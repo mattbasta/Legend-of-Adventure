@@ -137,8 +137,6 @@ var jgutils = {
             true // No Draw
         );
 
-        jgutils.comm.connect();
-
         // Make sure it stays in sync.
         $(window).resize(function(){
 
@@ -222,23 +220,21 @@ var jgutils = {
         refresh : function(preserved) {
             // Load up all of the avatars we want to save
             var museum = {local: jgutils.avatars.registry["local"]};
-            for(preserve in preserved)
-                museum[preserve] = jgutils.avatars.get(preserve);
+            for(var preserve in preserved)
+                if(preserve in jgutils.avatars.registry)
+                    museum[preserve] = jgutils.avatars.registry[preserve];
 
             // Iterate the rest and prune their canvas
             var object_wrapper = document.getElementById("object_wrapper");
             for(var avatar in jgutils.avatars.registry) {
-                // Don't prune if it's preserved.
-                if(museum[avatar])
-                    continue;
-                var av = document.getElementById("avatar_" + avatar);
-                object_wrapper.removeChild(av);
+                if(avatar in museum) continue;
+                object_wrapper.removeChild(document.getElementById("avatar_" + avatar));
             }
             jgutils.avatars.registry = museum;
 
             // If we're following someone that's not preserved by
             // game logic, then break our follow.
-            if(!museum[jgame.follow_avatar])
+            if(!jgame.follow_avatar in museum)
                 jgame.follow_avatar = "local";
 
 
@@ -297,24 +293,6 @@ var jgutils = {
             if(jgame.drawinterval)
                 clearInterval(jgame.drawinterval);
 
-            // Start Comm
-            if(!jgutils.comm.connection) {
-                jgutils.comm.connect();
-            }
-
-            jgutils.comm.subscription = "/loa/level/" + jgame.level.scene;
-            jgutils.comm.resubscribe();
-
-            var avatar = jgutils.avatars.get("local");
-            jgutils.comm_interaction.action(
-                "join",
-                {
-                    x : avatar.x,
-                    y : avatar.y,
-                    gender : (typeof jgutils.user.user_data.gender == "undefined" ? "male" : jgutils.user.user_data.gender)
-                }
-            );
-
             // Ready the UI for painting (without being blocked)
             loadutils.completed()
 
@@ -332,8 +310,6 @@ var jgutils = {
 
             // Remove everything level-specific
             jgutils.timing.stop();
-            if(jgutils.comm.connection)
-                jgutils.comm_interaction.action("leave");
 
             // Load in the new level
             $.getJSON(
@@ -636,61 +612,6 @@ var jgutils = {
                 }
                 yy += c_tilesize;
             }
-        }
-    },
-    comm : {
-        connection : null,
-        subscription : '',
-        queue : [],
-        ready : false,
-        connect : function() {
-            return;
-            jgutils.comm.connection = connection;
-        },
-        disconnect : function() {
-        },
-        resubscribe : function() {
-            jgutils.comm.disconnect();
-        },
-        send : function(message) {
-        },
-        onReceive : function(d) { jgutils.comm_interaction.handle(d); }
-    },
-    comm_interaction : {
-        handle : function(data) {
-            if(data.from == FB._session.uid)
-                return;
-            if(console) {
-                console.log("Frame from " + data.from + ":\n" + data.type + "\n" + JSON.stringify(data));
-            }
-            switch(data.type) {
-                case "join":
-                    jgutils.avatars.register(
-                        "remote_" + data.from,
-                        {
-                            x : data.x,
-                            y : data.y,
-                            image : "avatar",
-                            sprite : {}
-                        }
-                    );
-                    break;
-                case "leave":
-                    jgutils.avatars.unregister("remote_" + data.from);
-                    break;
-                case "reposition":
-                    var avatar = jgutils.avatars.get("remote_" + data.from);
-                    avatar.x = data.x;
-                    avatar.y = data.y;
-                    jgutils.avatars.reposition();
-            }
-
-        },
-        action : function(method, params) {
-            if(typeof params == "undefined")
-                params = {}
-            params["type"] = method;
-            jgutils.comm.send(params);
         }
     },
     timing : {
