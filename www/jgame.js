@@ -128,9 +128,9 @@ var jgutils = {
                         {position:9, duration:20}
                     ],
                     down : [
+                        {position:1, duration:20},
                         {position:2, duration:20},
-                        {position:3, duration:20},
-                        {position:1, duration:20}
+                        {position:0, duration:20}
                     ]
                 }
             },
@@ -166,7 +166,7 @@ var jgutils = {
             if(!properties.dirty)
                 properties.dirty = true;
             if(!properties.position)
-                properties.position = properties.sprite["down"][0]["position"];
+                properties.position = properties.sprite.down[0].position;
             jgutils.avatars.registry[id] = properties;
 
             // Create the canvas
@@ -184,6 +184,8 @@ var jgutils = {
 
             properties["canvas"] = canv;
             properties["direction"] = [0, 1];
+            properties["cycle_position"] = 0;
+            properties["sprite_cycle"] = 0;
 
             if(!nodraw)
                 jgutils.avatars.draw();
@@ -634,7 +636,6 @@ var jgutils = {
                 callback : callback
             };
         },
-        local_avatar_cache : null,
         tick : function() {
             var ticks = (new Date()).getTime(),
                 timing = jgutils.timing,
@@ -645,51 +646,79 @@ var jgutils = {
             } else {
                 var ms = ticks - timing.last;
                 timing.last = ticks;
-                timing.local_avatar_cache = jgutils.avatars.registry["local"];
             }
 
             // Move Avatar
             var _x = 0,
                 _y = 0,
-                _rate = 0.13, // Pixels per millisecond
+                _rate = 0.15, // Pixels per millisecond
                 _val = _rate * ms,
                 keys = jgame.keys;
             if(keys.left == true)
-                _x -= _val;
-            if(keys.right == true)
-                _x += _val;
+                _x = -1;
+            else if(keys.right == true)
+                _x = 1;
             if(keys.up == true)
-                _y -= _val;
-            if(keys.down == true)
-                _y += _val;
+                _y = -1;
+            else if(keys.down == true)
+                _y = 1;
 
-            // Prevent the avatar from moving at speeds > _val
-            if(_x && _y) {
-                _x *= Math.SQRT1_2;
-                _y *= Math.SQRT1_2;
+            // This needs to be crafted before the diagonal magic happens.
+            var direction = [_x, _y];
+
+            function get_avatar_sprite_direction(direction) {
+                _x = direction[0];
+                _y = direction[1];
+                if(_x < 0)
+                    return avatar.sprite.left;
+                else if(_x > 0)
+                    return avatar.sprite.right;
+                else if(_y < 0)
+                    return avatar.sprite.up;
+                else
+                    return avatar.sprite.down;
             }
 
+            var avatar = jgutils.avatars.registry["local"];
             if(_x || _y) {
-                var avatar = timing.local_avatar_cache;
-                if(!avatar)
-                    avatar = jgutils.avatars.registry["local"];
-                avatar.x += _x;
-                avatar.y += _y;
-                var direction = [_x, _y];
-                if(direction != avatar.direction) {
+                // Prevent the avatar from moving at speeds > _val
+                if(_x && _y) {
+                    _x *= Math.SQRT1_2;
+                    _y *= Math.SQRT1_2;
+                }
+
+                avatar.x += _x * _val;
+                avatar.y += _y * _val;
+
+                var sprite_direction = get_avatar_sprite_direction(direction)
+                if(direction[0] != avatar.direction[0] || direction[1] != avatar.direction[1]) {
                     avatar.dirty = true;
-                    avatar.direction = [_x, _y];
-                    if(_x < 0)
-                        avatar.position = avatar.sprite.left[0].position;
-                    else if(_x > 0)
-                        avatar.position = avatar.sprite.right[0].position;
-                    else if(_y < 0)
-                        avatar.position = avatar.sprite.up[0].position;
-                    else
-                        avatar.position = avatar.sprite.down[0].position;
+                    avatar.direction = direction;
+                    avatar.position = sprite_direction[1].position;
+                    avatar.cycle_position = 0;
+                    avatar.sprite_cycle = 0;
                     jgutils.avatars.draw("local");
+                } else {
+                    if(avatar.sprite_cycle++ == sprite_direction[avatar.cycle_position].duration) {
+                        avatar.dirty = true;
+                        avatar.sprite_cycle = 0;
+
+                        avatar.cycle_position = avatar.cycle_position + 1 == 3 ? 1 : 2;
+                        avatar.position = sprite_direction[avatar.cycle_position].position;
+
+                        jgutils.avatars.draw("local");
+                    }
                 }
                 jgutils.level.setCenterPosition();
+            } else if(avatar.direction[0] || avatar.direction[1]) {
+                avatar.position = get_avatar_sprite_direction(avatar.direction)[0].position;
+                // So it doesn't make sense to reset the avatar's direction,
+                // but it's more of a 'last known velocity' than anything.
+                avatar.direction = [0, 0];
+                avatar.sprite_cycle = 0;
+                avatar.cycle_position = 0;
+                avatar.dirty = true;
+                jgutils.avatars.draw("local");
             }
 
 
