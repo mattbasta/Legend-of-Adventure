@@ -4,7 +4,7 @@ import os
 import cherrypy
 from cherrypy.lib.static import serve_file
 
-import resourceloader
+import internals.resourceloader as resourceloader
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,10 +23,10 @@ class LOAServer:
         x, y = int(x), int(y)
         level = {"x": x,
                  "y": y,
-                 "w": 100,
-                 "h": 100,
+                 "w": 50,
+                 "h": 50,
                  "def_tile": 0,
-                 "avatar": {"x": 50, "y": 50, "image": "static/images/avatar.png"},
+                 "avatar": {"x": 25, "y": 25, "image": "static/images/avatar.png"},
                  "tileset": "default.gif",
                  "level": resourceloader.Loader().level(x, y)}
         return json.dumps(level)

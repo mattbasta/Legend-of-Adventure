@@ -594,15 +594,17 @@ var jgutils = {
             var image;
             var c_levlev = jgame.level.level,
                 c_tilesize = jgame.tilesize,
-                c_tileset = jgame.images["tileset"];
+                c_tileset = jgame.images["tileset"],
+                c_tiles_w = c_tileset.width / 16,
+                c_tiles_h = c_tileset.height / 16;
 
             var yy = 0;
             for(var y = 0; y < jgame.level.h; y++) {
                 var xx = 0;
                 for(var x = 0; x < jgame.level.w; x++) {
 
-                    var sprite_x = Math.floor(c_levlev[y][x] / 30) * 16,
-                        sprite_y = c_levlev[y][x] % (30 * 16) * 16;
+                    var sprite_y = Math.floor(c_levlev[y][x] / c_tiles_w) * 16,
+                        sprite_x = (c_levlev[y][x] % c_tiles_h) * 16;
 
                     c.drawImage(c_tileset,
                                 sprite_x, sprite_y,
@@ -699,6 +701,7 @@ var jgutils = {
                     avatar.sprite_cycle = 0;
                     jgutils.avatars.draw("local");
                 } else {
+                    // TODO : This needs to be converted to jgutils.timing.every.
                     if(avatar.sprite_cycle++ == sprite_direction[avatar.cycle_position].duration) {
                         avatar.dirty = true;
                         avatar.sprite_cycle = 0;
