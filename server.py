@@ -27,7 +27,7 @@ class LOAServer:
                  "h": 50,
                  "def_tile": 0,
                  "avatar": {"x": 25, "y": 25, "image": "static/images/avatar.png"},
-                 "tileset": "default.gif",
+                 "tileset": "default2.png",
                  "level": resourceloader.Loader().level(x, y)}
         return json.dumps(level)
 

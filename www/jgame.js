@@ -595,8 +595,7 @@ var jgutils = {
             var c_levlev = jgame.level.level,
                 c_tilesize = jgame.tilesize,
                 c_tileset = jgame.images["tileset"],
-                c_tiles_w = c_tileset.width / 16,
-                c_tiles_h = c_tileset.height / 16;
+                c_tiles_w = 80 / 16;
 
             var yy = 0;
             for(var y = 0; y < jgame.level.h; y++) {
@@ -604,7 +603,7 @@ var jgutils = {
                 for(var x = 0; x < jgame.level.w; x++) {
 
                     var sprite_y = Math.floor(c_levlev[y][x] / c_tiles_w) * 16,
-                        sprite_x = (c_levlev[y][x] % c_tiles_h) * 16;
+                        sprite_x = (c_levlev[y][x] % c_tiles_w) * 16;
 
                     c.drawImage(c_tileset,
                                 sprite_x, sprite_y,

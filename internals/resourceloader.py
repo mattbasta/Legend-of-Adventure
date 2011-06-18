@@ -19,7 +19,7 @@ class Loader():
 
         # TODO: Return the level data.
         tileset, region = build_region(x, y, 50, 50)
-        #region = rounding(region, tileset)
+        region = rounding(region, tileset)
 
         return region
 

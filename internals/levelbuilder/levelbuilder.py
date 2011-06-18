@@ -19,7 +19,7 @@ def perlin_refined(x, y, height=100, width=100):
     """Build a raw numeric map based on perlin noise."""
     freq = 16.0
     octave = 1
-    return [[_perlin(x, y) for x in range(height)] for y in range(width)]
+    return [[int(_perlin(x, y)) for x in range(height)] for y in range(width)]
 
 
 def _perlin(x, y, amplitude=10):
