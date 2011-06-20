@@ -4,6 +4,7 @@ import os
 import tornado.ioloop
 import tornado.web
 
+import internals.comm
 import internals.resourceloader as resourceloader
 
 
@@ -28,7 +29,7 @@ class LevelHandler(tornado.web.RequestHandler):
                  "h": 50,
                  "def_tile": 0,
                  "avatar": {"x": 25, "y": 25, "image": "static/images/avatar.png"},
-                 "tileset": "default2.png",
+                 "tileset": "default.png",
                  "level": resourceloader.Loader().level(x, y)}
 
         self.set_header("Content-Type", "application/json");
@@ -39,6 +40,7 @@ settings = {"static_path": os.path.join(current_dir, "www")}
 application = tornado.web.Application([
     (r"/", LOAHandler),
     (r"/level/", LevelHandler),
+    (r"/socket", internals.comm.CommHandler),
 ], **settings)
 
 if __name__ == "__main__":

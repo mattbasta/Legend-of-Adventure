@@ -2,21 +2,25 @@
 jGame utilities
 */
 
+function S4() {return (((1+Math.random())*0x10000)|0).toString(16).substring(1);}
+function guid() {return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());}
+
 function createImage(id, url) {
     if(jgame.images[id]) {
         // Refresh the tileset when requested, but not anything else.
         if(id == "tileset")
             delete jgame.images[id];
         else
+            if(jgame.images_loaded == jgame.images_added)
+                loadutils.complete_task("images");
             return;
     }
     var i = new Image();
     jgame.images_added++;
     i.onload = function() {
         jgame.images_loaded++;
-        if(jgame.images_loaded == jgame.images_added) {
-            jgutils.level.init();
-        }
+        if(jgame.images_loaded == jgame.images_added)
+            loadutils.complete_task("images");
     };
     i.src = url;
     jgame.images[id] = i;
@@ -219,28 +223,6 @@ var jgutils = {
                 _draw(avatar);
 
         },
-        refresh : function(preserved) {
-            // Load up all of the avatars we want to save
-            var museum = {local: jgutils.avatars.registry["local"]};
-            for(var preserve in preserved)
-                if(preserve in jgutils.avatars.registry)
-                    museum[preserve] = jgutils.avatars.registry[preserve];
-
-            // Iterate the rest and prune their canvas
-            var object_wrapper = document.getElementById("object_wrapper");
-            for(var avatar in jgutils.avatars.registry) {
-                if(avatar in museum) continue;
-                object_wrapper.removeChild(document.getElementById("avatar_" + avatar));
-            }
-            jgutils.avatars.registry = museum;
-
-            // If we're following someone that's not preserved by
-            // game logic, then break our follow.
-            if(!jgame.follow_avatar in museum)
-                jgame.follow_avatar = "local";
-
-
-        },
         setTilePosition : function(id, x, y, resize) {
             var avatar = jgutils.avatars.registry[id];
             avatar.x = x * jgame.tilesize;
@@ -295,12 +277,8 @@ var jgutils = {
             if(jgame.drawinterval)
                 clearInterval(jgame.drawinterval);
 
-            // Ready the UI for painting (without being blocked)
-            loadutils.completed()
-
             // Get everything looking decent and positioned correctly
             jgutils.level.update();
-            jgutils.avatars.refresh();
             jgutils.avatars.draw();
 
             // Start everything back up
@@ -312,6 +290,12 @@ var jgutils = {
 
             // Remove everything level-specific
             jgutils.timing.stop();
+
+            loadutils.start_task(
+                "level_init",
+                ["images", "load", "comm", "comm_reg"],
+                jgutils.level.init
+            );
 
             // Load in the new level
             $.getJSON(
@@ -329,10 +313,16 @@ var jgutils = {
                         createImage('avatar', data.avatar.image);
                     }
 
-                    createImage("tileset", 'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset);
-                        jgutils.level.init();
+                    var tileset_url = document.domain == "localhost" ? "/static/images/tilesets/" + data.tileset :
+                                        'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
+                    createImage("tileset", tileset_url);
+                    loadutils.complete_task("load");
+
+                    jgutils.comm.register(data["x"], data["y"], data.avatar.x, data.avatar.y);
                 }
             );
+
+            jgutils.comm.init();
         },
         update : function() {
             var bgt = document.getElementById('bg_tile');
@@ -430,6 +420,49 @@ var jgutils = {
                 moveavatar_x || resize,
                 moveavatar_y || resize
             );
+        }
+    },
+    comm : {
+        socket : null,
+        local_id : guid(),
+        registrar : null,
+        init : function() {
+            jgutils.comm.socket = new WebSocket("ws://" + document.domain + ":" + (window.location.href.split(":")[2]) + "socket");
+            jgutils.comm.socket.onopen = function(message) {
+                jgutils.comm.socket.onmessage = jgutils.comm.handle_message;
+                jgutils.comm.send("reg", jgutils.comm.local_id);
+                loadutils.complete_task("comm");
+                if(jgutils.comm.registrar)
+                    jgutils.comm.registrar();
+            };
+        },
+        handle_message : function(message) {
+            console.log("Server message: [" + message.data + "]");
+            body = message.data.substr(4);
+            switch(message.data.substr(0, 3)) {
+                case "pin":
+                    jgutils.comm.send("pon", "");
+                    break;
+                case "avp":
+                    data = body.split(":");
+                    break;
+            }
+        },
+        register : function(x, y, avatar_x, avatar_y) {
+            var r = function() {
+                jgutils.comm.send("pos", x + ":" + y + ":" + avatar_x + ":" + avatar_y);
+                loadutils.complete_task("comm_reg");
+            };
+            if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
+                r();
+            } else {
+                jgutils.comm.registrar = r;
+            }
+        },
+        send : function(header, body) {
+            if(!jgutils.comm.socket)
+                return;
+            jgutils.comm.socket.send(header + body);
         }
     },
     objects : {
@@ -773,19 +806,30 @@ var jgutils = {
 };
 
 var loadutils = {
-    loading: function() {
-        document.body.style.backgroundImage = "";
-        $.blockUI({ css: {
-            border: 'none',
-            padding: '15px',
-            backgroundColor: '#000',
-            '-webkit-border-radius': '10px',
-            '-moz-border-radius': '10px',
-            opacity: .5,
-            color: '#fff'
-        } });
+    active_dependencies : {},
+    start_task : function(task, dependencies, callback) {
+        loadutils.active_dependencies[task] = {dependencies: dependencies,
+                                               callback: callback};
     },
-    completed: function() {
-        $.unblockUI();
+    finish_task : function(task) {
+        loadutils.active_dependencies[task].callback();
+        delete loadutils.active_dependencies[task];
+    },
+    complete_task : function(task) {
+        console.log("Completed task: " + task)
+        if(task in loadutils.active_dependencies) {
+            loadutils.finish_task(task);
+        } else {
+            for(t in loadutils.active_dependencies) {
+                var tt = loadutils.active_dependencies[t];
+                if(tt.dependencies.indexOf(task) > -1)
+                    tt.dependencies = tt.dependencies.filter(function(x) {return x != task;});
+                if(!tt.dependencies.length) {
+                    console.log(tt.dependencies);
+                    console.log(t);
+                    loadutils.finish_task(t);
+                }
+            }
+        }
     }
 };

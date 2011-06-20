@@ -6,41 +6,15 @@
 <title>Legend of Adventure</title>
 <link rel="SHORTCUT ICON" href="http://cdn1.legendofadventure.com/favicon.ico" />
 <link rel="icon" href="http://cdn1.legendofadventure.com/favicon.ico" />
-<link type="text/css" href="http://cdn2.legendofadventure.com/frame.css" rel="stylesheet" />
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-<script type="text/javascript" src="http://cdn.serverboy.net/scripts/jquery.blockui.js"></script>
+<link rel="stylesheet" href="/static/frame.css" type="text/css" />
+<script type="text/javascript" src="/static/jquery-1.4.4.min.js"></script>
 <script type="text/javascript" src="/static/jgame.js"></script>
 <script type="text/javascript">
 <!--
 
 $(document).ready(function(){
-
-	jgutils.setup();
-	jgutils.user.onAfterLogin = function() {
-		loadutils.loading();
-		jgutils.level.load(0, 0);
-	};
-
-	jgutils.user.isLoggedIn(function(x) {
-		if(x) {
-			jgutils.user.onAfterLogin();
-		} else {
-			// Not logged in, jump into intro/login screen.
-			$.blockUI({
-				message : $('#fbauth'),
-				css : {
-					cursor : 'auto',
-					padding : '15px',
-					border : '0',
-					width : '500px',
-					left : (document.body.offsetWidth / 2 - 250) + 'px',
-					'-webkit-border-radius' : '10px',
-					'-moz-border-radius' : '10px'
-				}
-			});
-		}
-	});
-
+    jgutils.setup();
+    jgutils.level.load(0, 0);
 });
 
 -->
