@@ -147,14 +147,9 @@ var jgutils = {
             window.jgame.offset.w = document.body.offsetWidth;
             window.jgame.offset.h = document.body.offsetHeight;
 
-            // Invalidate the cache
-            jgame.updated = true;
-
             // Update the scene to make sure everything is onscreen.
             jgutils.level.setCenterPosition(true);
-
         });
-
     },
     user : {
         user_data : {},
@@ -165,6 +160,7 @@ var jgutils = {
         }
     },
     avatars : {
+        avatar_offsets : {x: 0, y: 0},
         registry : {},
         register : function(id, properties, nodraw) {
             if(!properties.dirty)
@@ -196,9 +192,11 @@ var jgutils = {
 
         },
         unregister : function(id) {
-            jgutils.avatars.registry[id] = null;
+            if(!(id in jgutils.avatars.registry))
+                return;
+            delete jgutils.avatars.registry[id];
             var av = document.getElementById("avatar_" + id);
-            document.getElementById("object_wrapper").removeChild(av);
+            av.parentNode.removeChild(av);
         },
         get : function(id) {return jgutils.avatars.registry[id];},
         get_element : function(id) {return document.getElementById("avatar_" + id);},
@@ -229,13 +227,16 @@ var jgutils = {
             avatar.y = y * jgame.tilesize;
             jgutils.level.setCenterPosition(resize);
         },
-        reposition : function(x, y, movefollow_x, movefollow_y) {
+        setAvatarOffset : function(x, y) {jgutils.avatars.avatar_offsets = {x: x, y: y};},
+        reposition : function(movefollow_x, movefollow_y) {
+            var x = jgutils.avatars.avatar_offsets.x,
+                y = jgutils.avatars.avatar_offsets.y;
             for(var avatar in jgutils.avatars.registry) {
                 var av = jgutils.avatars.registry[avatar],
                     canv = av["canvas"],
                     follower = jgame.follow_avatar == avatar;
                 var xpos = av.x + x,
-                    ypos = av.y - 100 + y;
+                    ypos = av.y - 65 + y;
                 if(xpos < -75 || ypos < -100 || xpos > jgame.offset.w || ypos > jgame.offset.h) {
                     if(!canv.jg_hidden) {
                         canv.style.display = "none";
@@ -252,6 +253,7 @@ var jgutils = {
                     canv.style.left = xpos + "px";
                 if(follower && movefollow_y || !follower)
                     canv.style.top = ypos + "px";
+                canv.style.zIndex = ypos;
             }
         }
     },
@@ -313,12 +315,12 @@ var jgutils = {
                         createImage('avatar', data.avatar.image);
                     }
 
-                    var tileset_url = document.domain == "localhost" ? "/static/images/tilesets/" + data.tileset :
-                                        'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
+                    var tileset_url = "/static/images/tilesets/" + data.tileset;// :
+//                                        'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
                     createImage("tileset", tileset_url);
                     loadutils.complete_task("load");
 
-                    jgutils.comm.register(data["x"], data["y"], data.avatar.x, data.avatar.y);
+                    jgutils.comm.register(data["x"], data["y"], data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
                 }
             );
 
@@ -415,8 +417,8 @@ var jgutils = {
                 obj_cont.style.top = n_y + 'px';
             }
 
+            jgutils.avatars.setAvatarOffset(n_x, n_y)
             jgutils.avatars.reposition(
-                n_x, n_y,
                 moveavatar_x || resize,
                 moveavatar_y || resize
             );
@@ -438,14 +440,42 @@ var jgutils = {
         },
         handle_message : function(message) {
             console.log("Server message: [" + message.data + "]");
-            body = message.data.substr(4);
+            body = message.data.substr(3);
             switch(message.data.substr(0, 3)) {
                 case "pin":
                     jgutils.comm.send("pon", "");
                     break;
-                case "avp":
-                    data = body.split(":");
+                case "add":
+                    var data = body.split(":");
+                    jgutils.avatars.register(
+                        data[0],
+                        {image: "avatar",
+                         facing: "down",
+                         sprite: jgutils.avatars.registry["local"].sprite,
+                         dirty: true,
+                         x: data[1] * 1,
+                         y: data[2] * 1},
+                        true
+                    );
+                    jgutils.avatars.reposition(true, true);
+                    jgutils.avatars.draw();
                     break;
+                case "del":
+                    jgutils.avatars.unregister(body);
+                    break;
+                case "upa":
+                    var data = body.split(":");
+                    var av = jgutils.avatars.registry[data[0]];
+                    av.x = data[1] * 1;
+                    av.y = data[2] * 1;
+                    if(av.position != data[3]) {
+                        av.position = data[3] * 1;
+                        jgutils.avatars.draw(data[0]);
+                    }
+                    if(jgame.follow_avatar == data[0])
+                        jgutils.level.setCenterPosition(true);
+                    else
+                        jgutils.avatars.reposition(false, false);
             }
         },
         register : function(x, y, avatar_x, avatar_y) {
@@ -661,7 +691,7 @@ var jgutils = {
             clearTimeout(jgutils.timing.timer);
             jgutils.timing.last = 0;
         },
-        unregister : function(id) {jgutils.timing.registers[id] = null;},
+        unregister : function(id) {delete jgutils.timing.registers[id];},
         every : function(id, callback, seconds) {
             jgutils.timing.registers[id] = {
                 id : id,
@@ -732,6 +762,10 @@ var jgutils = {
                     avatar.cycle_position = 0;
                     avatar.sprite_cycle = 0;
                     jgutils.avatars.draw("local");
+                    var update_position = function() {
+                        jgutils.comm.send("ups", Math.round(avatar.x) + ":" + Math.round(avatar.y) + ":" + avatar.position);
+                    };
+                    jgutils.timing.every("update_position", update_position, 0.2);
                 } else {
                     // TODO : This needs to be converted to jgutils.timing.every.
                     if(avatar.sprite_cycle++ == sprite_direction[avatar.cycle_position].duration) {
@@ -754,6 +788,10 @@ var jgutils = {
                 avatar.cycle_position = 0;
                 avatar.dirty = true;
                 jgutils.avatars.draw("local");
+                if(jgutils.timing.registers && "update_position" in jgutils.timing.registers) {
+                    jgutils.timing.registers["update_position"].callback();
+                    jgutils.timing.unregister("update_position");
+                }
             }
 
 
@@ -795,7 +833,7 @@ var jgutils = {
 
             for(var register in timing.registers) {
                 var reg = timing.registers[register];
-                if(ticks - reg.last_called > reg.interval / 1000) {
+                if(ticks - reg.last_called > reg.interval * 1000) {
                     reg.callback(ticks);
                     reg.last_called = ticks;
                 }
@@ -824,11 +862,8 @@ var loadutils = {
                 var tt = loadutils.active_dependencies[t];
                 if(tt.dependencies.indexOf(task) > -1)
                     tt.dependencies = tt.dependencies.filter(function(x) {return x != task;});
-                if(!tt.dependencies.length) {
-                    console.log(tt.dependencies);
-                    console.log(t);
+                if(!tt.dependencies.length)
                     loadutils.finish_task(t);
-                }
             }
         }
     }
