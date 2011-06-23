@@ -29,6 +29,7 @@ class LevelHandler(tornado.web.RequestHandler):
                  "h": 50,
                  "def_tile": 0,
                  "avatar": {"x": 25, "y": 25, "image": "static/images/avatar.png"},
+                 "images": {"npc": "static/images/npc.png"},
                  "tileset": "default.png",
                  "level": resourceloader.Loader().level(x, y)}
 

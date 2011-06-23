@@ -1,5 +1,8 @@
+import json
 import logging
+import math
 import time
+import uuid
 
 import tornado.websocket
 
@@ -42,6 +45,18 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             # POS : Client position data
             self._position(message[3:])
             return
+        elif message.startswith("dir"):
+            if not self.guid or self.scene is None:
+                return
+            # If there is no change in position, skip this update.
+            spos = int(message[3:])
+            if self.sp_position == spos:
+                return
+            CommHandler.notify_scene(self.scene,
+                                     "dir%s:%s" % (self.guid, message[3:]),
+                                     except_=self)
+            self.sp_position = spos
+            return
         elif message.startswith("ups"):
             if not self.guid:
                 self.write_message("errNot registered")
@@ -56,6 +71,15 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             except:
                 self.write_message("errInvalid update")
                 return
+
+            if self.position:
+                x2 = x - self.position[0]
+                y2 = y - self.position[1]
+                dist = math.sqrt(x2 * x2 + y2 * y2)
+                # TODO: This should take into account the time of last update.
+                if dist > 200:
+                    self.write_message("errMoving too fast")
+                    return
 
             # Perform the global position update before broadcasting in case
             # we're getting update spammed.
@@ -73,15 +97,38 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         elif message.startswith("cha"):
             if not self.guid or self.scene is None:
                 return
-            print "Chat: %s" % message[3:]
+            data = message[3:]
+            if data.startswith("/"):
+                return self._handle_command(data[1:])
+            print "Chat: %s" % data
             CommHandler.notify_scene(self.scene,
-                                     "cha%s:%s" % (self.guid, message[3:]),
+                                     "cha%s:%s" % (self.guid, data),
                                      except_=self)
             return
 
         self.write_message("pin");
         self.sent_ping = True
         pass
+
+    def _handle_command(self, message):
+        """Handle an admin message through chat."""
+        if not self.scene:
+            return
+
+        if message == "spawn":
+            CommHandler.spawn_object(self.scene,
+                                     uuid.uuid4().hex,
+                                     {"x": 25,
+                                      "y": 25,
+                                      "movement": {"type": "static"},
+                                      "image": {"type": "static",
+                                                "image": "npc",
+                                                "sprite": {"x": 32,
+                                                           "y": 0,
+                                                           "awidth": 65,
+                                                           "aheight": 65,
+                                                           "swidth": 32,
+                                                           "sheight": 32}}})
 
     def _register(self, guid):
         if guid in ("local", ):
@@ -109,6 +156,14 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.scene = (x, y)
         self.position = (av_x, av_y)
         CommHandler.add_client(self.scene, self)
+
+    @classmethod
+    def spawn_object(cls, scene, id, object):
+        if not isinstance(object, dict):
+            object = json.loads(object)
+        if "layer" not in object:
+            object["layer"] = "inactive"
+        cls.notify_scene(scene, "spa%s\n%s" % (id, json.dumps(object)))
 
     @classmethod
     def add_client(cls, scene, client):

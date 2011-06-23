@@ -3,7 +3,8 @@ jGame utilities
 */
 
 function S4() {return (((1+Math.random())*0x10000)|0).toString(16).substring(1);}
-function guid() {return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());}
+// Simplified GUID function
+function guid() {return S4()+S4()+S4()+S4();}
 
 function createImage(id, url) {
     if(jgame.images[id]) {
@@ -323,6 +324,8 @@ var jgutils = {
                         jgame.images['avatar'] = null;
                         createImage('avatar', data.avatar.image);
                     }
+                    for(var pref_img in data.images)
+                        createImage(pref_img, data.images[pref_img]);
 
                     var tileset_url = "/static/images/tilesets/" + data.tileset;// :
 //                                        'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
@@ -451,10 +454,10 @@ var jgutils = {
             console.log("Server message: [" + message.data + "]");
             body = message.data.substr(3);
             switch(message.data.substr(0, 3)) {
-                case "pin":
+                case "pin": // Ping!
                     jgutils.comm.send("pon", "");
                     break;
-                case "add":
+                case "add": // Add avatar
                     var data = body.split(":");
                     jgutils.avatars.register(
                         data[0],
@@ -469,16 +472,17 @@ var jgutils = {
                     jgutils.avatars.reposition(true, true);
                     jgutils.avatars.draw();
                     break;
-                case "del":
+                case "del": // Remove avatar
                     jgutils.avatars.unregister(body);
                     break;
-                case "upa":
+                case "upa": // Change avatar position and direction
                     var data = body.split(":");
                     var av = jgutils.avatars.registry[data[0]];
                     av.x = data[1] * 1;
                     av.y = data[2] * 1;
-                    if(av.position != data[3]) {
-                        av.position = data[3] * 1;
+                    var position = data[3];
+                    if(av.position != position) {
+                        av.position = position * 1;
                         jgutils.avatars.draw(data[0]);
                     }
                     if(jgame.follow_avatar == data[0])
@@ -486,8 +490,28 @@ var jgutils = {
                     else
                         jgutils.avatars.reposition(false, false);
                     break;
-                case "cha":
+                case "dir": // Change avatar direction
+                    var data = body.split(":");
+                    var av = jgutils.avatars.registry[data[0]];
+                    av.position = data[1] * 1;
+                    jgutils.avatars.draw(data[0]);
+                    break;
+                case "cha": // Chat message
                     chatutils.handleMessage(body.split(":")[1]);
+                    break;
+                case "spa": // Spawn object
+                    var data = body.split("\n");
+                    var jdata = JSON.parse(data[1]);
+                    jgutils.objects.create(
+                        data[0],
+                        jdata,
+                        jdata["layer"]
+                    );
+                    break;
+                case "err":
+                    if(!!window.console) {
+                        console.log("Error: " + body);
+                    }
             }
         },
         register : function(x, y, avatar_x, avatar_y) {
@@ -509,7 +533,7 @@ var jgutils = {
     },
     objects : {
         layers : {},
-        registry : [],
+        registry : {},
         createLayer : function(name) {
             var oc = document.getElementById('object_container');
 
@@ -524,28 +548,28 @@ var jgutils = {
 
             var x = (jgutils.objects.layers[name] = {
                 obj : layer,
-                child_objects : [],
+                child_objects : {},
                 updated : false
             });
 
             return x;
         },
-        create : function(proto, layer) {
-            var l = layer ? layer : 1;
+        create : function(id, proto, layer) {
+            layer = layer ? layer : 1;
             var lay;
-            if(!(l in jgutils.objects.layers))
-                lay = jgutils.objects.createLayer(l);
+            if(!(layer in jgutils.objects.layers))
+                lay = jgutils.objects.createLayer(layer);
             else
-                lay = jgutils.objects.layers[l];
-            var llen = lay.child_objects.length;
-            lay.child_objects[llen] = proto;
-
-            var len = jgutils.objects.registry.length;
-            jgutils.objects.registry[len] = proto;
-
-            proto['registry_proto'] = len;
-            proto['registry_layer'] = layer;
-            proto['registry_layer_len'] = llen;
+                lay = jgutils.objects.layers[layer];
+            proto["updated"] = true;
+            proto["registry_layer"] = layer;
+            proto.x *= jgame.tilesize;
+            proto.y *= jgame.tilesize;
+            proto["start_x"] = proto.x;
+            proto["start_y"] = proto.y;
+            lay.child_objects[id] = proto;
+            lay.updated = true;
+            jgutils.objects.registry[id] = proto;
         },
         simple_collision : function(x, y, x2, y2, radius) {
             x -= x2;
@@ -557,115 +581,43 @@ var jgutils = {
             if(!otick)
                 otick = 0;
 
-            var updated = false;
+            var updated = proto.updated;
+            proto.updated = false;
 
-            switch(proto.image.type) {
-                case 'static':
-                    proto.last_image = proto.image.image;
-                    break;
-                case 'sequence':
-                    var ps_c, ps_st;
-
-                    if(typeof proto.image.current == 'undefined') {
-                        ps_c = proto.image['current'] = -1;
-                        ps_st = proto.image['start_time'] = 0;
-                    } else {
-                        ps_c = proto.image.current;
-                        ps_st = proto.image.start_time;
-                    }
-
-                    // We want to use ftick because otick has a max.
-                    var curr = proto.image.series[ps_c];
-                    var len = ftick - ps_st;
-                    if(len > curr.duration) {
-                        proto.image.start_time = ps_st + curr.duration;
-                        ps_c++;
-                        if(ps_c > proto.image.series.length)
-                            ps_c = 0;
-                        proto.image.current = ps_c;
-
-                        proto.last_image = proto.image.series[ps_c].image;
-                        updated = true;
-
-                    }
-
-                    break;
-                case 'dynamic':
-                    // WOW. Most. Convoluted. Assignment. Slash. Comparison. EVER.
-                    updated = (proto.last_image != (proto.last_image = proto.image.callback(otick)));
-                    break;
+            var new_image = frameutils.get(proto.image.type,
+                                           proto.image,
+                                           otick,
+                                           0); // TODO : Set this to something useful.
+            if(new_image != proto.last_image) {
+                updated = true;
+                proto.last_image = new_image;
             }
 
-            switch(proto.movement.type) {
-                case 'static':
-                    proto.x = proto.movement.x;
-                    proto.y = proto.movement.y;
-                    break;
-                case 'sequence':
-                    var ps_c, ps_st, ps_sx, ps_sy;
-
-                    updated = true;
-
-                    if(typeof proto.movement.current == 'undefined') {
-                        ps_c = proto.movement['current'] = 0;
-                        ps_st = proto.movement['start_time'] = ftime;
-                        ps_sx = proto.movement['start_x'] = proto.x;
-                        ps_sy = proto.movement['start_y'] = proto.y;
-                    } else {
-                        ps_c = proto.movement.current;
-                        ps_st = proto.movement.start_time;
-                        ps_sx = proto.movement.start_x;
-                        ps_sy = proto.movement.start_y;
-                    }
-
-                    // We want to use ftick because otick has a max.
-                    var curr = proto.movement.series[ps_c];
-                    var len = ftick - ps_st;
-                    if(len > curr.duration) {
-                        proto.movement.start_time = ps_st + curr.duration;
-                        len -= curr.duration;
-                        ps_c++;
-                        if(ps_c > proto.movement.series.length)
-                            ps_c = 0;
-                        proto.movement.current = ps_c;
-                        curr = proto.movement.series[ps_c];
-                    }
-
-                    var perc = (len / curr.duration);
-
-                    proto.x = (curr.x - ps_sx) * perc + ps_sx;
-                    proto.y = (curr.y - ps_sy) * perc + ps_sy;
-
-                    break;
-                case 'dynamic':
-                    var new_locs = proto.movement.callback(otick);
-
-                    // We have to do this silly thing because it could jack us up if we don't.
-                    var x_u = (proto.x != (proto.x = new_locs.x));
-                        y_u = (proto.y != (proto.y = new_locs.y));
-                    if(!updated) // Silly silly silly
-                        updated = x_u || y_u; // Silliness!
-                    break;
+            if(proto.movement.type != "static" &&
+               frameutils.changed(proto.movement.type, proto.movement, otick, 0)) {
+                updated = true;
+                var movement = frameutils.get(proto.movement.type,
+                                              proto.movement,
+                                              otick,
+                                              0); // TODO : Same for this one.
+                // TODO : This should take into account animations.
+                proto.x = proto.start_x + movement.x;
+                proto.y = proto.start_y + movement.y;
             }
 
             return updated;
 
         },
-        remove : function(proto) {
-            jgutils.objects.registry[proto.registry_proto] = null;
-            jgutils.objects.layers[proto.registery_layer].child_objects[proto.registry_layer_len] = null;
+        remove : function(id) {
+            delete jgutils.objects.registry[id];
+            delete jgutils.objects.layers[proto.registry_layer].child_objects[id];
         }
     },
     drawing : {
-        init : function() {
-            jgutils.drawing.redrawBackground();
-        },
-        forceRecenter : function() {
-            jgutils.level.setCenterPosition(true);
-        },
+        init : function() {jgutils.drawing.redrawBackground();},
+        forceRecenter : function() {jgutils.level.setCenterPosition(true);},
         redrawBackground : function() {
             var c = document.getElementById('bg_tile').getContext('2d');
-
             var image;
             var c_levlev = jgame.level.level,
                 c_tilesize = jgame.tilesize,
@@ -778,6 +730,7 @@ var jgutils = {
                         jgutils.comm.send("ups", Math.round(avatar.x) + ":" + Math.round(avatar.y) + ":" + avatar.position);
                     };
                     jgutils.timing.every("update_position", update_position, 0.2);
+                    jgutils.comm.send("dir", avatar.position + "");
                 } else {
                     // TODO : This needs to be converted to jgutils.timing.every.
                     if(avatar.sprite_cycle++ == sprite_direction[avatar.cycle_position].duration) {
@@ -806,7 +759,6 @@ var jgutils = {
                 }
             }
 
-
             // Update Objects
             for(objid in objects.registry) {
                 var obj = objects.registry[objid];
@@ -820,25 +772,26 @@ var jgutils = {
 
                 if(updated)
                     objects.layers[obj.registry_layer].updated = true;
-
             }
-
 
             // Redraw layers
             for(l in objects.layers) {
                 var layer = objects.layers[l];
                 if(layer.updated) {
-
                     var context = layer.obj.getContext('2d');
                     context.clearRect(0,0,layer.obj.offsetWidth,layer.obj.offsetHeight);
 
                     for(co in layer.child_objects) {
-
-                        var child = layer.child_objects[co];
-                        context.drawImage(jgame.images[child.last_image], child.x, child.y);
-
+                        var child = layer.child_objects[co],
+                            li = child.last_image;
+                        if("sprite" in child.last_image)
+                            context.drawImage(jgame.images[li.image], li.sprite.x, li.sprite.y,
+                                              li.sprite.swidth, li.sprite.sheight,
+                                              child.x, child.y,
+                                              li.sprite.awidth, li.sprite.aheight);
+                        else
+                            context.drawImage(jgame.images[li.image], child.x, child.y);
                     }
-
                     layer.updated = false;
                 }
             }
@@ -890,6 +843,8 @@ var chatutils = {
             chatutils._cb.removeChild(chatutils._cb.childNodes[0]);
         }
         var p = document.createElement("p");
+        if(message[0] == "/")
+            p.style.color = "#5d6";
         p.innerHTML = message;
         chatutils._cb.appendChild(p);
     },
@@ -919,5 +874,41 @@ var chatutils = {
         chatutils._tb.value = "";
         chatutils._tb.style.display = "none";
         document.getElementById("chatbox").style.bottom = "0";
+    }
+};
+
+var frameutils = {
+    changed : function(type, data, ticks, start_tick) {
+        if(type == "static")
+            return false;
+        ticks -= start_ticks;
+        switch(type) {
+            case "sequence":
+                var seconds = "positions" in data ? data["positions"] : 10,
+                    duration = "duration" in data ? data["duration"] : 1,
+                    otick = Math.floor(ticks / duration) % seconds;
+                var old = Math.floor((ticks - 1) / duration) % seconds,
+                    new_ = Math.floor(ticks / duration) % seconds;
+                return old != new_;
+            case "callback":
+                // TODO: Once this starts getting used, a smarter means of providing
+                // updates should be devised.
+                return true;
+        }
+    },
+    get : function(type, data, ticks, start_ticks) {
+        ticks -= start_ticks;
+        switch(type) {
+            case "static":
+                return data;
+            case "sequence":
+                var seconds = "positions" in data ? data["positions"] : 10,
+                    duration = "duration" in data ? data["duration"] : 1,
+                    otick = Math.floor(ticks / duration) % seconds;
+                otick = Math.min(data.sequence.length, seconds);
+                return data.sequence[otick];
+            case "callback":
+                return data.callback(ticks);
+        }
     }
 };
