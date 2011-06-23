@@ -7,16 +7,15 @@
 <link rel="SHORTCUT ICON" href="http://cdn1.legendofadventure.com/favicon.ico" />
 <link rel="icon" href="http://cdn1.legendofadventure.com/favicon.ico" />
 <link rel="stylesheet" href="/static/frame.css" type="text/css" />
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=VT323:regular&v1" type="text/css" >
 <script type="text/javascript" src="/static/jquery-1.4.4.min.js"></script>
 <script type="text/javascript" src="/static/jgame.js"></script>
 <script type="text/javascript">
 <!--
-
 $(document).ready(function(){
     jgutils.setup();
     jgutils.level.load(0, 0);
 });
-
 -->
 </script>
 <style type="text/css">
@@ -24,16 +23,46 @@ html,body {height:100%;}
 body {background:#222 url(/static/images/ajax-loader.gif) no-repeat center center;}
 #bg_tile_wrap,
 #object_wrapper {
-	position:absolute;
-	top:0;
-	left:0;
-	overflow:hidden;
-	height:100%;
-	width:100%;
+    position:absolute;
+    top:0;
+    left:0;
+    overflow:hidden;
+    height:100%;
+    width:100%;
 }
 #object_wrapper { z-index:15; }
 #bg_tile_wrap { z-index:5; }
 #bg_tile { position:absolute; }
+#chatbox {
+    position:absolute;
+    bottom:0;
+    left:0;
+    padding:0.5em;
+    z-index:6;
+    font-size:2em;
+    letter-spacing:2px;
+}
+#chatbox, #talkbar {font-family:'VT323', Courier, Courier New, monospace;}
+#chatbox p {opacity:0;}
+#chatbox p+p {opacity:0.4;}
+#chatbox p+p+p {opacity:0.8;}
+#chatbox p+p+p+p {opacity:1;}
+#talkbar {
+    display:none;
+    position:absolute;
+    bottom:0.5em;
+    left:0.5em;
+    z-index:7;
+    font-size:20px;
+    background:rgba(0,0,0,0.8);
+    color:#fff;
+    border-radius:5px;
+    padding:0.1em 0.25em;
+    letter-spacing:0.2ex;
+}
+#talkbar.empty {
+    color:#aaa;
+}
 </style>
 </head>
 <body>
@@ -41,20 +70,29 @@ body {background:#222 url(/static/images/ajax-loader.gif) no-repeat center cente
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
 <script>
 CFInstall.check({
-	mode: "inline",
-	destination: "http://legendofadventure.com"
+    mode: "inline",
+    destination: "http://legendofadventure.com"
 });
 </script>
 <![endif]-->
 <div>
-	<div id="bg_tile_wrap">
-		<canvas id="bg_tile">
-			<p>Oh dear, it looks like you're running a browser that's going to suck at life. Try not using Internet Explorer. Or AOL. Neither of those.</p>
-		</canvas>
-	</div>
-	<div id="object_wrapper">
-		<div id="object_container" style="position:absolute;"></div>
-	</div>
+    <input type="text" id="talkbar" />
+    <div id="chatbox">
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+    </div>
+    <div id="inventory"></div>
+    <div id="bg_tile_wrap">
+        <canvas id="bg_tile">
+            <p>Oh dear, it looks like you're running a browser that's going to suck at life. Try not using Internet Explorer. Or AOL. Neither of those.</p>
+        </canvas>
+    </div>
+    <div id="object_wrapper">
+        <div id="object_container" style="position:absolute;"></div>
+    </div>
 </div>
 </body>
 </html>

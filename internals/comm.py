@@ -70,6 +70,14 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             CommHandler.notify_scene(self.scene,
                     "upa%s:%d:%d:%d" % (self.guid, x, y, spos), except_=self)
             return
+        elif message.startswith("cha"):
+            if not self.guid or self.scene is None:
+                return
+            print "Chat: %s" % message[3:]
+            CommHandler.notify_scene(self.scene,
+                                     "cha%s:%s" % (self.guid, message[3:]),
+                                     except_=self)
+            return
 
         self.write_message("pin");
         self.sent_ping = True

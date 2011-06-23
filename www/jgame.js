@@ -28,6 +28,10 @@ function createImage(id, url) {
 
 var jgutils = {
     setup : function() {
+
+        chatutils._tb = document.getElementById("talkbar");
+        chatutils._cb = document.getElementById("chatbox");
+
         // Setup key handlers
         $(document).keydown(function(e) {
 
@@ -51,7 +55,7 @@ var jgutils = {
                             kb();
                         else
                             for(var i=0; i<jgame.keys.bindings[e.keyCode].length; i++)
-                                (jgame.keys.bindings[e.keyCode][i])();
+                                return (jgame.keys.bindings[e.keyCode][i])();
                     }
             }
 
@@ -299,6 +303,11 @@ var jgutils = {
                 jgutils.level.init
             );
 
+            // "T" for chat
+            jgutils.keys.addBinding(84, chatutils.startChat, false);
+            // ESC for chat
+            jgutils.keys.addBinding(27, chatutils.stopChat, true);
+
             // Load in the new level
             $.getJSON(
                 'level/',
@@ -476,6 +485,9 @@ var jgutils = {
                         jgutils.level.setCenterPosition(true);
                     else
                         jgutils.avatars.reposition(false, false);
+                    break;
+                case "cha":
+                    chatutils.handleMessage(body.split(":")[1]);
             }
         },
         register : function(x, y, avatar_x, avatar_y) {
@@ -866,5 +878,46 @@ var loadutils = {
                     loadutils.finish_task(t);
             }
         }
+    }
+};
+
+var chatutils = {
+    _tb : null,
+    _cb : null,
+    started : false,
+    handleMessage : function(message) {
+        if(chatutils._cb.childNodes.length > 10) {
+            chatutils._cb.removeChild(chatutils._cb.childNodes[0]);
+        }
+        var p = document.createElement("p");
+        p.innerHTML = message;
+        chatutils._cb.appendChild(p);
+    },
+    startChat : function() {
+        chatutils._tb.style.display = "block";
+        setTimeout(function() {chatutils._tb.focus();}, 15);
+        chatutils._tb.onkeydown = function(e) {
+            e.stopPropagation();
+            switch(e.keyCode) {
+                case 13:
+                    var m = chatutils._tb.value;
+                    if(m) {
+                        jgutils.comm.send("cha", m);
+                        chatutils.handleMessage(m);
+                    }
+                case 27:
+                    chatutils.stopChat();
+            }
+            return true;
+        };
+        chatutils.started = true;
+        document.getElementById("chatbox").style.bottom = "40px";
+        return false;
+    },
+    stopChat : function() {
+        chatutils.started = false;
+        chatutils._tb.value = "";
+        chatutils._tb.style.display = "none";
+        document.getElementById("chatbox").style.bottom = "0";
     }
 };
