@@ -1,10 +1,15 @@
 import json
 import logging
 import math
+import re
 import time
 import uuid
 
 import tornado.websocket
+
+
+def strip_tags(data):
+    return re.compile(r'<[^<]*?>').sub('', data)
 
 class CommHandler(tornado.websocket.WebSocketHandler):
     scenes = {}
@@ -18,6 +23,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.sp_position = 0
         self.guid = None
 
+        self.chat_name = ""
         self.sent_ping = False
         self.last_update = 0
 
@@ -101,6 +107,14 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             if data.startswith("/"):
                 return self._handle_command(data[1:])
             print "Chat: %s" % data
+
+            # Strip tags
+            data = strip_tags(data)
+
+            # Put in the chat name
+            if self.chat_name:
+                data = '<span>%s</span>%s' % (self.chat_name, data)
+
             CommHandler.notify_scene(self.scene,
                                      "cha%s:%s" % (self.guid, data),
                                      except_=self)
@@ -115,7 +129,13 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         if not self.scene:
             return
 
-        if message == "spawn":
+        if message.startswith("identify "):
+            chat_name = message.strip().split()[-1]
+            chat_name = strip_tags(chat_name)
+            if chat_name:
+                self.chat_name = chat_name
+            self.write_message("chagod:/Got it, thanks")
+        elif message == "spawn":
             CommHandler.spawn_object(self.scene,
                                      uuid.uuid4().hex,
                                      {"x": 25,
