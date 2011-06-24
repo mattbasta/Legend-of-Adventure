@@ -5,6 +5,7 @@ from threading import Timer
 import uuid
 
 import internals.constants as constants
+from markov import MarkovBot
 
 
 messages = ["Adventure....away!!!",
@@ -21,6 +22,10 @@ class NPC(object):
         self.image = image_data
         self.id = uuid.uuid4().hex
 
+        self.chatbot = MarkovBot()
+        self.chattering = False
+        self.last_chat = ""
+
     def set_timer(self):
         self.timer = Timer(self._unexpected_time(), self.event)
         self.timer.start()
@@ -29,16 +34,33 @@ class NPC(object):
         return random.randint(10, 20)
 
     def event(self):
-        from internals.comm import CommHandler
         message = random.choice(messages)
-        message = "<span>Stranger:</span> %s" % message
+        self._write_chat(message)
+        self.set_timer()
 
+    def _write_chat(self, message):
+        from internals.comm import CommHandler
+        message = "<span>Stranger:</span> %s" % message
         if self.scene in CommHandler.scenes:
             for client in CommHandler.scenes[self.scene]:
                 if self.within_range(client.position[0], client.position[1]):
                     client.write_message("chanpc\n%s" % message)
 
-        self.set_timer()
+    def feed_chat(self, chat, client):
+        """Find out how we should be responding to users."""
+        if self.within_range(client.position[0], client.position[1]):
+            # Stop auto-pinging if we're set to.
+            if not self.chattering:
+                self.chattering = True
+                self.timer.cancel()
+            response = self.chatbot.respond(chat)
+            self._write_chat(response)
+            print "Chatting: %s" % response
+
+        # Train the markov bot with new phrases.
+        if self.last_chat:
+            self.chatbot.addRespond(self.last_chat, chat)
+        self.last_chat = chat
 
     def within_range(self, x, y):
         radius = 10

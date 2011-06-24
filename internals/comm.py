@@ -105,6 +105,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             if not self.guid or self.scene is None:
                 return
             data = message[3:]
+            original_data = data
             if data.startswith("/"):
                 return self._handle_command(data[1:])
             print "Chat: %s" % data
@@ -119,6 +120,10 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             CommHandler.notify_scene(self.scene,
                                      "cha%s\n%s" % (self.guid, data),
                                      except_=self)
+
+            if self.scene in CommHandler.npcs:
+                for npc in CommHandler.npcs[self.scene]:
+                    npc.feed_chat(original_data, self)
             return
 
         self.write_message("pin");
