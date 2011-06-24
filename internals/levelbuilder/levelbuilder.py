@@ -15,8 +15,12 @@ def build_region(x, y, height, width):
     return tileset, map
 
 
-def perlin_refined(x, y, height=100, width=100):
+def perlin_refined(x, y, height=0, width=0):
     """Build a raw numeric map based on perlin noise."""
+    if height == 0:
+        height = constants.level_height
+    if width == 0:
+        width = constants.level_width
     freq = 16.0
     octave = 1
     return [[int(_perlin(x, y)) for x in range(height)] for y in range(width)]

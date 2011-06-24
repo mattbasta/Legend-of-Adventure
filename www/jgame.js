@@ -9,7 +9,7 @@ function guid() {return S4()+S4()+S4()+S4();}
 function createImage(id, url) {
     if(jgame.images[id]) {
         // Refresh the tileset when requested, but not anything else.
-        if(id == "tileset")
+        if(id == "tileset" && url != jgame.images["tileset"].attributes[0].value)
             delete jgame.images[id];
         else
             if(jgame.images_loaded == jgame.images_added)
@@ -242,6 +242,7 @@ var jgutils = {
                     follower = jgame.follow_avatar == avatar;
                 var xpos = av.x + x,
                     ypos = av.y - 65 + y;
+                /*
                 if(xpos < -75 || ypos < -100 || xpos > jgame.offset.w || ypos > jgame.offset.h) {
                     if(!canv.jg_hidden) {
                         canv.style.display = "none";
@@ -254,6 +255,7 @@ var jgutils = {
                         canv.jg_hidden = false;
                     }
                 }
+                */
                 if(follower && movefollow_x || !follower)
                     canv.style.left = xpos + "px";
                 if(follower && movefollow_y || !follower)
@@ -293,10 +295,14 @@ var jgutils = {
             jgutils.timing.start();
 
         },
-        load : function(x, y) {
-
+        load : function(x, y, av_x, av_y) {
             // Remove everything level-specific
             jgutils.timing.stop();
+            for(var av in jgutils.avatars.registry)
+                if(av != "local")
+                    jgutils.avatars.unregister(av);
+            if(jgame.follow_avatar != "local")
+                jgame.follow_avatar = "local";
 
             loadutils.start_task(
                 "level_init",
@@ -312,7 +318,7 @@ var jgutils = {
             // Load in the new level
             $.getJSON(
                 'level/',
-                { x : x, y : y },
+                { x : x, y : y, avx : av_x ? av_x : null, avy : av_y ? av_y : null },
                 function(data) {
                     jgame['level'] = data;
 
@@ -441,6 +447,12 @@ var jgutils = {
         local_id : guid(),
         registrar : null,
         init : function() {
+            if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
+                loadutils.complete_task("comm");
+                if(jgutils.comm.registrar)
+                    jgutils.comm.registrar();
+                return;
+            }
             jgutils.comm.socket = new WebSocket("ws://" + document.domain + ":" + (window.location.href.split(":")[2]) + "socket");
             jgutils.comm.socket.onopen = function(message) {
                 jgutils.comm.socket.onmessage = jgutils.comm.handle_message;
@@ -744,6 +756,23 @@ var jgutils = {
                     }
                 }
                 jgutils.level.setCenterPosition();
+
+                function begin_swap_region(x, y, avx, avy) {
+                    avx = Math.floor(avx);
+                    avy = Math.floor(avy);
+                    jgutils.level.load(x, y, avx, avy);
+                }
+                if(_y < 0 && avatar.y < jgame.tilesize / 2)
+                    begin_swap_region(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y * -1);
+                else if(_y > 0 && avatar.y > (jgame.level.h - 0.5) * jgame.tilesize)
+                    begin_swap_region(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y * -1);
+                else if(_x < 0 && avatar.x < jgame.tilesize / 2)
+                    begin_swap_region(jgame.level.x - 1, jgame.level.y, avatar.x * -1, avatar.y);
+                else if(_x > 0 && avatar.x > (jgame.level.w - 0.5) * jgame.tilesize)
+                    begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x * -1, avatar.y);
+
+
+
             } else if(avatar.direction[0] || avatar.direction[1]) {
                 avatar.position = get_avatar_sprite_direction(avatar.direction)[0].position;
                 // So it doesn't make sense to reset the avatar's direction,

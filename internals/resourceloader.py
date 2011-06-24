@@ -1,6 +1,7 @@
 import cherrypy
 import json
 
+import constants
 from levelbuilder.levelbuilder import build_region
 from levelbuilder.finishing import rounding
 
@@ -18,7 +19,7 @@ class Loader():
         # TODO: Generate the region if it doesn't already automatically exist.
 
         # TODO: Return the level data.
-        tileset, region = build_region(x, y, 50, 50)
+        tileset, region = build_region(x, y, constants.level_width, constants.level_height)
         region = rounding(region, tileset)
 
         return region
