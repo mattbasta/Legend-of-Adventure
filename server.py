@@ -10,6 +10,7 @@ import internals.resourceloader as resourceloader
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
+port = 8080
 
 class LOAHandler(tornado.web.RequestHandler):
     """Server of the main page."""
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     if os.path.exists(config_path):
         with open(config_path) as config_file:
             local_settings = json.loads(config_file.read())
+    port = local_settings["port"]
     application.listen(local_settings["port"])
     tornado.ioloop.IOLoop.instance().start()
 

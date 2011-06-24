@@ -82,6 +82,7 @@ var jgutils = {
 
         // Setup the jgame instance
         window.jgame = {
+            port : 80,
             fps : 30,
             cdn : 0,
             images : {},
@@ -320,6 +321,7 @@ var jgutils = {
                 'level/',
                 { x : x, y : y, avx : av_x ? av_x : null, avy : av_y ? av_y : null },
                 function(data) {
+                    jgame['port'] = data.port;
                     jgame['level'] = data;
 
                     var avatars = jgutils.avatars;
@@ -453,7 +455,7 @@ var jgutils = {
                     jgutils.comm.registrar();
                 return;
             }
-            jgutils.comm.socket = new WebSocket("ws://" + document.domain + ":" + (window.location.href.split(":")[2]) + "socket");
+            jgutils.comm.socket = new WebSocket("ws://" + document.domain + ":" + jgame.port + "/socket");
             jgutils.comm.socket.onopen = function(message) {
                 jgutils.comm.socket.onmessage = jgutils.comm.handle_message;
                 jgutils.comm.send("reg", jgutils.comm.local_id);
