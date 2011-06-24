@@ -1,4 +1,3 @@
-import cherrypy
 import json
 
 import constants
@@ -9,7 +8,6 @@ from levelbuilder.finishing import rounding
 class Loader():
     """This is a class to load resources that may be required by the game."""
 
-    @cherrypy.expose
     def level(self, x, y):
         """Load a region to be played."""
 
