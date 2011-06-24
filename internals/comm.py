@@ -79,7 +79,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
                 self.write_message("errInvalid update")
                 return
 
-            if self.position:
+            if self.position and False:
                 x2 = x - self.position[0]
                 y2 = y - self.position[1]
                 dist = math.sqrt(x2 * x2 + y2 * y2)
@@ -117,7 +117,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
                 data = '<span>%s</span>%s' % (self.chat_name, data)
 
             CommHandler.notify_scene(self.scene,
-                                     "cha%s:%s" % (self.guid, data),
+                                     "cha%s\n%s" % (self.guid, data),
                                      except_=self)
             return
 
@@ -135,20 +135,9 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             chat_name = strip_tags(chat_name)
             if chat_name:
                 self.chat_name = chat_name
-            self.write_message("chagod:/Got it, thanks")
+            self.write_message("chagod\n/Got it, thanks")
         elif message == "spawn":
-            CommHandler.spawn_object(self.scene,
-                                     {"x": 25,
-                                      "y": 25,
-                                      "movement": {"type": "static"},
-                                      "image": {"type": "static",
-                                                "image": "npc",
-                                                "sprite": {"x": 32,
-                                                           "y": 0,
-                                                           "awidth": 65,
-                                                           "aheight": 65,
-                                                           "swidth": 32,
-                                                           "sheight": 32}}})
+            CommHandler.spawn_object(self.scene)
 
     def _register(self, guid):
         if guid in ("local", ):
@@ -177,15 +166,17 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.position = (av_x, av_y)
         CommHandler.add_client(self.scene, self)
 
-    @classmethod
-    def spawn_object(cls, scene, object):
-        if "layer" not in object:
-            object["layer"] = "inactive"
+        if self.scene in CommHandler.npcs:
+            for npc in CommHandler.npcs[self.scene]:
+                self.write_message("spa%s\n%s" % (npc.id, str(npc)))
 
+    @classmethod
+    def spawn_object(cls, scene, layer="inactive"):
         npc = NPC(scene,
                   (25, 25),
                   {"type": "static",
                    "image": "npc",
+                   "layer": layer,
                    "sprite": {
                        "x": 32,
                        "y": 0,

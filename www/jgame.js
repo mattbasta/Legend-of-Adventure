@@ -509,7 +509,7 @@ var jgutils = {
                     jgutils.avatars.draw(data[0]);
                     break;
                 case "cha": // Chat message
-                    chatutils.handleMessage(body.split(":")[1]);
+                    chatutils.handleMessage(body.split("\n")[1]);
                     break;
                 case "spa": // Spawn object
                     var data = body.split("\n");
