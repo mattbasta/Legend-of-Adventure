@@ -63,6 +63,12 @@ application = tornado.web.Application([
 ], **settings)
 
 if __name__ == "__main__":
-    application.listen(8080)
+    config_path = os.path.join(os.path.dirname(__file__),
+                               "config.conf")
+    local_settings = {"port": 8080}
+    if os.path.exists(config_path):
+        with open(config_path) as config_file:
+            local_settings = json.loads(config_file.read())
+    application.listen(local_settings["port"])
     tornado.ioloop.IOLoop.instance().start()
 
