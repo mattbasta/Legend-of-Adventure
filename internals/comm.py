@@ -1,11 +1,11 @@
-import json
 import logging
 import math
 import re
 import time
-import uuid
 
 import tornado.websocket
+
+from internals.objects.npc import NPC
 
 
 def strip_tags(data):
@@ -13,6 +13,7 @@ def strip_tags(data):
 
 class CommHandler(tornado.websocket.WebSocketHandler):
     scenes = {}
+    npcs = {}
 
     def open(self):
         # Send welcome message
@@ -137,7 +138,6 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             self.write_message("chagod:/Got it, thanks")
         elif message == "spawn":
             CommHandler.spawn_object(self.scene,
-                                     uuid.uuid4().hex,
                                      {"x": 25,
                                       "y": 25,
                                       "movement": {"type": "static"},
@@ -178,12 +178,26 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         CommHandler.add_client(self.scene, self)
 
     @classmethod
-    def spawn_object(cls, scene, id, object):
-        if not isinstance(object, dict):
-            object = json.loads(object)
+    def spawn_object(cls, scene, object):
         if "layer" not in object:
             object["layer"] = "inactive"
-        cls.notify_scene(scene, "spa%s\n%s" % (id, json.dumps(object)))
+
+        npc = NPC(scene,
+                  (25, 25),
+                  {"type": "static",
+                   "image": "npc",
+                   "sprite": {
+                       "x": 32,
+                       "y": 0,
+                       "awidth": 65,
+                       "aheight": 65,
+                       "swidth": 32,
+                       "sheight": 32}})
+
+        if scene not in cls.npcs:
+            cls.npcs[scene] = set()
+        cls.npcs[scene].add(npc)
+        cls.notify_scene(scene, "spa%s\n%s" % (npc.id, str(npc)))
 
     @classmethod
     def add_client(cls, scene, client):
