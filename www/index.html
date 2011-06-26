@@ -30,9 +30,16 @@ body {background:#222 url(/static/images/ajax-loader.gif) no-repeat center cente
     height:100%;
     width:100%;
 }
-#object_wrapper { z-index:15; }
-#bg_tile_wrap { z-index:5; }
-#bg_tile { position:absolute; }
+#object_wrapper {z-index:15;}
+#bg_tile_wrap {z-index:5;}
+#bg_tile {display:none;}
+#bg_tile_full {
+    position:absolute;
+    top:0;
+    left:0;
+    height:100%;
+    width:100%;
+}
 #chatbox {
     position:absolute;
     bottom:0;
@@ -88,9 +95,8 @@ CFInstall.check({
     </div>
     <div id="inventory"></div>
     <div id="bg_tile_wrap">
-        <canvas id="bg_tile">
-            <p>Oh dear, it looks like you're running a browser that's going to suck at life. Try not using Internet Explorer. Or AOL. Neither of those.</p>
-        </canvas>
+        <canvas id="bg_tile_full"></canvas>
+        <canvas id="bg_tile"></canvas>
     </div>
     <div id="object_wrapper">
         <div id="object_container" style="position:absolute;"></div>

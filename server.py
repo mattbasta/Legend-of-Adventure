@@ -50,7 +50,8 @@ class LevelHandler(tornado.web.RequestHandler):
                             "image": "static/images/avatar.png"},
                  "images": {"npc": "static/images/npc.png"},
                  "tileset": "default.png",
-                 "level": resourceloader.Loader().level(x, y)}
+                 "level": resourceloader.Loader().level(x, y),
+                 "port": port}
 
         self.set_header("Content-Type", "application/json");
         self.write(json.dumps(level))

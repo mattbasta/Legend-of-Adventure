@@ -111,7 +111,8 @@ var jgutils = {
                 w : document.body.offsetWidth,
                 h : document.body.offsetHeight
             },
-            tilesize : 50
+            tilesize : 50,
+            terrain_canvas : null
         };
 
         jgutils.avatars.register(
@@ -154,6 +155,7 @@ var jgutils = {
             window.jgame.offset.h = document.body.offsetHeight;
 
             // Update the scene to make sure everything is onscreen.
+            jgutils.level.update();
             jgutils.level.setCenterPosition(true);
         });
     },
@@ -293,6 +295,7 @@ var jgutils = {
 
             // Start everything back up
             jgutils.drawing.init();
+            jgutils.level.setCenterPosition(true);
             jgutils.timing.start();
 
         },
@@ -324,10 +327,10 @@ var jgutils = {
                     jgame['port'] = data.port;
                     jgame['level'] = data;
 
-                    var avatars = jgutils.avatars;
-                    avatars.setTilePosition("local", data.avatar.x, data.avatar.y, true);
+                    var avatar = jgutils.avatars.get("local");
+                    avatar.x = data.avatar.x * jgame.tilesize;
+                    avatar.y = data.avatar.y * jgame.tilesize;
 
-                    var avatar = avatars.get("local");
                     if(avatar.image != data.avatar.image) {
                         jgame.images['avatar'] = null;
                         createImage('avatar', data.avatar.image);
@@ -340,20 +343,27 @@ var jgutils = {
                     createImage("tileset", tileset_url);
                     loadutils.complete_task("load");
 
+                    jgutils.comm.init();
                     jgutils.comm.register(data["x"], data["y"], data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
                 }
             );
-
-            jgutils.comm.init();
         },
         update : function() {
-            var bgt = document.getElementById('bg_tile');
+            var bgt_buffer = document.getElementById('bg_tile_full'),
+                bgt = document.getElementById('bg_tile');
             var dtile_h;
             var level_h = jgame.level.h * jgame.tilesize,
                 level_w = jgame.level.w * jgame.tilesize;
 
-            bgt.height = level_h;
-            bgt.width = level_w;
+            var bgh_c = bgt.height != level_h,
+                bgw_c = bgt.width != level_w;
+            if(bgw_c || bgh_c) {
+                bgt.height = level_h;
+                bgt.width = level_w;
+                jgutils.drawing.redrawBackground();
+            }
+            bgt_buffer.height = jgame.offset.h;
+            bgt_buffer.width = jgame.offset.w;
 
             if(jgame.offset.h > level_h)
                 jgame.offset.y = Math.floor(jgame.offset.h / 2 - level_h / 2) * -1;
@@ -426,14 +436,21 @@ var jgutils = {
                 n_y = jgame.offset.y * -1;
 
             var obj_cont = document.getElementById('object_container');
-            var bg_tile = document.getElementById('bg_tile');
+            var bg_tile = document.getElementById('bg_tile_full'),
+                c = bg_tile.getContext("2d");
+
+            c.drawImage(jgame.terrain_canvas,
+                        jgame.offset.x, jgame.offset.y,
+                        bg_tile.clientWidth, bg_tile.clientHeight,
+                        0, 0,
+                        bg_tile.clientWidth, bg_tile.clientHeight);
 
             if(!moveavatar_x || resize) {
-                bg_tile.style.left = n_x + 'px';
+                //bg_tile.style.left = n_x + 'px';
                 obj_cont.style.left = n_x + 'px';
             }
             if(!moveavatar_y || resize) {
-                bg_tile.style.top = n_y + 'px';
+                //bg_tile.style.top = n_y + 'px';
                 obj_cont.style.top = n_y + 'px';
             }
 
@@ -631,8 +648,8 @@ var jgutils = {
         init : function() {jgutils.drawing.redrawBackground();},
         forceRecenter : function() {jgutils.level.setCenterPosition(true);},
         redrawBackground : function() {
-            var c = document.getElementById('bg_tile').getContext('2d');
-            var image;
+            var bg_tile = document.getElementById('bg_tile'),
+                c = bg_tile.getContext('2d');
             var c_levlev = jgame.level.level,
                 c_tilesize = jgame.tilesize,
                 c_tileset = jgame.images["tileset"],
@@ -656,6 +673,7 @@ var jgutils = {
                 }
                 yy += c_tilesize;
             }
+            jgame.terrain_canvas = bg_tile;
         }
     },
     timing : {
