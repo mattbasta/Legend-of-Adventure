@@ -9,7 +9,8 @@ from internals.objects.npc import NPC
 
 
 def strip_tags(data):
-    return re.compile(r'<[^<]*?>').sub('', data)
+    data = re.compile(r'<[^<]*?>').sub('', data)
+    return data.replace("<", "&lt;").replace(">", "&gt;")
 
 class CommHandler(tornado.websocket.WebSocketHandler):
     scenes = {}
