@@ -57,7 +57,9 @@ class LevelHandler(tornado.web.RequestHandler):
         self.write(json.dumps(level))
 
 
-settings = {"static_path": os.path.join(current_dir, "www")}
+settings = {
+        "static_path": os.path.join(current_dir, "www"),
+        "auto_reload": True}
 application = tornado.web.Application([
     (r"/", LOAHandler),
     (r"/level/", LevelHandler),

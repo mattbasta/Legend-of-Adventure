@@ -16,9 +16,8 @@ class CommHandler(tornado.websocket.WebSocketHandler):
     scenes = {}
     npcs = {}
 
-    def open(self):
-        # Send welcome message
-        self.write_message("elo");
+    def __init__(self, application, request, **kwargs):
+        super(CommHandler, self).__init__(application, request)
 
         # Define variables to store state information.
         self.scene = None
@@ -28,6 +27,10 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.chat_name = ""
         self.sent_ping = False
         self.last_update = 0
+
+    def open(self):
+        # Send welcome message
+        self.write_message("elo");
 
     def on_close(self):
         if self.scene:
@@ -57,12 +60,15 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             if not self.guid or self.scene is None:
                 return
             # If there is no change in position, skip this update.
-            spos = int(message[3:])
-            if self.sp_position == spos:
+            spos, x_dir, y_dir = map(int, message[3:].split(":"))
+            if not (-1 <= x_dir <= 1 or -1 <= y_dir <= 1):
+                self.write_message("errBad Direction")
                 return
-            CommHandler.notify_scene(self.scene,
-                                     "dir%s:%s" % (self.guid, message[3:]),
-                                     except_=self)
+            # TODO : This should have some sort of throttling.
+            CommHandler.notify_scene(
+                    self.scene,
+                    "dir%s:%d:%d:%d" % (self.guid, spos, x_dir, y_dir),
+                    except_=self)
             self.sp_position = spos
             return
         elif message.startswith("ups"):
