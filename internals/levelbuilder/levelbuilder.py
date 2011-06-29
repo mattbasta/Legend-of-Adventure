@@ -23,7 +23,13 @@ def perlin_refined(x, y, height=0, width=0):
         width = constants.level_width
     freq = 16.0
     octave = 1
-    return [[int(_perlin(x, y)) for x in range(height)] for y in range(width)]
+
+    x *= width
+    y *= height
+
+    return [[int(_perlin(x_grid, y_grid, 5) + 3) for
+             x_grid in range(x, x + width)] for
+            y_grid in range(y, y + height)]
 
 
 def _perlin(x, y, amplitude=10):
