@@ -177,18 +177,18 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             avx = constants.level_width / 2
         else:
             avx = int(avx) / constants.tilesize
-            if avx < 0:
+            if avx < 2:
                 avx = constants.level_width - 1
-            elif avx > constants.level_width:
+            elif avx > constants.level_width - 2:
                 avx = 0
 
         if avy == -1:
             avy = constants.level_height / 2
         else:
             avy = int(avy) / constants.tilesize
-            if avy < 0:
+            if avy < 2:
                 avy = constants.level_height - 1
-            elif avy > constants.level_height:
+            elif avy > constants.level_height - 2:
                 avy = 0
 
         self.location = resourceloader.Location("o:%d:%d" % (x, y))

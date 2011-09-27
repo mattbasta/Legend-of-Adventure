@@ -816,13 +816,13 @@ var jgutils = {
                     jgutils.level.load(x, y, avx, avy);
                 }
                 if(_y < 0 && avatar.y < jgame.tilesize / 2)
-                    begin_swap_region(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y * -1);
+                    begin_swap_region(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y);
                 else if(_y > 0 && avatar.y > (jgame.level.h - 0.5) * jgame.tilesize)
-                    begin_swap_region(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y * -1);
+                    begin_swap_region(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y);
                 else if(_x < 0 && avatar.x < jgame.tilesize / 2)
-                    begin_swap_region(jgame.level.x - 1, jgame.level.y, avatar.x * -1, avatar.y);
+                    begin_swap_region(jgame.level.x - 1, jgame.level.y, avatar.x, avatar.y);
                 else if(_x > 0 && avatar.x > (jgame.level.w - 0.5) * jgame.tilesize)
-                    begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x * -1, avatar.y);
+                    begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
 
             } else if(avatar.direction[0] || avatar.direction[1]) {
                 avatar.position = get_avatar_sprite_direction(avatar.direction)[0].position;
