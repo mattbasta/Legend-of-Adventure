@@ -6,6 +6,9 @@ function S4() {return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
 // Simplified GUID function
 function guid() {return S4()+S4()+S4()+S4();}
 
+if(typeof WebSocket == "undefined" && MozWebSocket)
+    WebSocket = MozWebSocket;
+
 function createImage(id, url) {
     if(jgame.images[id]) {
         // Refresh the tileset when requested, but not anything else.
