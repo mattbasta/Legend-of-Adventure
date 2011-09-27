@@ -1,3 +1,4 @@
+import json
 import logging
 import math
 import re
@@ -5,7 +6,13 @@ import time
 
 import tornado.websocket
 
+import internals.constants as constants
 from internals.objects.npc import NPC
+import internals.resourceloader as resourceloader
+
+
+REQUIRE_GUID = ("pos", "dir", "ups", "cha", )
+REQUIRE_SCENE = ("dir", "ups", "cha", )
 
 
 def strip_tags(data):
@@ -23,6 +30,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.scene = None
         self.sp_position = 0
         self.guid = None
+        self.location = None
 
         self.chat_name = ""
         self.sent_ping = False
@@ -46,96 +54,93 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             return
         print "Server message: [%s]" % message
 
-        if message.startswith("reg"):
-            # REG : Client registration
-            self._register(message[3:])
+        callbacks = {"reg": self._register,
+                     "pos": self._load_level,
+                     "cha": self._on_chat,
+                     "ups": self._on_position_update,
+                     "dir": self._on_velocity_update}
+
+        m_type = message[:3]
+
+        # Filter out bad requests.
+        if m_type in REQUIRE_GUID and not self.guid:
+            self.write_message("errNot Registered")
             return
-        elif message.startswith("pos"):
-            if not self.guid:
-                return
-            # POS : Client position data
-            self._position(message[3:])
-            return
-        elif message.startswith("dir"):
-            if not self.guid or self.scene is None:
-                return
-            # If there is no change in position, skip this update.
-            spos, x_dir, y_dir = map(int, message[3:].split(":"))
-            if not (-1 <= x_dir <= 1 or -1 <= y_dir <= 1):
-                self.write_message("errBad Direction")
-                return
-            # TODO : This should have some sort of throttling.
-            CommHandler.notify_scene(
-                    self.scene,
-                    "dir%s:%d:%d:%d" % (self.guid, spos, x_dir, y_dir),
-                    except_=self)
-            self.sp_position = spos
-            return
-        elif message.startswith("ups"):
-            if not self.guid:
-                self.write_message("errNot registered")
-                return
-            if self.scene is None:
-                self.write_message("errNo scene registered")
-                return
-
-            x, y, spos = 0, 0, 0
-            try:
-                x, y, spos = map(int, message[3:].split(":"))
-            except:
-                self.write_message("errInvalid update")
-                return
-
-            if self.position and False:
-                x2 = x - self.position[0]
-                y2 = y - self.position[1]
-                dist = math.sqrt(x2 * x2 + y2 * y2)
-                # TODO: This should take into account the time of last update.
-                if dist > 200:
-                    self.write_message("errMoving too fast")
-                    return
-
-            # Perform the global position update before broadcasting in case
-            # we're getting update spammed.
-            self.position = (x, y)
-            self.sp_position = spos
-
-            now = time.time() * 1000
-            if now - self.last_update < 100:
-                return
-            self.last_update = now
-
-            CommHandler.notify_scene(self.scene,
-                    "upa%s:%d:%d:%d" % (self.guid, x, y, spos), except_=self)
-            return
-        elif message.startswith("cha"):
-            if not self.guid or self.scene is None:
-                return
-            data = message[3:]
-            original_data = data
-            if data.startswith("/"):
-                return self._handle_command(data[1:])
-            print "Chat: %s" % data
-
-            # Strip tags
-            data = strip_tags(data)
-
-            # Put in the chat name
-            if self.chat_name:
-                data = '<span>%s</span>%s' % (self.chat_name, data)
-
-            CommHandler.notify_scene(self.scene,
-                                     "cha%s\n%s" % (self.guid, data),
-                                     except_=self)
-
-            if self.scene in CommHandler.npcs:
-                for npc in CommHandler.npcs[self.scene]:
-                    npc.feed_chat(original_data, self)
+        if m_type in REQUIRE_SCENE and self.scene is None:
+            self.write_message("errNo registered scene")
             return
 
-        self.write_message("pin");
-        self.sent_ping = True
-        pass
+        # Do the fast callbacks.
+        if m_type in callbacks:
+            callbacks[m_type](message[3:])
+            return
+        else:
+            self.write_message("errUnknown Command")
+
+    def _on_velocity_update(self, data):
+        # If there is no change in position, skip this update.
+        spos, x_dir, y_dir = map(int, data.split(":"))
+        if not (-1 <= x_dir <= 1 or -1 <= y_dir <= 1):
+            self.write_message("errBad Direction")
+            return
+        # TODO : This should have some sort of throttling.
+        CommHandler.notify_scene(
+                self.scene,
+                "dir%s:%d:%d:%d" % (self.guid, spos, x_dir, y_dir),
+                except_=self)
+        self.sp_position = spos
+
+    def _on_position_update(self, data):
+        x, y, spos = 0, 0, 0
+        try:
+            x, y, spos = map(int, data.split(":"))
+        except ValueError:
+            self.write_message("errInvalid Position")
+            return
+
+        if self.position and False:
+            x2 = x - self.position[0]
+            y2 = y - self.position[1]
+            dist = math.sqrt(x2 * x2 + y2 * y2)
+            # TODO: This should take into account the time of last update.
+            if dist > 200:
+                self.write_message("errMoving too fast")
+                return
+
+        # Perform the global position update before broadcasting in case
+        # we're getting update spammed.
+        self.position = (x, y)
+        self.sp_position = spos
+
+        now = time.time() * 1000
+        if now - self.last_update < 100:
+            return
+        self.last_update = now
+
+        CommHandler.notify_scene(self.scene,
+                                 "upa%s:%d:%d:%d" % (self.guid, x, y, spos),
+                                 except_=self)
+
+    def _on_chat(self, data):
+        original_data = data
+        if data.startswith("/"):
+            return self._handle_command(data[1:])
+        print "Chat: %s" % data
+
+        # Strip tags
+        data = strip_tags(data)
+
+        # Put in the chat name
+        if self.chat_name:
+            data = '<span>%s</span>%s' % (self.chat_name, data)
+
+        CommHandler.notify_scene(self.scene,
+                                 "cha%s\n%s" % (self.guid, data),
+                                 except_=self)
+
+        if self.scene in CommHandler.npcs:
+            for npc in CommHandler.npcs[self.scene]:
+                npc.feed_chat(original_data, self)
 
     def _handle_command(self, message):
         """Handle an admin message through chat."""
@@ -151,31 +156,63 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         elif message == "spawn":
             CommHandler.spawn_object(self.scene)
 
-    def _register(self, guid):
-        if guid in ("local", ):
+    def _register(self, data):
+        if data in ("local", ):
             self.write_message("errBad GUID")
             return
-        self.guid = guid
+        self.guid = data
+        # TODO: Once database access is available, this should pull the player
+        # location from the database.
+        return self._load_level("%d:%d:%d:%d" % (0, 0, -1, -1))
 
-    def _position(self, data):
-        """Register the user position in the world."""
-        x, y, av_x, av_y = 0, 0, 0, 0
+    def _load_level(self, data):
+        x, y, avx, avy = 0, 0, 0, 0
         try:
-            x, y, av_x, av_y = map(int, data.split(":"))
+            x, y, avx, avy = map(int, data.split(":"))
         except ValueError:
             self.write_message("errInvalid registration")
             self.close()
             return
 
-        # TODO: Check that the user can register with this scene at the
-        # position that they're requesting.
+        if avx == -1:
+            avx = constants.level_width / 2
+        else:
+            avx = int(avx) / constants.tilesize
+            if avx < 0:
+                avx = constants.level_width - 1
+            elif avx > constants.level_width:
+                avx = 0
 
-        # Unregister previous scene.
+        if avy == -1:
+            avy = constants.level_height / 2
+        else:
+            avy = int(avy) / constants.tilesize
+            if avy < 0:
+                avy = constants.level_height - 1
+            elif avy > constants.level_height:
+                avy = 0
+
+        self.location = resourceloader.Location("o:%d:%d" % (x, y))
+        level = {"x": x,
+                 "y": y,
+                 "w": constants.level_width,
+                 "h": constants.level_height,
+                 "def_tile": 0,
+                 "avatar": {"x": avx, "y": avy,
+                            "image": "static/images/avatar.png"},
+                 "images": {"npc": "static/images/npc.png"},
+                 "tileset": "default.png",
+                 "level": self.location.render(),
+                 "port": constants.port}
+
+        self.write_message("lev%s" % json.dumps(level))
+
+        # Unregister us from the previous scene.
         if self.scene is not None:
             CommHandler.del_client(self.scene, self)
 
         self.scene = (x, y)
-        self.position = (av_x, av_y)
+        self.position = (avx, avy)
         CommHandler.add_client(self.scene, self)
 
         if self.scene in CommHandler.npcs:

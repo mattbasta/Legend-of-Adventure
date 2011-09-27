@@ -10,7 +10,6 @@ import internals.resourceloader as resourceloader
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-port = 8080
 
 class LOAHandler(tornado.web.RequestHandler):
     """Server of the main page."""
@@ -41,6 +40,7 @@ class LevelHandler(tornado.web.RequestHandler):
             if avy < 0:
                 avy += constants.level_height
 
+        loader = resourceloader.Location("o:%d:%d" % (x, y))
         level = {"x": x,
                  "y": y,
                  "w": constants.level_width,
@@ -50,8 +50,8 @@ class LevelHandler(tornado.web.RequestHandler):
                             "image": "static/images/avatar.png"},
                  "images": {"npc": "static/images/npc.png"},
                  "tileset": "default.png",
-                 "level": resourceloader.Loader().level(x, y),
-                 "port": port}
+                 "level": loader.render(),
+                 "port": contsants.port}
 
         self.set_header("Content-Type", "application/json");
         self.write(json.dumps(level))
@@ -62,7 +62,6 @@ settings = {
         "auto_reload": True}
 application = tornado.web.Application([
     (r"/", LOAHandler),
-    (r"/level/", LevelHandler),
     (r"/socket", internals.comm.CommHandler),
 ], **settings)
 

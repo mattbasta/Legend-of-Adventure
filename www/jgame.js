@@ -82,7 +82,7 @@ var jgutils = {
 
         // Setup the jgame instance
         window.jgame = {
-            port : 80,
+            port : 8080,
             fps : 30,
             cdn : 0,
             avatar_details : {
@@ -115,7 +115,8 @@ var jgutils = {
                 h : document.body.offsetHeight
             },
             tilesize : 50,
-            terrain_canvas : null
+            terrain_canvas : null,
+            location_id : ""
         };
 
         jgutils.avatars.register(
@@ -323,10 +324,9 @@ var jgutils = {
             // ESC for chat
             jgutils.keys.addBinding(27, chatutils.stopChat, true);
 
-            // Load in the new level
-            $.getJSON(
-                'level/',
-                { x : x, y : y, avx : av_x ? av_x : null, avy : av_y ? av_y : null },
+            jgutils.comm.init();
+            jgutils.comm.register(
+                x + ":" + y + ":" + av_x + ":" + av_y,
                 function(data) {
                     jgame['port'] = data.port;
                     jgame['level'] = data;
@@ -347,8 +347,6 @@ var jgutils = {
                     createImage("tileset", tileset_url);
                     loadutils.complete_task("load");
 
-                    jgutils.comm.init();
-                    jgutils.comm.register(data["x"], data["y"], data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
                 }
             );
         },
@@ -467,8 +465,9 @@ var jgutils = {
     },
     comm : {
         socket : null,
-        local_id : guid(),
+        local_id : "",
         registrar : null,
+        _level_callback : null,
         init : function() {
             if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
                 loadutils.complete_task("comm");
@@ -479,7 +478,6 @@ var jgutils = {
             jgutils.comm.socket = new WebSocket("ws://" + document.domain + ":" + jgame.port + "/socket");
             jgutils.comm.socket.onopen = function(message) {
                 jgutils.comm.socket.onmessage = jgutils.comm.handle_message;
-                jgutils.comm.send("reg", jgutils.comm.local_id);
                 loadutils.complete_task("comm");
                 if(jgutils.comm.registrar)
                     jgutils.comm.registrar();
@@ -489,9 +487,6 @@ var jgutils = {
             console.log("Server message: [" + message.data + "]");
             body = message.data.substr(3);
             switch(message.data.substr(0, 3)) {
-                case "pin": // Ping!
-                    jgutils.comm.send("pon", "");
-                    break;
                 case "add": // Add avatar
                     var data = body.split(":");
                     jgutils.avatars.register(
@@ -545,16 +540,25 @@ var jgutils = {
                         jdata["layer"]
                     );
                     break;
+                case "lev":
+                    jgutils.comm._level_callback(JSON.parse(body))
+                    break;
                 case "err":
                     if(!!window.console) {
                         console.log("Error: " + body);
                     }
             }
         },
-        register : function(x, y, avatar_x, avatar_y) {
+        register : function(position, callback) {
             var r = function() {
-                jgutils.comm.send("pos", x + ":" + y + ":" + avatar_x + ":" + avatar_y);
-                loadutils.complete_task("comm_reg");
+                jgutils.comm._level_callback = function(data) {
+                    loadutils.complete_task("comm_reg");
+                    callback(data);
+                };
+                if(jgutils.comm.local_id)
+                    jgutils.comm.send("lev", position);
+                else
+                    jgutils.comm.send("reg", jgutils.comm.local_id = guid());
             };
             if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
                 r();

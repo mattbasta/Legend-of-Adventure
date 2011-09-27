@@ -1,7 +1,9 @@
 import noise
 import internals.caching as cache
 import internals.constants as constants
+import internals.levelbuilder.finishing as finishing
 import internals.levelbuilder.tilesets.field
+import internals.levelbuilder.towns as towns
 
 
 REGIONS = {"field": internals.levelbuilder.tilesets.field.TILESET}
@@ -9,9 +11,11 @@ REGIONS = {"field": internals.levelbuilder.tilesets.field.TILESET}
 def build_region(x, y, height, width):
     """Generates a region based on the region type and coordinates."""
     region = "field"
-
-    map = perlin_refined(x, y, height, width)
     tileset = REGIONS[region]
+
+    map = perlin_refined(x, y, height, width)  # Build the terrain.
+    map = finishing.rounding(map, tileset)  # Perform corner smoothing.
+
     return tileset, map
 
 
