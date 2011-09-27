@@ -55,7 +55,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         print "Server message: [%s]" % message
 
         callbacks = {"reg": self._register,
-                     "pos": self._load_level,
+                     "lev": self._load_level,
                      "cha": self._on_chat,
                      "ups": self._on_position_update,
                      "dir": self._on_velocity_update}
@@ -170,8 +170,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         try:
             x, y, avx, avy = map(int, data.split(":"))
         except ValueError:
-            self.write_message("errInvalid registration")
-            self.close()
+            self.write_message("errInvalid level id")
             return
 
         if avx == -1:

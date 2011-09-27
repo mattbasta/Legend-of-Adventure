@@ -554,6 +554,7 @@ var jgutils = {
                 jgutils.comm._level_callback = function(data) {
                     loadutils.complete_task("comm_reg");
                     callback(data);
+                    jgutils.comm._level_callback = null;
                 };
                 if(jgutils.comm.local_id)
                     jgutils.comm.send("lev", position);
