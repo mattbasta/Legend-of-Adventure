@@ -33,7 +33,6 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.location = None
 
         self.chat_name = ""
-        self.sent_ping = False
         self.last_update = 0
 
     def open(self):
@@ -45,13 +44,6 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             CommHandler.del_client(self.scene, self)
 
     def on_message(self, message):
-        if message == "pon":
-            if not self.sent_ping:
-                print "Invalid pong"
-            else:
-                print "Got Pong!"
-            self.sent_ping = False
-            return
         print "Server message: [%s]" % message
 
         callbacks = {"reg": self._register,
@@ -191,20 +183,10 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             elif avy > constants.level_height - 2:
                 avy = 0
 
+        # Create the location
         self.location = resourceloader.Location("o:%d:%d" % (x, y))
-        level = {"x": x,
-                 "y": y,
-                 "w": constants.level_width,
-                 "h": constants.level_height,
-                 "def_tile": 0,
-                 "avatar": {"x": avx, "y": avy,
-                            "image": "static/images/avatar.png"},
-                 "images": {"npc": "static/images/npc.png"},
-                 "tileset": "default.png",
-                 "level": self.location.render(),
-                 "port": constants.port}
-
-        self.write_message("lev%s" % json.dumps(level))
+        self.write_message(
+                "lev%s" % json.dumps(self.location.render(avx, avy)))
 
         # Unregister us from the previous scene.
         if self.scene is not None:

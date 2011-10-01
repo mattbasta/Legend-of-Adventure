@@ -6,7 +6,7 @@ function S4() {return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
 // Simplified GUID function
 function guid() {return S4()+S4()+S4()+S4();}
 
-if(typeof WebSocket == "undefined" && MozWebSocket)
+if(typeof WebSocket == "undefined" && typeof MozWebSocket != "undefined")
     WebSocket = MozWebSocket;
 
 function createImage(id, url) {
@@ -58,14 +58,13 @@ var jgutils = {
                         if(typeof kb == 'function')
                             kb();
                         else
-                            for(var i=0; i<jgame.keys.bindings[e.keyCode].length; i++)
+                            for(var i=0, keys = jgame.keys.bindings[e.keyCode].length; i < keys; i++)
                                 return (jgame.keys.bindings[e.keyCode][i])();
                     }
             }
 
         });
         $(document).keyup(function(e) {
-
             switch(e.keyCode) {
                 case 37:
                     jgame.keys.left = false;
@@ -80,7 +79,6 @@ var jgutils = {
                     jgame.keys.down = false;
                     break;
             }
-
         });
 
         // Setup the jgame instance
@@ -157,9 +155,8 @@ var jgutils = {
 
         // Make sure it stays in sync.
         $(window).resize(function(){
-
-            window.jgame.offset.w = document.body.offsetWidth;
-            window.jgame.offset.h = document.body.offsetHeight;
+            jgame.offset.w = document.body.offsetWidth;
+            jgame.offset.h = document.body.offsetHeight;
 
             // Update the scene to make sure everything is onscreen.
             jgutils.level.update();
@@ -174,6 +171,52 @@ var jgutils = {
             callback(true);
         }
     },
+    hitmapping : {
+        generate_x : function(map, x, y_orig) { // All hitmapes are assumed to be one tile space in size.
+            var ts = jgame.tilesize,
+                x = ((x / ts) | 0),
+                y = ((y_orig / ts) | 0),
+                y2 = (((y_orig - 1) / ts)|0) + 1;
+            //console.log("RM X: " + x + ", " + y + ", " + y2);
+            var x_min = 0, x_max = map[y].length * ts;
+            for(var i = x - 1; i >= 0; i--) {
+                if(map[y][i] || map[y2][i]) {
+                    x_min = (i + 1) * ts;
+                    break;
+                }
+            }
+            for(var i = x + 1, rowlen = map[y].length; i < rowlen; i++) {
+                if(map[y][i] || map[y2][i]) {
+                    x_max = i * ts;
+                    break;
+                }
+            }
+            //console.log("(result_translated): " + (x_min / jgame.tilesize) + ", " + (x_max / jgame.tilesize));
+            return [x_min, x_max];
+        },
+        generate_y : function(map, x_orig, y) {
+            var ts = jgame.tilesize,
+                x = (x_orig / ts) | 0,
+                x2 = (((x_orig - 1) / ts) | 0) + 1,
+                y = ((y / ts) - 1) | 0;
+            //console.log("RM Y: " + x + ", " + y);
+            var y_min = 0, y_max = map.length * jgame.tilesize;
+            for(var i = y; i >= 0; i--) {
+                if(map[i][x] || map[i][x2]) {
+                    y_min = (i + 2) * ts;
+                    break;
+                }
+            }
+            for(var i = y + 1, maplen = map.length; i < maplen; i++) {
+                if(map[i][x] || map[i][x2]) {
+                    y_max = (i + 1) * ts;
+                    break;
+                }
+            }
+            //console.log("(result_translated): " + (y_min / jgame.tilesize) + ", " + (y_max / jgame.tilesize));
+            return [y_min, y_max];
+        }
+    },
     avatars : {
         avatar_offsets : {x: 0, y: 0},
         registry : {},
@@ -182,16 +225,18 @@ var jgutils = {
                 properties.dirty = true;
             if(!properties.position)
                 properties.position = properties.sprite.down[0].position;
+            if(!properties.hitmap)
+                properties.hitmap = [0, Infinity, Infinity, 0]; // TODO: precalculate this on the fly.
             jgutils.avatars.registry[id] = properties;
 
             // Create the canvas
             var canv = document.createElement("canvas");
             canv.id = "avatar_" + id;
-            canv.width = 65;
-            canv.height = 65;
+            canv.width = jgame.avatar.w;
+            canv.height = jgame.avatar.h;
             canv.style.position = "absolute";
-            canv.style.left = (properties.x - jgame.offset.x) + "px";
-            canv.style.top = (properties.y - jgame.offset.y) + "px";
+            canv.style.left = ((properties.x - jgame.offset.x) | 0) + "px";
+            canv.style.top = ((properties.y - jgame.offset.y) | 0) + "px";
 
             canv.jg_hidden = false;
 
@@ -224,12 +269,12 @@ var jgutils = {
                 if(!(av.image in jgame.images))
                     return;
                 var context = document.getElementById('avatar_' + avatar).getContext('2d');
-                context.clearRect(0, 0, 65, 65);
+                context.clearRect(0, 0, jgame.avatar.w, jgame.avatar.h);
                 context.drawImage(jgame.images[av.image],
-                                  (av.position % 3) * 32, Math.floor(av.position / 3) * 32,
+                                  (av.position % 3) * 32, ((av.position / 3) | 0) * 32,
                                   32, 32,
                                   0, 0,
-                                  65, 65);
+                                  jgame.avatar.w, jgame.avatar.h);
             }
             if(typeof id != "undefined")
                 return _draw(id);
@@ -252,7 +297,7 @@ var jgutils = {
                     canv = av["canvas"],
                     follower = jgame.follow_avatar == avatar;
                 var xpos = av.x + x,
-                    ypos = av.y - 65 + y;
+                    ypos = av.y - jgame.avatar.h + y;
                 /*
                 if(xpos < -75 || ypos < -100 || xpos > jgame.offset.w || ypos > jgame.offset.h) {
                     if(!canv.jg_hidden) {
@@ -268,9 +313,9 @@ var jgutils = {
                 }
                 */
                 if(follower && movefollow_x || !follower)
-                    canv.style.left = xpos + "px";
+                    canv.style.left = (xpos | 0) + "px";
                 if(follower && movefollow_y || !follower)
-                    canv.style.top = ypos + "px";
+                    canv.style.top = (ypos | 0) + "px";
                 canv.style.zIndex = ypos;
             }
         }
@@ -371,10 +416,10 @@ var jgutils = {
             bgt_buffer.width = jgame.offset.w;
 
             if(jgame.offset.h > level_h)
-                jgame.offset.y = Math.floor(jgame.offset.h / 2 - level_h / 2) * -1;
+                jgame.offset.y = ((jgame.offset.h / 2 - level_h / 2) | 0) * -1;
 
             if(jgame.offset.w > level_w)
-                jgame.offset.x = Math.floor(jgame.offset.w / 2 - level_w / 2) * -1;
+                jgame.offset.x = ((jgame.offset.w / 2 - level_w / 2) | 0) * -1;
 
         },
         // Centers the screen around an avatar
@@ -410,10 +455,10 @@ var jgutils = {
                     moveavatar_x = false;
                 }
 
-                jgame.offset.x = Math.floor(jgame.offset.x);
+                jgame.offset.x = jgame.offset.x | 0;
 
             } else if(resize)
-                jgame.offset.x = Math.floor(c_offsetw / 2 - c_levelw * c_tilesize / 2) * -1;
+                jgame.offset.x = ((c_offsetw / 2 - c_levelw * c_tilesize / 2) | 0) * -1;
 
 
             if(c_levelh * c_tilesize > c_offseth) { // The scene isn't narrower than the canvas
@@ -431,7 +476,7 @@ var jgutils = {
                     moveavatar_y = false;
                 }
 
-                jgame.offset.y = Math.floor(jgame.offset.y);
+                jgame.offset.y = jgame.offset.y | 0;
 
             } else if(resize)
                 jgame.offset.y = Math.floor(c_offseth / 2 - c_levelh * c_tilesize / 2) * -1;
@@ -452,11 +497,11 @@ var jgutils = {
 
             if(!moveavatar_x || resize) {
                 //bg_tile.style.left = n_x + 'px';
-                obj_cont.style.left = n_x + 'px';
+                obj_cont.style.left = (n_x | 0) + 'px';
             }
             if(!moveavatar_y || resize) {
                 //bg_tile.style.top = n_y + 'px';
-                obj_cont.style.top = n_y + 'px';
+                obj_cont.style.top = (n_y | 0) + 'px';
             }
 
             jgutils.avatars.setAvatarOffset(n_x, n_y)
@@ -694,7 +739,7 @@ var jgutils = {
                                 16, 16,
                                 xx, yy,
                                 c_tilesize, c_tilesize)
-
+                    //c.fillText(x + "," + y, xx, yy);
                     xx += c_tilesize;
                 }
                 yy += c_tilesize;
@@ -774,12 +819,71 @@ var jgutils = {
             function update_direction() {
                 jgutils.comm.send("dir", avatar.position + ":" + direction[0] + ":" + direction[1]);
             }
-            if(_x || _y) {
-                // Prevent the avatar from moving at speeds > _val
-                var adjusted_direction = adjust_diagonal(direction);
 
-                avatar.x += adjusted_direction[0] * _val;
-                avatar.y += adjusted_direction[1] * _val;
+            var player_moving = _x || _y,
+                // Prevent the avatar from moving at speeds > _val
+                adjusted_direction = adjust_diagonal(direction),
+                // Calculate the distance that the player has tried to move.
+                adjusted_increment_x = adjusted_direction[0] * _val,
+                adjusted_increment_y = adjusted_direction[1] * _val;
+
+            if(player_moving) {
+                // Perform hit mapping against the terrain.
+                var hitmap = avatar.hitmap;
+                if(_x) {
+                    // Are we hitting the right hitmap?
+                    if(_x > 0 && avatar.x + adjusted_increment_x + jgame.avatar.w > hitmap[1])
+                        adjusted_increment_x = hitmap[1] - avatar.x - jgame.avatar.w;
+                    // What about the left hitmap?
+                    else if(_x < 0 && avatar.x + adjusted_increment_x < hitmap[3])
+                        adjusted_increment_x = hitmap[3] - avatar.x;
+
+                    // Mark that we aren't moving if we've adjusted the hitmap not to move.
+                    if(!adjusted_increment_x)  // Perhaps faster to have it out here? IDK.
+                        _x = 0;
+                }
+
+                if(_y) {
+                    // Are we hitting the bottom hitmap?
+                    if(_y > 0 && avatar.y + adjusted_increment_y + jgame.avatar.h > hitmap[2])
+                        adjusted_increment_y = hitmap[2] - avatar.y - jgame.avatar.h;
+                    // What about the top hitmap?
+                    else if(_y < 0 && avatar.y + adjusted_increment_y < hitmap[0])
+                        adjusted_increment_y = hitmap[0] - avatar.y;
+
+                    if(!adjusted_increment_y)
+                        _y = 0;
+                }
+
+                // Recompute whether the player is actually moving. Useful for when we're backed
+                // into a corner or something; this will make the player stop walking. :)
+                player_moving = _x || _y;
+            }
+
+            if(player_moving) {
+                // Perform all the fun calculations.
+                var adjusted_x = avatar.x + adjusted_increment_x,
+                    adjusted_y = avatar.y + adjusted_increment_y;
+
+                function update_y_hitmap() {
+                    var y_hitmap = jgutils.hitmapping.generate_y(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
+                    avatar.hitmap[0] = y_hitmap[0];
+                    avatar.hitmap[2] = y_hitmap[1] + 15;
+                }
+                function update_x_hitmap() {
+                    var x_hitmap = jgutils.hitmapping.generate_x(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
+                    avatar.hitmap[1] = x_hitmap[1] + 7.5;
+                    avatar.hitmap[3] = x_hitmap[0] - 7.5;
+                }
+
+                // Update the location of the avatar.
+                avatar.x = adjusted_x;
+                avatar.y = adjusted_y;
+
+                if(_x)
+                    update_y_hitmap();
+                if(_y)
+                    update_x_hitmap();
 
                 var sprite_direction = get_avatar_sprite_direction(direction)
                 if(direction[0] != avatar.direction[0] || direction[1] != avatar.direction[1]) {
@@ -973,6 +1077,7 @@ var chatutils = {
         chatutils._tb.value = "";
         chatutils._tb.style.display = "none";
         document.getElementById("chatbox").style.bottom = "0";
+        document.focus();
     }
 };
 

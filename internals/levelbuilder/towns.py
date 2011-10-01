@@ -10,19 +10,33 @@ def get_building_tiles(building):
     Open a tiles file, parse the contents, and output the building entity.
     """
 
-    output = []
+    def read_building(f):
+        output = []
+        for line in f:
+            line = line.strip()
+            row = []
+            for tile in line.split():
+                row.append(int(tile))
+            output.append(row)
+        return output
+
     with open(os.path.join(os.path.dirname(__file__),
                            "buildings/",
                            "%s.tiles" % building)) as building_file:
 
-        for line in building_file:
-            line = line.strip()
-            row = []
-            for tile in line.split(" "):
-                row.append(int(tile))
-            output.append(row)
+        output = read_building(building_file)
 
-    return (len(output[0]), len(output), output)
+    hitmap_file = os.path.join(os.path.dirname(__file__),
+                               "buildings/",
+                               "%s.hitmap" % building)
+    if os.path.exists(hitmap_file):
+        with open(hitmap_file) as hitmap_file:
+            hitmap = read_building(hitmap_file)
+    else:
+        hitmap = [[0 for i in range(len(output[j]))] for
+                  j in range(len(output))]
+
+    return (len(output[0]), len(output), output, hitmap, )
 
 
 BUILDINGS = ("plaza", "well", "town_hall", "church", "clock", "library",
@@ -33,18 +47,19 @@ REPEATABLE_BUILDINGS = ("shop", "house", )
 ROAD_WIDTH = 4
 
 
-def overlay(grid, building, x, y):
+def overlay(grid, hitmap, building, x, y):
     """Place a building on the tile grid."""
 
-    width, height, bt = building
+    width, height, bt, hm = building
     for row_num in range(height):
         for tile in range(width):
             grid[y + row_num][x + tile] = bt[row_num][tile]
+            hitmap[y + row_num][x + tile] = hm[row_num][tile]
 
-    return grid
+    return grid, hitmap
 
 
-def build_town(grid, seed=0):
+def build_town(grid, hitmap, seed=0):
     """Run the town building algorithm on a tile grid."""
 
     available_buildings = list(BUILDINGS)
@@ -61,7 +76,7 @@ def build_town(grid, seed=0):
     town_boundaries = [center_y, center_x + center_entity[0],
                        center_y + center_entity[1], center_x]
 
-    grid = overlay(grid, center_entity, center_x, center_y)
+    overlay(grid, hitmap, center_entity, center_x, center_y)
 
     available_buildings.remove(center)
 
@@ -110,13 +125,12 @@ def build_town(grid, seed=0):
                 building_entity = BUILDING_ENTITIES[building]
 
                 # Determine the building's offset from the spiral's position.
-                building_w, building_h, temp = building_entity
+                building_w, building_h, temp, temp2 = building_entity
                 offset_x, offset_y = direction_defs[direction]
                 offset_x *= building_w
                 offset_y *= building_h
 
-                grid = overlay(grid, building_entity,
-                               x + offset_x, y + offset_y)
+                overlay(grid, hitmap, building_entity, x + offset_x, y + offset_y)
 
                 if direction == 0:
                     y += building_h
@@ -156,6 +170,6 @@ def build_town(grid, seed=0):
 
     ##########################
 
-    return grid
+    return grid, hitmap
 
 

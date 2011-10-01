@@ -42,19 +42,31 @@ class Location():
         random.seed(self.coords[0] * 1001 + self.coords[1] * 2 + 1)
         return random.randint(0, 5)
 
-    def render(self):
-        """Load a region to be played."""
+    def render(self, avx, avy):
+        """Load a level to be played."""
 
-        # TODO: Ensure that the user can access the region from their current
+        # TODO: Ensure that the user can access the level from their current
         # position.
 
-        # TODO: Generate the region if it doesn't already automatically exist.
+        # TODO: Generate the level if it doesn't already automatically exist.
 
-        tileset, region = build_region(self.coords[0], self.coords[1],
-                                       constants.level_width, constants.level_height)
+        tileset, level = build_region(self.coords[0], self.coords[1],
+                                      constants.level_width, constants.level_height)
+        hitmap = [[0 for x in range(constants.level_width)] for y in range(constants.level_height)]
         if self.is_town():
             # Already seeded by is_town method.
-            region = towns.build_town(region)  # Add buildings if there is a town.
+            level, hitmap = towns.build_town(level, hitmap)  # Add buildings if there is a town.
 
-        return region
+        return {"x": self.coords[0],
+                 "y": self.coords[1],
+                 "w": constants.level_width,
+                 "h": constants.level_height,
+                 "def_tile": 0,
+                 "avatar": {"x": avx, "y": avy,
+                            "image": "static/images/avatar.png"},
+                 "images": {"npc": "static/images/npc.png"},
+                 "tileset": "default.png",
+                 "level": level,
+                 "hitmap": hitmap,
+                 "port": constants.port}
 
