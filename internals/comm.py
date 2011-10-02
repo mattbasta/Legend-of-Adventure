@@ -28,7 +28,6 @@ class CommHandler(tornado.websocket.WebSocketHandler):
 
         # Define variables to store state information.
         self.scene = None
-        self.sp_position = 0
         self.guid = None
         self.location = None
 
@@ -49,8 +48,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         callbacks = {"reg": self._register,
                      "lev": self._load_level,
                      "cha": self._on_chat,
-                     "ups": self._on_position_update,
-                     "dir": self._on_velocity_update}
+                     "loc": self._on_position_update,}
 
         m_type = message[:3]
 
@@ -69,25 +67,22 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         else:
             self.write_message("errUnknown Command")
 
-    def _on_velocity_update(self, data):
-        # If there is no change in position, skip this update.
-        spos, x_dir, y_dir = map(int, data.split(":"))
+    def _on_position_update(self, data):
+        x, y, x_dir, y_dir = 0, 0, 0, 0
+        try:
+            x, y, x_dir, y_dir = map(int, map(float, data.split(":")))
+        except ValueError:
+            raise
+            self.write_message("errInvalid Position")
+            return
+
         if not (-1 <= x_dir <= 1 or -1 <= y_dir <= 1):
             self.write_message("errBad Direction")
             return
-        # TODO : This should have some sort of throttling.
-        CommHandler.notify_scene(
-                self.scene,
-                "dir%s:%d:%d:%d" % (self.guid, spos, x_dir, y_dir),
-                except_=self)
-        self.sp_position = spos
 
-    def _on_position_update(self, data):
-        x, y, spos = 0, 0, 0
-        try:
-            x, y, spos = map(int, data.split(":"))
-        except ValueError:
-            self.write_message("errInvalid Position")
+        if (x < 0 or x > constants.level_width * constants.tilesize or
+            y < 0 or y > constants.level_height * constants.tilesize):
+            self.write_message("errBad Position")
             return
 
         if self.position and False:
@@ -102,15 +97,15 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         # Perform the global position update before broadcasting in case
         # we're getting update spammed.
         self.position = (x, y)
-        self.sp_position = spos
 
         now = time.time() * 1000
-        if now - self.last_update < 100:
+        if now - self.last_update < 5:
             return
         self.last_update = now
 
         CommHandler.notify_scene(self.scene,
-                                 "upa%s:%d:%d:%d" % (self.guid, x, y, spos),
+                                 "loc%s:%d:%d:%d:%d" % (self.guid,
+                                                        x, y, x_dir, y_dir),
                                  except_=self)
 
     def _on_chat(self, data):

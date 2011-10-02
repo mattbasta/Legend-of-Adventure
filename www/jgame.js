@@ -99,7 +99,29 @@ var jgutils = {
                 y : 0,
                 h : 65,
                 w : 65,
-                state : 0
+                state : 0,
+                sprite: {
+                    left : [
+                        {position:4, duration:7},
+                        {position:5, duration:7},
+                        {position:3, duration:7}
+                    ],
+                    right : [
+                        {position:7, duration:7},
+                        {position:8, duration:7},
+                        {position:6, duration:7}
+                    ],
+                    up : [
+                        {position:10, duration:7},
+                        {position:11, duration:7},
+                        {position:9, duration:7}
+                    ],
+                    down : [
+                        {position:1, duration:7},
+                        {position:2, duration:7},
+                        {position:0, duration:7}
+                    ]
+                }
             },
             follow_avatar : "local",
             keys : {
@@ -126,29 +148,7 @@ var jgutils = {
                 image: "avatar",
                 x:0,
                 y:0,
-                facing: "down",
-                sprite: {
-                    left : [
-                        {position:4, duration:7},
-                        {position:5, duration:7},
-                        {position:3, duration:7}
-                    ],
-                    right : [
-                        {position:7, duration:7},
-                        {position:8, duration:7},
-                        {position:6, duration:7}
-                    ],
-                    up : [
-                        {position:10, duration:7},
-                        {position:11, duration:7},
-                        {position:9, duration:7}
-                    ],
-                    down : [
-                        {position:1, duration:7},
-                        {position:2, duration:7},
-                        {position:0, duration:7}
-                    ]
-                }
+                facing: "down"
             },
             true // No Draw
         );
@@ -224,7 +224,7 @@ var jgutils = {
             if(!properties.dirty)
                 properties.dirty = true;
             if(!properties.position)
-                properties.position = properties.sprite.down[0].position;
+                properties.position = jgame.avatar.sprite.down[0].position;
             if(!properties.hitmap)
                 properties.hitmap = [0, Infinity, Infinity, 0]; // TODO: precalculate this on the fly.
             jgutils.avatars.registry[id] = properties;
@@ -281,6 +281,16 @@ var jgutils = {
             for(var avatar in jgutils.avatars.registry)
                 _draw(avatar);
 
+        },
+        get_avatar_sprite_direction : function(direction) {
+            if(direction[0] < 0)
+                return jgame.avatar.sprite.left;
+            else if(direction[0] > 0)
+                return jgame.avatar.sprite.right;
+            else if(direction[1] < 0)
+                return jgame.avatar.sprite.up;
+            else
+                return jgame.avatar.sprite.down;
         },
         setTilePosition : function(id, x, y, resize) {
             var avatar = jgutils.avatars.registry[id];
@@ -554,26 +564,31 @@ var jgutils = {
                 case "del": // Remove avatar
                     jgutils.avatars.unregister(body);
                     break;
-                case "upa": // Change avatar position and direction
+                case "loc": // Change avatar position and direction
                     var data = body.split(":");
                     var av = jgutils.avatars.registry[data[0]];
                     av.x = data[1] * 1;
                     av.y = data[2] * 1;
-                    var position = data[3];
-                    if(av.position != position) {
-                        av.position = position * 1;
-                        jgutils.avatars.draw(data[0]);
-                    }
+                    var new_direction = [data[3] * 1, data[4] * 1];
                     if(jgame.follow_avatar == data[0])
                         jgutils.level.setCenterPosition(true);
                     else
                         jgutils.avatars.reposition(false, false);
-                    break;
-                case "dir": // Change avatar direction
-                    var data = body.split(":");
-                    var av = jgutils.avatars.registry[data[0]];
-                    av.position = data[1] * 1;
-                    av.direction = [data[2] * 1, data[3] * 1];
+
+                    if((new_direction[0] == 0 && new_direction[1] == 0) && (av.direction[0] || av.direction[1])) {
+                        var sp_dir = jgutils.avatars.get_avatar_sprite_direction(av.direction);
+                        av.dirty = true;
+                        av.position = sp_dir[0].position;
+                        av.cycle_position = 0;
+                        av.sprite_cycle = 0;
+                    } else if(new_direction != av.direction) {
+                        av.dirty = true;
+                        var sp_dir = jgutils.avatars.get_avatar_sprite_direction(new_direction);
+                        av.position = sp_dir[1].position;
+                        av.cycle_position = 0;
+                        av.sprite_cycle = 0;
+                    }
+                    av.direction = new_direction;
                     jgutils.avatars.draw(data[0]);
                     break;
                 case "cha": // Chat message
@@ -795,18 +810,6 @@ var jgutils = {
             // This needs to be crafted before the diagonal magic happens.
             var direction = [_x, _y];
 
-            function get_avatar_sprite_direction(direction) {
-                _x = direction[0];
-                _y = direction[1];
-                if(_x < 0)
-                    return avatar.sprite.left;
-                else if(_x > 0)
-                    return avatar.sprite.right;
-                else if(_y < 0)
-                    return avatar.sprite.up;
-                else
-                    return avatar.sprite.down;
-            }
 
             function adjust_diagonal(direction) {
                 if(direction[0] && direction[1])
@@ -816,8 +819,8 @@ var jgutils = {
 
             var avatar = jgutils.avatars.registry["local"],
                 do_setcenter = false;
-            function update_direction() {
-                jgutils.comm.send("dir", avatar.position + ":" + direction[0] + ":" + direction[1]);
+            function update_location() {
+                jgutils.comm.send("loc", (avatar.x|0) + ":" + (avatar.y|0) + ":" + direction[0] + ":" + direction[1]);
             }
 
             var player_moving = _x || _y,
@@ -858,6 +861,7 @@ var jgutils = {
                 // Recompute whether the player is actually moving. Useful for when we're backed
                 // into a corner or something; this will make the player stop walking. :)
                 player_moving = _x || _y;
+                direction = [_x, _y];
             }
 
             if(player_moving) {
@@ -885,7 +889,7 @@ var jgutils = {
                 if(_y)
                     update_x_hitmap();
 
-                var sprite_direction = get_avatar_sprite_direction(direction)
+                var sprite_direction = jgutils.avatars.get_avatar_sprite_direction(direction)
                 if(direction[0] != avatar.direction[0] || direction[1] != avatar.direction[1]) {
                     avatar.dirty = true;
                     avatar.direction = direction;
@@ -893,23 +897,7 @@ var jgutils = {
                     avatar.cycle_position = 0;
                     avatar.sprite_cycle = 0;
                     jgutils.avatars.draw("local");
-                    var update_position = function() {
-                        jgutils.comm.send("ups", Math.round(avatar.x) + ":" + Math.round(avatar.y) + ":" + avatar.position);
-                    };
-                    jgutils.timing.every("update_position", update_position, 2.5);
-                    update_direction()
-                } else {
-                    // TODO : This needs to be converted to jgutils.timing.every.
-                    if(avatar.sprite_cycle++ == sprite_direction[avatar.cycle_position].duration) {
-                        avatar.dirty = true;
-                        avatar.sprite_cycle = 0;
-
-                        avatar.cycle_position = avatar.cycle_position + 1 == 3 ? 1 : 2;
-                        avatar.position = sprite_direction[avatar.cycle_position].position;
-
-                        jgutils.avatars.draw("local");
-                        update_direction();
-                    }
+                    update_location()
                 }
                 do_setcenter = true;
 
@@ -929,7 +917,7 @@ var jgutils = {
                     begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
 
             } else if(avatar.direction[0] || avatar.direction[1]) {
-                avatar.position = get_avatar_sprite_direction(avatar.direction)[0].position;
+                avatar.position = jgutils.avatars.get_avatar_sprite_direction(avatar.direction)[0].position;
                 // So it doesn't make sense to reset the avatar's direction,
                 // but it's more of a 'last known velocity' than anything.
                 avatar.direction = [0, 0];
@@ -937,24 +925,28 @@ var jgutils = {
                 avatar.cycle_position = 0;
                 avatar.dirty = true;
                 jgutils.avatars.draw("local");
-                if(jgutils.timing.registers && "update_position" in jgutils.timing.registers) {
-                    jgutils.timing.registers["update_position"].callback();
-                    jgutils.timing.unregister("update_position");
-                }
-                update_direction();
+                update_location();
             }
 
             var do_reposition_avs = false;
             for(var av in jgutils.avatars.registry) {
-                if(av == "local")
-                    continue;
                 var a = jgutils.avatars.registry[av];
                 if(a.direction[0] || a.direction[1]) {
-                    var adjusted_dir = adjust_diagonal(a.direction);
-                    a.x += adjusted_dir[0] * _val;
-                    a.y += adjusted_dir[1] * _val;
-                    do_reposition_avs = true;
+                    if(av != "local") {
+                        var adjusted_dir = adjust_diagonal(a.direction);
+                        a.x += adjusted_dir[0] * _val;
+                        a.y += adjusted_dir[1] * _val;
+                        do_reposition_avs = true;
+                    }
+                    var sp_dir = jgutils.avatars.get_avatar_sprite_direction(a.direction);
+                    if(a.sprite_cycle++ == sp_dir[avatar.cycle_position].duration) {
+                        a.dirty = true;
+                        a.sprite_cycle = 0;
+                        a.cycle_position = a.cycle_position + 1 == 3 ? 1 : 2;
+                        a.position = sp_dir[a.cycle_position].position;
 
+                        jgutils.avatars.draw(av);
+                    }
                 }
             }
             if(do_setcenter)
