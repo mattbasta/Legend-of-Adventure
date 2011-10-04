@@ -102,12 +102,8 @@ var jgutils = {
             images_loaded : 0,
             avatar : {
                 image : "avatar",
-                sprite : null,
-                x : 0,
-                y : 0,
                 h : 65,
                 w : 65,
-                state : 0,
                 sprite: {
                     left : [
                         {position:4, duration:7},
@@ -245,6 +241,7 @@ var jgutils = {
             canv.style.position = "absolute";
             canv.style.left = ((properties.x - jgame.offset.x) | 0) + "px";
             canv.style.top = ((properties.y - jgame.offset.y) | 0) + "px";
+            canv.style.zIndex = (properties.y - jgame.offset.y) | 0;
 
             canv.jg_hidden = false;
 

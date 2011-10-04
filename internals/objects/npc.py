@@ -5,6 +5,7 @@ from threading import Timer
 import uuid
 
 import internals.constants as constants
+from entity import Entity
 from markov import MarkovBot
 
 
@@ -12,7 +13,7 @@ messages = ["Adventure....away!!!",
             "Haldo!",
             "I can tell your fortune for only 5 cents!"]
 
-class NPC(object):
+class NPC(Entity):
     """A non-playable character."""
 
     def __init__(self, scene, position, image_data):

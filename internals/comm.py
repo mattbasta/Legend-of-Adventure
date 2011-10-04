@@ -4,6 +4,7 @@ import math
 import re
 import time
 
+import redis
 import tornado.websocket
 
 import internals.constants as constants
@@ -13,6 +14,14 @@ import internals.resourceloader as resourceloader
 
 REQUIRE_GUID = ("pos", "dir", "ups", "cha", )
 REQUIRE_SCENE = ("dir", "ups", "cha", )
+
+redis_host, redis_port = constants.redis.split(":")
+outbound_redis = redis.Redis(host=redis_host, port=int(redis_port))
+
+# This should get set by web_server.py
+brukva = None
+connections = []
+locations = {}
 
 
 def strip_tags(data):
@@ -27,7 +36,6 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         super(CommHandler, self).__init__(application, request)
 
         # Define variables to store state information.
-        self.scene = None
         self.guid = None
         self.location = None
 
@@ -35,12 +43,12 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.last_update = 0
 
     def open(self):
-        # Send welcome message
-        self.write_message("elo");
+        self.write_message("elo")
+        connections.append(self)
 
     def on_close(self):
-        if self.scene:
-            CommHandler.del_client(self.scene, self)
+        CommHandler.del_client(self)
+        connections.remove(self)
 
     def on_message(self, message):
         print "Server message: [%s]" % message
@@ -56,7 +64,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         if m_type in REQUIRE_GUID and not self.guid:
             self.write_message("errNot Registered")
             return
-        if m_type in REQUIRE_SCENE and self.scene is None:
+        if m_type in REQUIRE_SCENE and self.location is None:
             self.write_message("errNo registered scene")
             return
 
@@ -97,16 +105,17 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         # Perform the global position update before broadcasting in case
         # we're getting update spammed.
         self.position = (x, y)
+        outbound_redis.set("l:p:%s" % self.guid,
+                           "%s:%d:%d" % (self.guid, x, y))
 
         now = time.time() * 1000
         if now - self.last_update < 5:
             return
         self.last_update = now
 
-        CommHandler.notify_scene(self.scene,
-                                 "loc%s:%d:%d:%d:%d" % (self.guid,
-                                                        x, y, x_dir, y_dir),
-                                 except_=self)
+        self._notify_location(self.location,
+                              "loc%s:%d:%d:%d:%d" %
+                                  (self.guid, x, y, x_dir, y_dir))
 
     def _on_chat(self, data):
         original_data = data
@@ -121,17 +130,12 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         if self.chat_name:
             data = '<span>%s</span>%s' % (self.chat_name, data)
 
-        CommHandler.notify_scene(self.scene,
-                                 "cha%s\n%s" % (self.guid, data),
-                                 except_=self)
-
-        if self.scene in CommHandler.npcs:
-            for npc in CommHandler.npcs[self.scene]:
-                npc.feed_chat(original_data, self)
+        self._notify_location(self.location,
+                "cha%s:\n%s" % (self.guid, data))
 
     def _handle_command(self, message):
         """Handle an admin message through chat."""
-        if not self.scene:
+        if not self.location:
             return
 
         if message.startswith("identify "):
@@ -140,8 +144,6 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             if chat_name:
                 self.chat_name = chat_name
             self.write_message("chagod\n/Got it, thanks")
-        elif message == "spawn":
-            CommHandler.spawn_object(self.scene)
 
     def _register(self, data):
         if data in ("local", ):
@@ -178,72 +180,70 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             elif avy > constants.level_height - 2:
                 avy = 0
 
+        if self.location:
+            CommHandler.del_client(self)
+
         # Create the location
         self.location = resourceloader.Location("o:%d:%d" % (x, y))
         self.write_message(
                 "lev%s" % json.dumps(self.location.render(avx, avy)))
 
-        # Unregister us from the previous scene.
-        if self.scene is not None:
-            CommHandler.del_client(self.scene, self)
-
-        self.scene = (x, y)
         self.position = (avx, avy)
-        CommHandler.add_client(self.scene, self)
-
-        if self.scene in CommHandler.npcs:
-            for npc in CommHandler.npcs[self.scene]:
-                self.write_message("spa%s\n%s" % (npc.id, str(npc)))
+        CommHandler.add_client(self.location, self)
 
     @classmethod
-    def spawn_object(cls, scene, layer="inactive"):
-        npc = NPC(scene,
-                  (25, 25),
-                  {"type": "static",
-                   "image": "npc",
-                   "layer": layer,
-                   "sprite": {
-                       "x": 32,
-                       "y": 0,
-                       "awidth": 65,
-                       "aheight": 65,
-                       "swidth": 32,
-                       "sheight": 32}})
+    def add_client(cls, location, client):
+        loc_str = str(location)
+        x, y = client.position
 
-        if scene not in cls.npcs:
-            cls.npcs[scene] = set()
-        cls.npcs[scene].add(npc)
-        cls.notify_scene(scene, "spa%s\n%s" % (npc.id, str(npc)))
+        if loc_str not in locations:
+            locations[loc_str] = []
+        locations[loc_str].append(client)
 
-    @classmethod
-    def add_client(cls, scene, client):
-        if scene not in cls.scenes:
-            cls.scenes[scene] = set()
-        else:
-            cls.notify_scene(scene, "add%s" % ":".join(
-                map(str, (client.guid, client.position[0],
-                          client.position[1]))))
-            for c in cls.scenes[scene]:
-                client.write_message("add%s" % ":".join(
-                    map(str, (c.guid, c.position[0],
-                              c.position[1]))))
-        cls.scenes[scene].add(client)
+        # Subscribe to the location if we aren't subscribed already.
+        brukva.subscribe("location::%s" % loc_str)
+        # Let everyone know that we're here.
+        client._notify_global(
+                "enter",
+                "%s>%s:%d:%d" % (loc_str, client.guid, x, y))
+
+        client_set = "l:c:%s" % loc_str
+        for rclient in outbound_redis.smembers(client_set):
+            client_location = outbound_redis.get("l:p:%s" % rclient)
+            client.write_message("add%s" % client_location)
+        outbound_redis.sadd(client_set, client.guid)
+        outbound_redis.set("l:p:%s" % client.guid,
+                           "%s:%d:%d" % (client.guid, client.position[0],
+                                         client.position[1]))
 
     @classmethod
-    def del_client(cls, scene, client):
-        if scene in cls.scenes:
-            cls.scenes[scene].discard(client)
-            if cls.scenes[scene]:
-                cls.notify_scene(scene, "del%s" % client.guid)
-
-    @classmethod
-    def notify_scene(cls, scene, data, except_=None):
-        if scene not in cls.scenes:
+    def del_client(cls, client):
+        if not client.location or not client.guid:
             return
-        for client in cls.scenes[scene]:
-            if except_ == client:
-                continue
-            try:
-                client.write_message(data)
-            except:
-                logging.error("Error writing message", exc_info=True)
+
+        outbound_redis.srem("l:c:%s" % str(client.location), client.guid)
+        outbound_redis.delete("l:p:%s" % client.guid)
+        client._notify_location(client.location, "del%s" % client.guid)
+
+        loc_str = str(client.location)
+        locations[loc_str].remove(client)
+        if not locations[loc_str]:
+            del locations[loc_str]
+            brukva.unsubscribe("location::%s" % loc_str)
+
+    def _notify_location(self, location, data):
+        """
+        Broadcast a blob of data to all of the other listeners in a particular
+        location.
+        """
+        outbound_redis.publish("location::%s" % location,
+                               "%s>%s" % (location, data))
+
+    def _notify_global(self, data_type, data):
+        """
+        Broadcast a message to all nodes that are listening on the various
+        global channels. This should be used sparingly, as these messages reach
+        all of the entity server and all of the web server instances.
+        """
+        outbound_redis.publish("global::%s" % data_type, data)
+

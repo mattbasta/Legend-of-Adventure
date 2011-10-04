@@ -1,3 +1,5 @@
 noise==1.0b3
 tornado
 -e git://github.com/evilkost/brukva.git#egg=brukva
+hiredis
+redis
