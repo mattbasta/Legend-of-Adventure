@@ -81,6 +81,14 @@ var jgutils = {
             }
         });
 
+        var ci = $("#canvas_inventory");
+        ci.mouseleave(jgutils.inventory._unhover).mousemove(jgutils.inventory._hover);
+        // TODO: Move these into jgutils.inventory.
+        ci.mousedown(function() {jgutils.inventory.selected = true;
+                                 jgutils.inventory._redraw();});
+        ci.mouseup(function() {jgutils.inventory.selected = false;
+                               jgutils.inventory._redraw();});
+
         // Setup the jgame instance
         window.jgame = {
             port : 8080,
@@ -354,6 +362,7 @@ var jgutils = {
 
             // Get everything looking decent and positioned correctly
             jgutils.level.update();
+            jgutils.inventory._redraw();
             jgutils.avatars.draw();
 
             // Start everything back up
@@ -381,6 +390,9 @@ var jgutils = {
             jgutils.keys.addBinding(84, chatutils.startChat, false);
             // ESC for chat
             jgutils.keys.addBinding(27, chatutils.stopChat, true);
+
+            // Load images if we know where they are.
+            createImage("inventory", "/static/images/inventory.png");
 
             jgutils.comm.init();
             jgutils.comm.register(
@@ -519,6 +531,67 @@ var jgutils = {
                 moveavatar_x || resize,
                 moveavatar_y || resize
             );
+        }
+    },
+    inventory : {
+        slots : [null, null, null, null, null],
+        hovering : -1,
+        selected : false,
+        special : -1,
+        set : function(slot, item) {
+            jgutils.inventory.slots[slot] = item;
+            jgutils.inventory._redraw();
+        },
+        clear : function(slot) {
+            jgutils.inventory.slots[slot] = null;
+            jgutils.inventory._redraw();
+        },
+        _redraw : function() {
+            var inventory = document.getElementById("canvas_inventory"),
+                ctx = inventory.getContext("2d"),
+                ii = jgame.images["inventory"],
+                h = jgutils.inventory.hovering,
+                s = jgutils.inventory.special,
+                sel = jgutils.inventory.selected;
+            ctx.clearRect(0, 0, 374, 85);
+            for(var i = 0; i < 5; i++) {
+                if(i == 0) {
+                    var sx = 0;
+                    if(h == i)
+                        sx = sel ? 240 : 160;
+                    else if(s == i)
+                        sx = 80;
+                    ctx.drawImage(ii, sx, 0, 80, 80,
+                                  0, 0, 80, 80);
+                } else {
+                    var sx = 0;
+                    if(h == i)
+                        sx = sel ? 192 : 128;
+                    else if(s == i)
+                        sx = 64;
+                    ctx.drawImage(ii, sx + (i > 1 ? 32 : 0), 80, 16, 64,
+                                  26 + i * 64, 14, 16, 64);
+                    ctx.drawImage(ii, sx + (i < 4 ? 16 : 48), 80, 16, 64,
+                                  74 + i * 64, 14, 16, 64);
+                }
+            }
+        },
+        _hover : function(e) {
+            var oh = jgutils.inventory.hovering;
+            if(e.offsetX < 80) {
+                jgutils.inventory.hovering = 0;
+            } else if(e.offsetY > 14) {
+                jgutils.inventory.hovering = ((e.offsetX - 26) / 64) | 0;
+            } else {
+                jgutils.inventory.hovering = -1;
+            }
+            if(oh == jgutils.inventory.hovering)
+                return;
+            jgutils.inventory._redraw();
+        },
+        _unhover : function() {
+            jgutils.inventory.hovering = -1;
+            jgutils.inventory._redraw();
         }
     },
     comm : {

@@ -72,6 +72,12 @@ body {background:#222 url(/static/images/ajax-loader.gif) no-repeat center cente
 #talkbar.empty {
     color:#aaa;
 }
+#inventory {
+    z-index: 1000; /* Don't judge. */
+    position:fixed;
+    left:0;
+    bottom:0;
+}
 </style>
 </head>
 <body>
@@ -93,7 +99,9 @@ CFInstall.check({
         <p></p>
         <p></p>
     </div>
-    <div id="inventory"></div>
+    <div id="inventory">
+        <canvas id="canvas_inventory" width="374" height="85"></canvas>
+    </div>
     <div id="bg_tile_wrap">
         <canvas id="bg_tile_full"></canvas>
         <canvas id="bg_tile"></canvas>
