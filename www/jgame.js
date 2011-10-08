@@ -1134,15 +1134,14 @@ var chatutils = {
             return true;
         };
         chatutils.started = true;
-        document.getElementById("chatbox").style.bottom = "40px";
+        document.getElementById("chatbox").style.bottom = "130px";
         return false;
     },
     stopChat : function() {
         chatutils.started = false;
         chatutils._tb.value = "";
         chatutils._tb.style.display = "none";
-        document.getElementById("chatbox").style.bottom = "0";
-        document.focus();
+        document.getElementById("chatbox").style.bottom = "100px";
     }
 };
 
