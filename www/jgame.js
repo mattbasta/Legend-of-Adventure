@@ -391,9 +391,6 @@ var jgutils = {
             // ESC for chat
             jgutils.keys.addBinding(27, chatutils.stopChat, true);
 
-            // Load images if we know where they are.
-            createImage("inventory", "/static/images/inventory.png");
-
             jgutils.comm.init();
             jgutils.comm.register(
                 x + ":" + y + ":" + av_x + ":" + av_y,
@@ -415,6 +412,7 @@ var jgutils = {
                     var tileset_url = "/static/images/tilesets/" + data.tileset;// :
 //                                        'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
                     createImage("tileset", tileset_url);
+                    createImage("inventory", "/static/images/inventory.png");
                     loadutils.complete_task("load");
 
                 }
