@@ -576,10 +576,12 @@ var jgutils = {
         },
         _hover : function(e) {
             var oh = jgutils.inventory.hovering;
-            if(e.offsetX < 80) {
+            var x = e.offsetX ? e.offsetX : e.layerX,
+                y = e.offsetY ? e.offsetY : e.layerY;
+            if(x < 80) {
                 jgutils.inventory.hovering = 0;
-            } else if(e.offsetY > 14) {
-                jgutils.inventory.hovering = ((e.offsetX - 26) / 64) | 0;
+            } else if(y > 14) {
+                jgutils.inventory.hovering = ((x - 26) / 64) | 0;
             } else {
                 jgutils.inventory.hovering = -1;
             }
