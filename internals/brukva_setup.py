@@ -17,7 +17,6 @@ def setup_brukva(client):
         """
         Handle an inbound message for a location that we're subscribed to.
         """
-        print message
         guid = get_guid(message)
 
         if location in comm.locations:

@@ -7,7 +7,6 @@ import tornado.web
 
 import internals.comm
 import internals.constants as constants
-import internals.resourceloader as resourceloader
 import internals.brukva_setup as brukva_setup
 
 

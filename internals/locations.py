@@ -2,6 +2,7 @@ import json
 import random
 
 import constants
+import entities.all as entities
 from levelbuilder.levelbuilder import build_region
 import levelbuilder.towns as towns
 
@@ -46,6 +47,20 @@ class Location():
         random.seed(self.coords[0] * 1001 + self.coords[1] * 2 + 1)
         return random.randint(0, 5)
 
+    def has_entities(self):
+        return True
+
+    def get_entities_to_spawn(self):
+        """
+        Returns a list containing class types of entities that should be
+        spawned in this location when a player first visits it. The number and
+        type of each entity is representative of
+        """
+        if self.is_town():
+            return [entities.Trader, entities.Trader, entities.Child,
+                    entities.Child, entities.Child, entities.Bully]
+        return []
+
     def generate(self):
         """Generate the static terrain elements for a particular location."""
 
@@ -80,7 +95,10 @@ class Location():
                  "def_tile": 0,
                  "avatar": {"x": avx, "y": avy,
                             "image": "static/images/avatar.png"},
-                 "images": {"npc": "static/images/npc.png"},
+                 "images": {"npc": "static/images/npc.png",
+                            "child1": "static/images/child1.png",
+                            "child2": "static/images/child2.png",
+                            "bully": "static/images/bully.png"},
                  "tileset": "default.png",
                  "level": level,
                  "hitmap": hitmap,

@@ -11,3 +11,4 @@ tilesize = 50
 entity_despawn_time = 60 * 10
 
 MESSAGES_WITH_GUIDS = ("loc", "add", "del", "cha")
+PLAYER_RANGES = 3

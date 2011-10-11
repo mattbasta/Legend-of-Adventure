@@ -8,8 +8,7 @@ import redis
 import tornado.websocket
 
 import internals.constants as constants
-from internals.objects.npc import NPC
-import internals.resourceloader as resourceloader
+from internals.locations import Location
 
 
 REQUIRE_GUID = ("pos", "dir", "ups", "cha", )
@@ -29,8 +28,6 @@ def strip_tags(data):
     return data.replace("<", "&lt;").replace(">", "&gt;")
 
 class CommHandler(tornado.websocket.WebSocketHandler):
-    scenes = {}
-    npcs = {}
 
     def __init__(self, application, request, **kwargs):
         super(CommHandler, self).__init__(application, request)
@@ -184,7 +181,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             CommHandler.del_client(self)
 
         # Create the location
-        self.location = resourceloader.Location("o:%d:%d" % (x, y))
+        self.location = Location("o:%d:%d" % (x, y))
         self.write_message(
                 "lev%s" % json.dumps(self.location.render(avx, avy)))
 

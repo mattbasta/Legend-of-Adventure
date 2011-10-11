@@ -666,6 +666,8 @@ var jgutils = {
                     break;
                 case "spa": // Spawn object
                     var data = body.split("\n");
+                    if(data[0] in jgutils.objects.registry)
+                        break;
                     var jdata = JSON.parse(data[1]);
                     jgutils.objects.create(
                         data[0],
@@ -1025,18 +1027,18 @@ var jgutils = {
                 jgutils.avatars.reposition();
 
             // Update Objects
-            for(objid in objects.registry) {
-                var obj = objects.registry[objid];
+            var objects = jgutils.objects,
+                object_registry = jgutils.objects.registry;
+            for(objid in jgutils.objects.registry) {
+                var obj = object_registry[objid];
 
                 var mod_sec = (obj.mod_seconds ? obj.mod_seconds : 1000),
                     mod_dur = (obj.mod_duration ? obj.mod_duration : 1),
                     otick = ticks / mod_dur % mod_sec;
 
                 // Outsourced for easy update as well as setup.
-                var updated = objects.update(obj, otick, ticks, mod_sec);
-
-                if(updated)
-                    objects.layers[obj.registry_layer].updated = true;
+                if(jgutils.objects.update(obj, otick, ticks, mod_sec))
+                    jgutils.objects.layers[obj.registry_layer].updated = true;
             }
 
             // Redraw layers
@@ -1049,6 +1051,8 @@ var jgutils = {
                     for(co in layer.child_objects) {
                         var child = layer.child_objects[co],
                             li = child.last_image;
+                        if(!(li.image in jgame.images))
+                            continue
                         if("sprite" in child.last_image)
                             context.drawImage(jgame.images[li.image], li.sprite.x, li.sprite.y,
                                               li.sprite.swidth, li.sprite.sheight,
