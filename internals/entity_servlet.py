@@ -29,6 +29,7 @@ class LocationHandler(object):
         # Fork the process.
         self.pid = os.fork()
         if self.pid:  # The server daemon should continue on.
+            print "Forked process (%d)" % self.pid
             return
 
         redis_host, port = constants.redis.split(":")
@@ -67,7 +68,11 @@ class LocationHandler(object):
                 continue
 
             message = event["data"]
-            message_data = message.split(">", 1)[1]
+            location, message_data = message.split(">", 1)
+            if (event["channel"] == "global::enter" and
+                location == str(self.location)):
+                self.on_enter(message_data)
+                continue
 
             message_type, message_data = message_data[:3], message_data[3:]
             if (message_type in MESSAGES_TO_IGNORE or
