@@ -662,7 +662,15 @@ var jgutils = {
                     jgutils.avatars.draw(data[0]);
                     break;
                 case "cha": // Chat message
-                    chatutils.handleMessage(body.split("\n")[1]);
+                    var data = body.split("\n"),
+                        metadata = data[0].split(":");
+                    if(metadata.length > 1) {
+                        var av = jgutils.avatars.registry[jgame.follow_avatar],
+                            distance = Math.sqrt(Math.pow(av.x - metadata[1] * 1, 2) + Math.pow(av.y - metadata[2] * 1, 2)) / jgame.tilesize;
+                        if(distance > 12)
+                            break;
+                    }
+                    chatutils.handleMessage(data[1]);
                     break;
                 case "spa": // Spawn object
                     var data = body.split("\n");
