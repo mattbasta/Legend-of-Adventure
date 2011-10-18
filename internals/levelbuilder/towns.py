@@ -219,8 +219,6 @@ def build_town(grid, hitmap, seed=0):
 
                 building_count += 1
 
-            # TODO: Do road generation here.
-
             if direction == 0:
                 fill_road(grid, old_boundaries[1], old_boundaries[0],
                           ROAD_WIDTH, y - old_boundaries[0])

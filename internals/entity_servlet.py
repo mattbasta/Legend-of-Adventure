@@ -40,7 +40,7 @@ class LocationHandler(object):
         self.ttl = None
 
         if message_data:
-            self.on_enter(message_data)
+            self.on_enter(message_data, initial=True)
 
         try:
             self.run()
@@ -86,7 +86,7 @@ class LocationHandler(object):
 
             # TODO: Event handling code goes here.
 
-    def on_enter(self, message_data):
+    def on_enter(self, message_data, initial=False):
         """
         When a player enters a level, test whether we need to spawn some
         entities. If a timer is set to destroy entities, disable and delete it.
@@ -94,13 +94,22 @@ class LocationHandler(object):
         if self.ttl:
             print "Cleanup of %s cancelled." % self.location
             self.ttl.cancel()
+            initial = False
 
-        if self.location.has_entities():
+        if initial and self.location.has_entities():
             self.spawn_initial_entities(self.location)
+        else:
+            # TODO: Move this responsibility to the web server and just keep a
+            # copy of the entity data in Redis.
+            for entity in self.entities:
+                self.spawn_entity(entity)
 
         guid = message_data.split(":")[0]
         print "Registering user %s" % guid
         self.players.add(guid)
+
+        # TODO: Move this responsibility to the web server and just keep a copy
+        # of the entity data in Redis.
 
     def on_leave(self, user):
         """
@@ -139,7 +148,7 @@ class LocationHandler(object):
 
         for entity in spawn_entities:
             # Initialize the new entity.
-            e = entity(location, self.outbound_redis)
+            e = entity(self)
 
             level = self.location.generate()
             placeable_locations = e.get_placeable_locations(*level)
@@ -166,7 +175,11 @@ class LocationHandler(object):
 
     def spawn_entity(self, entity):
         """Send the command necessary to spawn an entity to the client."""
-        self.outbound_redis.publish("location::%s" % self.location,
-                                    "%s>spa%s\n%s" % (self.location, entity.id,
-                                                      str(entity)))
+        self.notify_location("spa", "%s\n%s" % (entity.id, str(entity)))
+
+    def notify_location(self, command, message):
+        """A shortcut for broadcasting a message to the location."""
+        self.outbound_redis.publish(
+                "location::%s" % self.location,
+                "%s>%s%s" % (self.location, command, message))
 

@@ -48,14 +48,15 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         connections.remove(self)
 
     def on_message(self, message):
-        print "Server message: [%s]" % message
-
         callbacks = {"reg": self._register,
                      "lev": self._load_level,
                      "cha": self._on_chat,
                      "loc": self._on_position_update,}
 
         m_type = message[:3]
+
+        if m_type not in ("loc", ):
+            print "Message: [%s]" % message
 
         # Filter out bad requests.
         if m_type in REQUIRE_GUID and not self.guid:

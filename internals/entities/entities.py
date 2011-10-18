@@ -1,6 +1,8 @@
 import json
 from math import sqrt
+import random
 import threading
+import time
 import uuid
 
 import internals.constants as constants
@@ -9,11 +11,11 @@ import internals.constants as constants
 class Entity(object):
     """An entity is any non-player, non-terrain element of the game."""
 
-    def __init__(self, location, connection, x=None, y=None, id=None):
+    def __init__(self, location, x=None, y=None, id=None):
         self.id = id if id else "@%s" % uuid.uuid4().hex
+        self.height, self.width = 0, 0
         self.position = x, y
         self.location = location
-        self.connection = connection
 
         self.remembered_distances = {}
 
@@ -37,7 +39,7 @@ class Entity(object):
         All resources pointing to this entity should be properly dereferenced.
         """
         if notify:
-            self._notify_location("del%s" % self.id)
+            self.location.notify_location("del", self.id)
 
     def place(self, x, y):
         """Set the entity's position at X,Y coordinates."""
@@ -122,21 +124,40 @@ class Entity(object):
         """
         pass
 
-    def _notify_location(self, message):
-        loc_str = str(self.location)
-        self.connection.publish("location::%s" % loc_str,
-                                "%s>%s" % (loc_str, message))
+    def _get_properties(self):
+        return {"x": self.position[0] / constants.tilesize,
+                "y": self.position[1] / constants.tilesize,
+                "height": self.height,
+                "width": self.width,
+                "layer": 0,
+                "x_vel": 0,
+                "y_vel": 0,
+                "movement": {"type": "static"},
+                "image": None,
+                "view": {"type": "static"}}
 
     def __str__(self):
-        """Convert the NPC to the serialized JSON format."""
-        return json.dumps({"x": self.position[0] / constants.tilesize,
-                           "y": self.position[1] / constants.tilesize,
-                           "movement": {"type": "static"},
-                           "image": {"type": "static",
-                                     "image": self.image,
-                                     "sprite": {"x": 0, "y": 0,
-                                                "swidth": 32, "sheight": 32,
-                                                "awidth": 65, "aheight": 65}}})
+        return json.dumps(self._get_properties())
+
+    def broadcast_changes(self, *args):
+        """
+        Broadcast a set of changed properties to the location. This should also
+        update other entities of relevant information.
+        """
+        props = self._get_properties()
+        def get_prop(key, value=None):
+            if value is None:
+                value = props
+            if "|" in key:
+                new_key = key.split("|", 1)
+                return get_prop(new_key[1], props[new_key[0]])
+            else:
+                return value[key]
+
+        builder = lambda x: "%s=%s" % (x, json.dumps(get_prop(x)))
+        command = "\n".join(map(builder, args))
+
+        self.location.notify_location("epu", "%s:%s" % (self.id, command))
 
 
 class Animat(Entity):
@@ -147,13 +168,57 @@ class Animat(Entity):
 
     def __init__(self, *args, **kwargs):
         super(Animat, self).__init__(*args, **kwargs)
-        self.timer = None
+        self.timers = []
 
-    def schedule(self, seconds, callback=None):
+        self.velocity = [0, 0]
+        self.movement_effect = ""
+
+    def destroy(self, notify=True):
+        super(Animat, self).destroy(notify)
+
+        # Since we're being destroyed, delete all of our planned events.
+        self.deschedule_all()
+
+    def forget(self, guid):
+        """
+        We want to make sure we unregister all scheduled events that are
+        focused around the user being despawned.
+        """
+        for timer in self.timers:
+            if timer[2] == guid:
+               timer[1].cancel()
+               self.timers.remove(timer)
+
+    def schedule(self, seconds, callback=None, focus=None):
         if not callback:
             callback = self._on_event
-        self.timer = threading.Timer(seconds, callback)
-        self.timer.start()
+
+        ts = int(time.time()) + seconds
+
+        # Provide a means of cleaning up the timer list.
+        def callback_wrapper():
+            for t in self.timers:
+                if t[0] == ts:
+                    self.timers.remove(t)
+                elif t[0] > ts:
+                    break
+            callback()
+
+        timer = threading.Timer(seconds, callback_wrapper)
+        timer.start()
+
+        index = 0
+        for t_ts, t_timer, t_focus in self.timers:
+            index += 1
+            if t_ts < ts:
+                self.timers.insert(index, (ts, timer, focus))
+                return
+        self.timers.append((ts, timer, focus))
+
+    def deschedule_all(self):
+        """Deschedule all of the events in the timer queue."""
+        for t_ts, t_timer, t_focus in self.timers:
+            t_timer.cancel()
 
     def _on_event(self):
         """
@@ -161,6 +226,31 @@ class Animat(Entity):
         overridden by child classes.
         """
         pass
+
+    def move(self, x_vel, y_vel):
+        """Start the sprite moving in any direction, or stop it from moving."""
+        changed = x_vel != self.velocity[0] or y_vel != self.velocity[1]
+        if not changed:
+            return
+        self.velocity = [x_vel, y_vel]
+        self.layer = 1 if x_vel or y_vel else 0
+        self.broadcast_changes("x_vel", "y_vel", "layer")
+
+    def wander(self):
+        directions = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1),
+                      (0, -1), (1, -1)]
+        def callback():
+            self.move(*(random.choice(directions)))
+            self.wandering = True
+            self.schedule(random.randint(1, 4), self.stop_wandering)
+        # Move the callback into the future so we can finish initializing the
+        # entity.
+        self.schedule(0.25, callback)
+
+    def stop_wandering(self):
+        self.move(0, 0)
+        self.wandering = False
+        self.schedule(random.randint(1, 3), self.wander)
 
     def get_placeable_locations(self, grid, hitmap):
         """
@@ -182,6 +272,18 @@ class Animat(Entity):
 
     def write_chat(self, message):
         """Write a line of text to the chats of nearby users."""
-        self._notify_location("cha%s:%d:%d\n%s" % (self.id, self.position[0],
-                                                   self.position[1], message))
+        self.location.notify_location(
+                "cha",
+                "%s:%d:%d\n%s" % (self.id, self.position[0],
+                                  self.position[1], message))
+
+    def _get_properties(self):
+        baseline = super(Animat, self)._get_properties()
+        baseline["x_vel"] = self.velocity[0]
+        baseline["y_vel"] = self.velocity[1]
+        return baseline
+
+        #"sprite": {"x": 0, "y": 0,
+        #           "swidth": 32, "sheight": 32,
+        #           "awidth": 65, "aheight": 65}
 

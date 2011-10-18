@@ -686,6 +686,17 @@ var jgutils = {
                 case "lev":
                     jgutils.comm._level_callback(JSON.parse(body))
                     break;
+                case "epu":
+                    var body = body.split(":", 2),
+                        data = body[1].split("\n"),
+                        entity = jgutils.objects.registry[body[0]];
+                    for(var i = 0; i < data.length; i++) {
+                        var line = data[i].split("=", 2),
+                            key = line[0],
+                            value = line[1];
+                        entity[key] = JSON.parse(value);
+                    }
+                    break;
                 case "err":
                     if(!!window.console) {
                         console.log("Error: " + body);
@@ -770,37 +781,25 @@ var jgutils = {
             var updated = proto.updated;
             proto.updated = false;
 
-            var new_image = frameutils.get(proto.image.type,
-                                           proto.image,
+            // TODO: This should be moved out of here
+            if(typeof proto.view == "string")
+                proto.view = jgassets[proto.view];
+
+            var new_view = frameutils.get(proto.view.type,
+                                           proto.view,
                                            otick,
                                            0); // TODO : Set this to something useful.
-            if(new_image != proto.last_image) {
+            if(new_view != proto.last_view) {
                 updated = true;
-                proto.last_image = new_image;
+                proto.last_view = new_view;
             }
 
-            if(proto.movement.type != "static" &&
-               !proto.movement_prerender &&
-               frameutils.changed(proto.movement.type, proto.movement, otick, 0)) {
+            if(proto.x_vel || proto.y_vel) {
                 updated = true;
-                var movement = frameutils.get(proto.movement.type,
-                                              proto.movement,
-                                              otick,
-                                              0); // TODO : Same for this one.
-                // TODO : This should take into account animations.
-                if((typeof movement) == "object") {
-                    proto.move_prerender = movement;
-                } else {
-                    proto.x = proto.start_x + movement.x;
-                    proto.y = proto.start_y + movement.y;
-                }
+                proto.x += proto.x_vel * 2.5;
+                proto.y += proto.y_vel * 2.5;
             }
-            if(proto.move_prerender) {
-                var next_position = proto.move_prerender.pop();
-                proto.x = next_position[0];
-                proto.y = next_position[1];
-                updated = true;
-            }
+
 
             return updated;
 
@@ -1058,14 +1057,15 @@ var jgutils = {
 
                     for(co in layer.child_objects) {
                         var child = layer.child_objects[co],
-                            li = child.last_image;
-                        if(!(li.image in jgame.images))
+                            li = child.last_view,
+                            ii = child.image;
+                        if(!(ii in jgame.images))
                             continue
-                        if("sprite" in child.last_image)
-                            context.drawImage(jgame.images[li.image], li.sprite.x, li.sprite.y,
+                        if("sprite" in li)
+                            context.drawImage(jgame.images[ii], li.sprite.x, li.sprite.y,
                                               li.sprite.swidth, li.sprite.sheight,
                                               child.x, child.y,
-                                              li.sprite.awidth, li.sprite.aheight);
+                                              child.height, child.width);
                         else
                             context.drawImage(jgame.images[li.image], child.x, child.y);
                     }
@@ -1179,10 +1179,8 @@ var frameutils = {
             case "static":
                 return data;
             case "sequence":
-                var seconds = "positions" in data ? data["positions"] : 10,
-                    duration = "duration" in data ? data["duration"] : 1,
-                    otick = Math.floor(ticks / duration) % seconds;
-                otick = Math.min(data.sequence.length, seconds);
+                var duration = "duration" in data ? data["duration"] : 1,
+                    otick = Math.floor(ticks / duration) % data.sequence.length;
                 return data.sequence[otick];
             case "callback":
                 if((typeof data.callback) == "string")
