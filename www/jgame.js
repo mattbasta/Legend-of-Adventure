@@ -95,7 +95,7 @@ var jgutils = {
             fps : 30,
             cdn : 0,
             avatar_details : {
-                rate : 0.15
+                rate : 0.2
             },
             images : {},
             images_added : 0,
@@ -106,24 +106,24 @@ var jgutils = {
                 w : 65,
                 sprite: {
                     left : [
-                        {position:4, duration:7},
-                        {position:5, duration:7},
-                        {position:3, duration:7}
+                        {position:4, duration:5},
+                        {position:5, duration:5},
+                        {position:3, duration:5}
                     ],
                     right : [
-                        {position:7, duration:7},
-                        {position:8, duration:7},
-                        {position:6, duration:7}
+                        {position:7, duration:5},
+                        {position:8, duration:5},
+                        {position:6, duration:5}
                     ],
                     up : [
-                        {position:10, duration:7},
-                        {position:11, duration:7},
-                        {position:9, duration:7}
+                        {position:10, duration:5},
+                        {position:11, duration:5},
+                        {position:9, duration:5}
                     ],
                     down : [
-                        {position:1, duration:7},
-                        {position:2, duration:7},
-                        {position:0, duration:7}
+                        {position:1, duration:5},
+                        {position:2, duration:5},
+                        {position:0, duration:5}
                     ]
                 }
             },
