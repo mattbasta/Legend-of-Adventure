@@ -12,6 +12,8 @@ class Entity(object):
     """An entity is any non-player, non-terrain element of the game."""
 
     def __init__(self, location, x=None, y=None, id=None):
+        super(Entity, self).__init__()
+
         self.id = id if id else "@%s" % uuid.uuid4().hex
         self.height, self.width = 0, 0
         self.position = x, y
@@ -92,7 +94,9 @@ class Entity(object):
 
         Player position should be passed in pixels, not tiles.
         """
-        distance = sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
+        x, y = map(int, (x, y))
+        distance = sqrt((x - self.position[0]) ** 2 +
+                        (y - self.position[1]) ** 2)
         distance /= constants.tilesize
         distance = round(distance / constants.PLAYER_RANGES)
         distance *= constants.PLAYER_RANGES
@@ -122,6 +126,7 @@ class Entity(object):
         the chat should appear to be coming from a position very near to the
         entity.
         """
+        print "Chat received %d %s" % (distance, message)
         pass
 
     def _get_properties(self):

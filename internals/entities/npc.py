@@ -13,9 +13,6 @@ class NPC(Animat, MarkovBot):
     def __init__(self, *args):
         super(NPC, self).__init__(*args)
 
-        # TODO: If we're not simulating the NPC and we're only using it for,
-        # say, harvesting values on the web server, then this shouldn't be
-        # fired as part of __init__.
         self.schedule(self._unexpected_time())
         self.image = "npc"
         self.view = "npc.static.down"
@@ -23,7 +20,6 @@ class NPC(Animat, MarkovBot):
 
         self.messages = ["Hmmmm...", "So much to do!",
                          "*dumm dumm dee deedlee*"]
-        self.chatbot = MarkovBot()
         self.chattering = False
         self.last_chat = ""
 
@@ -44,16 +40,17 @@ class NPC(Animat, MarkovBot):
         message = random.choice(self.messages)
         self.write_chat(message)
 
-    def on_chat(self, guid, message, distance):
+    def on_chat(self, guid, message, distance=0):
+        print "Received chat (%d): %s" % (distance, message)
         if distance <= 10:
             if not self.chattering:
                 self.chattering = True
-            response = self.chatbot.response(message)
+            response = self.response(message)
             self.write_chat(response)
 
             # Train the bot with this bit of conversation.
             if self.last_chat:
-                self.chatbot.addRespond(self.last_chat, message)
+                self.train_response(self.last_chat, message)
             self.last_chat = message
 
     def _get_properties(self):

@@ -83,7 +83,6 @@ def rounding(region, tileset):
 
             # Optimize the third pass by squashing it into the second.
             if is_horizontal_gradient(region[y][x]):
-                # TODO: Update these to use mutate()
                 if hleft_c:
                     if (region[y][x][0] == region[y][x - 1][1] and
                         region[y][x][2] == region[y][x - 1][2]):

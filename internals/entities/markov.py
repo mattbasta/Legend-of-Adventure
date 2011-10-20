@@ -21,8 +21,8 @@ def tokenise(s):
     # use James' tokeniser
     for p in "!\"#$%()*+,-./:;<=>?@[\]^_`{|}~":
         s = s.replace(p, " "+p)
-    toks = s.split()
-    return toks
+    tokens = s.split()
+    return tokens
 
 def detokenise(s):
     txt = " ".join(s)
@@ -37,56 +37,52 @@ def recursivedict_factory(depth):
         return int
 
 class MarkovBot(object):
+    """
+    This is a mixin of sorts that adds chatbot properties to an entity. In
+    general, it should be used with NPCs, though it could likely be used with
+    any kind of entity.
+    """
+
     def __init__(self):
+        # Make sure we initialize whatever the parent class is, if there is
+        # one.
+        super(MarkovBot, self).__init__()
+
+        # Define all of the data stores.
         self.markov = recursivedict_factory(3)()
         self.markov2 = recursivedict_factory(2)()
         self.markov3 = recursivedict_factory(1)()
-        self.wordcount = 0
 
-    def addToks(self, toks):
+        self._word_count = 0
+
+    def _add_tokens(self, tokens):
         if DEBUG:
-            print "adding toks:", toks
-        self.markov2[toks[0]][toks[1]] += 1
-        self.markov3[toks[0]] += 2
-        self.wordcount += 2
-        for (i, tok) in enumerate(toks[2:]):
+            print "adding tokens:", tokens
+        self.markov2[tokens[0]][tokens[1]] += 1
+        self.markov3[tokens[0]] += 2
+        self._word_count += 2
+        for (i, tok) in enumerate(tokens[2:]):
             i += 2
-            self.markov[toks[i-2]][toks[i-1]][toks[i]] += 1
-            self.markov2[toks[i-1]][toks[i]] += 1
-            self.markov3[toks[i]] += 1
-            self.wordcount += 1
+            self.markov[tokens[i-2]][tokens[i-1]][tokens[i]] += 1
+            self.markov2[tokens[i-1]][tokens[i]] += 1
+            self.markov3[tokens[i]] += 1
+            self._word_count += 1
 
-
-
-    def addRespond(self, statement, response):
+    def train_response(self, statement, response):
         sta = [GAP] + tokenise(statement)
         while len(sta) > 1 and len(sta[-1]) < 2:
             sta.pop(-1)
         res = tokenise(response)
-        toks = [START +sta[-1]] + [GAP] + res + [GAP]
-        self.addToks(toks)
+        tokens = [START +sta[-1]] + [GAP] + res + [GAP]
+        self._add_tokens(tokens)
 
     def addLine(self, line):
-        toks = tokenise(line.strip())
-        self.addToks(toks)
+        tokens = tokenise(line.strip())
+        self._add_tokens(tokens)
 
-    def readConvoFile(self, filename):
-        f = open(filename, 'rU')
-        cur = ""
-        for line in f:
-            self.addRespond(cur, line)
-            cur = line
-
-    def readFile(self, filename, lines=True):
-        f = open(filename, 'rU')
-        if lines:
-            for line in f:
-                self.addLine(line)
-        else:
-            txt = f.read()
-            # tokenise based on sentences
-
-    def getwordlist(self, start):
+    def _get_word_list(self, start):
+        if not any((self.markov, self.markov2, self.markov3)):
+            return start
         words = start
         gapcount = 1
         while words[-1] != END and gapcount < 2:
@@ -98,7 +94,7 @@ class MarkovBot(object):
                 total = self.markov3[words[-1]]
             else:
                 dicti = self.markov3
-                total = self.wordcount
+                total = self._word_count
             r = random.randint(0, total)
             x = -1
             for key in dicti:
@@ -108,34 +104,24 @@ class MarkovBot(object):
                     break
             if words[-1] == GAP and len(words) > 2:
                 gapcount += 1
-###     while START in words[2:-1]:
-###         i = words[2:-1].index(START)
-###         words.pop(i+2)
         return words
 
-    def respond(self, txt):
-        toks = tokenise(txt)
-        while len(toks) > 1 and len(toks[-1]) < 2:
-            toks.pop(-1)
-        toks = [GAP] + toks
-        toks = [START+toks[-1]] + [GAP]
+    def response(self, text):
+        tokens = tokenise(text)
+        while len(tokens) > 1 and len(tokens[-1]) < 2:
+            tokens.pop(-1)
+        tokens = [GAP] + tokens
+        tokens = [START+tokens[-1]] + [GAP]
         if DEBUG:
-            print "Looking up:", toks[-2:]
-        words = self.getwordlist(toks[-2:])
+            print "Looking up:", tokens[-2:]
+        words = self._get_word_list(tokens[-2:])
         if DEBUG:
             print "Found:", words
         return detokenise(words[2:-1])
 
-    def generate(self):
-        words = self.getwordlist([GAP, GAP])
-        return detokenise(words[2:-1])
-
     def __str__(self):
-        res = str(self.markov3)
-        res += '\n'
-        res += str(self.markov2)
-        res += '\n'
-        res += str(self.markov)
-        return res
+        return "%s\n%s\n%s" % map(str, (self.markov3,
+                                        self.markov2,
+                                        self.markov))
 
 

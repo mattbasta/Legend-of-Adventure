@@ -90,61 +90,26 @@ var jgutils = {
                                jgutils.inventory._redraw();});
 
         // Setup the jgame instance
-        window.jgame = {
-            port : 8080,
-            fps : 30,
-            cdn : 0,
-            avatar_details : {
-                rate : 0.2
-            },
-            images : {},
-            images_added : 0,
-            images_loaded : 0,
-            avatar : {
-                image : "avatar",
-                h : 65,
-                w : 65,
-                sprite: {
-                    left : [
-                        {position:4, duration:5},
-                        {position:5, duration:5},
-                        {position:3, duration:5}
-                    ],
-                    right : [
-                        {position:7, duration:5},
-                        {position:8, duration:5},
-                        {position:6, duration:5}
-                    ],
-                    up : [
-                        {position:10, duration:5},
-                        {position:11, duration:5},
-                        {position:9, duration:5}
-                    ],
-                    down : [
-                        {position:1, duration:5},
-                        {position:2, duration:5},
-                        {position:0, duration:5}
-                    ]
-                }
-            },
-            follow_avatar : "local",
-            keys : {
-                up : false,
-                down : false,
-                left : false,
-                right : false,
-                bindings : {}
-            },
-            offset : {
-                x : 0,
-                y : 0,
-                w : document.body.offsetWidth,
-                h : document.body.offsetHeight
-            },
-            tilesize : 50,
-            terrain_canvas : null,
-            location_id : ""
+        jgame["images"] = {};
+        jgame["images_added"] = 0;
+        jgame["images_loaded"] = 0;
+        jgame["level"] = {};
+        jgame["follow_avatar"] = "local";
+        jgame["keys"] = {
+            up : false,
+            down : false,
+            left : false,
+            right : false,
+            bindings : {}
         };
+        jgame["offset"] = {
+            x : 0,
+            y : 0,
+            w : document.body.offsetWidth,
+            h : document.body.offsetHeight
+        };
+        jgame["terrain_canvas"] = null;
+        jgame["location_id"] = "";
 
         jgutils.avatars.register(
             "local",
@@ -394,6 +359,14 @@ var jgutils = {
                 function(data) {
                     jgame['port'] = data.port;
                     jgame['level'] = data;
+
+                    jgutils.objects.registry = {};
+                    for(var i in jgutils.objects.layers) {
+                        var layer = jgutils.objects.layers[i];
+                        layer.child_objects = {};
+                        layer.updated = true;
+                    }
+                    jgutils.objects.redrawLayers();
 
                     var avatar = jgutils.avatars.get("local");
                     avatar.x = data.avatar.x * jgame.tilesize;
@@ -750,6 +723,32 @@ var jgutils = {
 
             return x;
         },
+        redrawLayers : function() {
+            var layers = jgutils.objects.layers;
+            for(l in layers) {
+                var layer = layers[l];
+                if(layer.updated) {
+                    var context = layer.obj.getContext('2d');
+                    context.clearRect(0,0,layer.obj.offsetWidth,layer.obj.offsetHeight);
+
+                    for(co in layer.child_objects) {
+                        var child = layer.child_objects[co],
+                            li = child.last_view,
+                            ii = child.image;
+                        if(!(ii in jgame.images))
+                            continue
+                        if("sprite" in li)
+                            context.drawImage(jgame.images[ii], li.sprite.x, li.sprite.y,
+                                              li.sprite.swidth, li.sprite.sheight,
+                                              child.x, child.y,
+                                              child.height, child.width);
+                        else
+                            context.drawImage(jgame.images[li.image], child.x, child.y);
+                    }
+                    layer.updated = false;
+                }
+            }
+        },
         create : function(id, proto, layer) {
             layer = layer ? layer : 1;
             var lay;
@@ -875,7 +874,7 @@ var jgutils = {
             // Move Avatar
             var _x = 0,
                 _y = 0,
-                _val = jgame.avatar_details.rate * ms,
+                _val = jgame.speed * ms,
                 keys = jgame.keys;
             if(keys.left == true)
                 _x = -1;
@@ -1048,30 +1047,7 @@ var jgutils = {
                     jgutils.objects.layers[obj.registry_layer].updated = true;
             }
 
-            // Redraw layers
-            for(l in objects.layers) {
-                var layer = objects.layers[l];
-                if(layer.updated) {
-                    var context = layer.obj.getContext('2d');
-                    context.clearRect(0,0,layer.obj.offsetWidth,layer.obj.offsetHeight);
-
-                    for(co in layer.child_objects) {
-                        var child = layer.child_objects[co],
-                            li = child.last_view,
-                            ii = child.image;
-                        if(!(ii in jgame.images))
-                            continue
-                        if("sprite" in li)
-                            context.drawImage(jgame.images[ii], li.sprite.x, li.sprite.y,
-                                              li.sprite.swidth, li.sprite.sheight,
-                                              child.x, child.y,
-                                              child.height, child.width);
-                        else
-                            context.drawImage(jgame.images[li.image], child.x, child.y);
-                    }
-                    layer.updated = false;
-                }
-            }
+            jgutils.objects.redrawLayers();
 
             for(var register in timing.registers) {
                 var reg = timing.registers[register];

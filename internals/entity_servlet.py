@@ -68,13 +68,15 @@ class LocationHandler(object):
                 continue
 
             message = event["data"]
-            location, message_data = message.split(">", 1)
+            location, full_message_data = message.split(">", 1)
             if (event["channel"] == "global::enter" and
                 location == str(self.location)):
-                self.on_enter(message_data)
+                self.on_enter(full_message_data)
                 continue
 
-            message_type, message_data = message_data[:3], message_data[3:]
+            message_type = full_message_data[:3]
+            message_data = full_message_data[3:]
+
             if (message_type in MESSAGES_TO_IGNORE or
                 (message_type in MESSAGES_TO_INSPECT and
                  message_data.startswith("@"))):
@@ -85,6 +87,8 @@ class LocationHandler(object):
                 self.on_leave(message_data)
 
             # TODO: Event handling code goes here.
+            for entity in self.entities:
+                entity.handle_message(full_message_data)
 
     def on_enter(self, message_data, initial=False):
         """
