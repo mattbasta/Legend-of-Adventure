@@ -4,6 +4,16 @@ Legend of Adventure
 
 An action adventure MMORPG that runs in the browser!
 
+LoA has the following goals:
+
+* Infinitely large, procedurally generated worlds.
+* Novel AI for every NPC and many non-NPCs.
+* Semi-intelligent learning chatbot with individual training data for each NPC.
+* To provide a high degree of replayability.
+* Realtime, massively multiplayer.
+* Horizontally scalable to hundreds or thousands of machines.
+
+
 ------------------
 Basic Requirements
 ------------------
@@ -14,7 +24,7 @@ To play LoA, you need a web browser that is capable of both WebSockets (Firefox 
 Server Requirements
 ===================
 
-The server will only run on *NIX-based systems. The server can only be started as root (e.g.: with ``sudo``).
+The server will only run on \*NIX-based systems. The server can only be started as root (e.g.: with ``sudo``).
 
 
 Server Dependencies
@@ -27,4 +37,5 @@ Server Dependencies
 Other dependencies can be resolved with: ::
 
     pip install -r requirements.txt
+
 
