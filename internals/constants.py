@@ -7,8 +7,12 @@ level_grad_resolution = 4
 level_width = 100
 level_height = 100
 tilesize = 50
+framerate = 30  # FPS
+speed = 0.2  # Pixels per tick
 
 entity_despawn_time = 60 * 10
 
 MESSAGES_WITH_GUIDS = ("loc", "add", "del", "cha")
 PLAYER_RANGES = 3
+
+TICK = 1.0 / framerate

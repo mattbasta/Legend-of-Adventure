@@ -29,6 +29,11 @@ function createImage(id, url) {
     i.src = url;
     jgame.images[id] = i;
 }
+function adjust_diagonal(direction) {
+    if(direction[0] && direction[1])
+        return direction.map(function(x) {return x * Math.SQRT1_2;});
+    return direction;
+}
 
 var jgutils = {
     setup : function() {
@@ -37,20 +42,23 @@ var jgutils = {
         chatutils._cb = document.getElementById("chatbox");
 
         // Setup key handlers
-        $(document).keydown(function(e) {
-
+        function keypress(e, set) {
             switch(e.keyCode) {
-                case 37:
-                    jgame.keys.left = true;
+                case 37: // Left
+                case 65: // A
+                    jgame.keys.left = set;
                     break;
-                case 38:
-                    jgame.keys.up = true;
+                case 38: // Up
+                case 87: // W
+                    jgame.keys.up = set;
                     break;
-                case 39:
-                    jgame.keys.right = true;
+                case 39: // Right
+                case 68: // D
+                    jgame.keys.right = set;
                     break;
-                case 40:
-                    jgame.keys.down = true;
+                case 40: // Down
+                case 83: // S
+                    jgame.keys.down = set;
                     break;
                 default:
                     var kb;
@@ -59,26 +67,15 @@ var jgutils = {
                             kb();
                         else
                             for(var i=0, keys = jgame.keys.bindings[e.keyCode].length; i < keys; i++)
-                                return (jgame.keys.bindings[e.keyCode][i])();
+                                return (jgame.keys.bindings[e.keyCode][i])(set);
                     }
             }
-
+        }
+        $(document).keydown(function(e) {
+            keypress(e, true);
         });
         $(document).keyup(function(e) {
-            switch(e.keyCode) {
-                case 37:
-                    jgame.keys.left = false;
-                    break;
-                case 38:
-                    jgame.keys.up = false;
-                    break;
-                case 39:
-                    jgame.keys.right = false;
-                    break;
-                case 40:
-                    jgame.keys.down = false;
-                    break;
-            }
+            keypress(e, false);
         });
 
         var ci = $("#canvas_inventory");
@@ -195,7 +192,7 @@ var jgutils = {
             if(!properties.position)
                 properties.position = jgame.avatar.sprite.down[0].position;
             if(!properties.hitmap)
-                properties.hitmap = [0, Infinity, Infinity, 0]; // TODO: precalculate this on the fly.
+                properties.hitmap = [0, Infinity, Infinity, 0];
             jgutils.avatars.registry[id] = properties;
 
             // Create the canvas
@@ -371,6 +368,9 @@ var jgutils = {
                     var avatar = jgutils.avatars.get("local");
                     avatar.x = data.avatar.x * jgame.tilesize;
                     avatar.y = data.avatar.y * jgame.tilesize;
+                    var x_map = jgutils.hitmapping.generate_x(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize),
+                        y_map = jgutils.hitmapping.generate_y(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
+                    avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
 
                     if(avatar.image != data.avatar.image) {
                         jgame.images['avatar'] = null;
@@ -666,8 +666,11 @@ var jgutils = {
                     for(var i = 0; i < data.length; i++) {
                         var line = data[i].split("=", 2),
                             key = line[0],
-                            value = line[1];
-                        entity[key] = JSON.parse(value);
+                            value = JSON.parse(line[1]);
+                        if(key == "x" || key == "y")
+                            entity[key] = value * jgame.tilesize;
+                        else
+                            entity[key] = value;
                     }
                     break;
                 case "err":
@@ -740,10 +743,14 @@ var jgutils = {
                         if("sprite" in li)
                             context.drawImage(jgame.images[ii], li.sprite.x, li.sprite.y,
                                               li.sprite.swidth, li.sprite.sheight,
-                                              child.x, child.y,
+                                              child.x + child.offset.x, child.y + child.offset.y,
                                               child.height, child.width);
                         else
-                            context.drawImage(jgame.images[li.image], child.x, child.y);
+                            context.drawImage(jgame.images[li.image], child.x + child.offset.x, child.y.offset.y);
+                        //context.fillStyle = "red";
+                        //context.fillRect(child.x - 2, child.y - 2, 4, 4);
+                        //context.fillStyle = "green";
+                        //context.fillRect(child.x + child.offset.x - 2, child.y + child.offset.y - 2, 4, 4);
                     }
                     layer.updated = false;
                 }
@@ -773,7 +780,9 @@ var jgutils = {
             var dist = Math.sqrt(x * x + y * y);
             return dist < radius;
         },
-        update : function(proto, otick, ftick, mod_sec) {
+        update : function(proto, otick, ftick, mod_sec, speed) {
+            // Speed is denoted in pixels per tick.
+
             if(!otick)
                 otick = 0;
 
@@ -795,10 +804,10 @@ var jgutils = {
 
             if(proto.x_vel || proto.y_vel) {
                 updated = true;
-                proto.x += proto.x_vel * 2.5;
-                proto.y += proto.y_vel * 2.5;
+                var adjusted_velocity = adjust_diagonal([proto.x_vel, proto.y_vel]);
+                proto.x += adjusted_velocity[0] * speed;
+                proto.y += adjusted_velocity[1] * speed;
             }
-
 
             return updated;
 
@@ -887,13 +896,6 @@ var jgutils = {
 
             // This needs to be crafted before the diagonal magic happens.
             var direction = [_x, _y];
-
-
-            function adjust_diagonal(direction) {
-                if(direction[0] && direction[1])
-                    return direction.map(function(x) {return x * Math.SQRT1_2;});
-                return direction;
-            }
 
             var avatar = jgutils.avatars.registry["local"],
                 do_setcenter = false;
@@ -1043,7 +1045,7 @@ var jgutils = {
                     otick = ticks / mod_dur % mod_sec;
 
                 // Outsourced for easy update as well as setup.
-                if(jgutils.objects.update(obj, otick, ticks, mod_sec))
+                if(jgutils.objects.update(obj, otick, ticks, mod_sec, _val))
                     jgutils.objects.layers[obj.registry_layer].updated = true;
             }
 

@@ -56,6 +56,10 @@ class Location():
         spawned in this location when a player first visits it. The number and
         type of each entity is representative of
         """
+
+        # Uncomment to debug
+        # return [entities.Child]
+
         if self.is_town():
             return [entities.Trader, entities.Trader, entities.Child,
                     entities.Child, entities.Child, entities.Bully]
@@ -69,11 +73,12 @@ class Location():
 
         # TODO: Generate the level if it doesn't already automatically exist.
 
+        width, height = self.width(), self.height()
         tileset, level = build_region(
                 self.coords[0], self.coords[1],
-                constants.level_width, constants.level_height)
-        hitmap = [[0 for x in range(constants.level_width)] for
-                  y in range(constants.level_height)]
+                width, height)
+        hitmap = [[0 for x in range(width)] for
+                  y in range(height)]
         if self.is_town():
             # Already seeded by is_town method.
             level, hitmap = towns.build_town(level, hitmap)
@@ -83,6 +88,18 @@ class Location():
 
         return level, hitmap
 
+    def height(self):
+        if self.world == "o":
+            return constants.level_height
+        else:
+            return constants.level_height
+
+    def width(self):
+        if self.world == "o":
+            return constants.level_width
+        else:
+            return constants.level_width
+
     def render(self, avx, avy):
         """Render the JSON representation of the level."""
 
@@ -90,8 +107,8 @@ class Location():
 
         return {"x": self.coords[0],
                  "y": self.coords[1],
-                 "w": constants.level_width,
-                 "h": constants.level_height,
+                 "w": self.width(),
+                 "h": self.height(),
                  "def_tile": 0,
                  "avatar": {"x": avx, "y": avy,
                             "image": "static/images/avatar.png"},

@@ -61,7 +61,8 @@ class LocationHandler(object):
         inbound_redis = redis.Redis(host=redis_host, port=int(port))
         pubsub = inbound_redis.pubsub()
         pubsub.subscribe("global::enter")
-        pubsub.subscribe("location::%s" % self.location)
+        pubsub.subscribe("location::p::%s" % self.location)
+        pubsub.subscribe("location::pe::%s" % self.location)
 
         for event in pubsub.listen():
             if event["type"] != "message":
@@ -159,14 +160,14 @@ class LocationHandler(object):
 
             # Look at the avaialable locations for the entity.
             if placeable_locations is None:
+                e.destroy()
                 # There are not available locations.
                 continue
             elif not placeable_locations:
                 # The entity can be placed anywhere.
-                x = random.randint(0.1 * constants.level_width,
-                                   0.9 * constants.level_width)
-                y = random.randint(0.1 * constants.level_height,
-                                   0.9 * constants.level_height)
+                width, height = self.location.width(), self.location.height()
+                x = random.randint(int(0.1 * width), int(0.9 * width))
+                y = random.randint(int(0.1 * height), int(0.9 * height))
             else:
                 x, y = random.choice(placeable_locations)
 
@@ -184,6 +185,6 @@ class LocationHandler(object):
     def notify_location(self, command, message):
         """A shortcut for broadcasting a message to the location."""
         self.outbound_redis.publish(
-                "location::%s" % self.location,
+                "location::e::%s" % self.location,
                 "%s>%s%s" % (self.location, command, message))
 

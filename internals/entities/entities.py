@@ -6,6 +6,11 @@ import time
 import uuid
 
 import internals.constants as constants
+from internals.hitmapping import get_hitmap
+from internals.scheduler import Scheduler
+
+
+SQRT1_2 = sqrt(float(1) / 2)
 
 
 class Entity(object):
@@ -18,6 +23,7 @@ class Entity(object):
         self.height, self.width = 0, 0
         self.position = x, y
         self.location = location
+        self.offset = (0, 0)
 
         self.remembered_distances = {}
 
@@ -116,7 +122,7 @@ class Entity(object):
         changes by a unit of constants.PLAYER_RANGES. It should be overridden
         by child classes.
         """
-        print "Player %s within %d of %s" % (guid, distance, self.id)
+        #print "Player %s within %d of %s" % (guid, distance, self.id)
         pass
 
     def on_chat(self, guid, message, distance=0):
@@ -139,7 +145,9 @@ class Entity(object):
                 "y_vel": 0,
                 "movement": {"type": "static"},
                 "image": None,
-                "view": {"type": "static"}}
+                "view": {"type": "static"},
+                "offset": {"x": self.offset[0],
+                           "y": self.offset[1]}}
 
     def __str__(self):
         return json.dumps(self._get_properties())
@@ -174,9 +182,16 @@ class Animat(Entity):
     def __init__(self, *args, **kwargs):
         super(Animat, self).__init__(*args, **kwargs)
         self.timers = []
+        self.scheduler = Scheduler(constants.tilesize / constants.speed / 1000,
+                                   self._on_scheduled_event)
 
         self.velocity = [0, 0]
         self.movement_effect = ""
+
+        self.hitmap = None
+
+        # Properties that are changed on moevement.
+        self._movement_properties = ("x_vel", "y_vel", "layer", "x", "y", )
 
     def destroy(self, notify=True):
         super(Animat, self).destroy(notify)
@@ -232,22 +247,123 @@ class Animat(Entity):
         """
         pass
 
-    def move(self, x_vel, y_vel):
+    def _updated_position(self, x, y, velocity=None, duration=250):
+        if velocity is None:
+            velocity = self.velocity
+        if all(velocity):
+            velocity = map(lambda x: x * SQRT1_2, velocity)
+
+        new_x = x + velocity[0] * duration * constants.speed
+        new_y = y + velocity[1] * duration * constants.speed
+        return new_x, new_y  # Be aware that this doesn't return an int!
+
+    def _on_scheduled_event(self, scheduled):
+        """
+        This is the method the fires intermittently as the animat moves across
+        the level. It should be used to internally update the animat's
+        position, recalculate distances to avatars and other entities, and to
+        recalculate hitmaps.
+        """
+
+        duration = time.time() - self.scheduler.last_tick
+        duration *= 1000
+
+        # Calculate the updated position.
+        position = self._updated_position(*self.position, duration=duration)
+        if scheduled or True:
+            self.position = position
+            # Calculate the next position in this direction.
+            future_position = self._updated_position(*self.position,
+                                                     duration=duration)
+            # If the next position isn't a valid place to move, stop moving.
+            if not self._test_position(future_position, self.velocity):
+                self.write_chat("Oh no, I almost hit a wall.")
+                self.move(0, 0, response=True)
+                # Also don't keep calculating the next position.
+                return False
+
+        return any(self.velocity)
+
+    def _test_position(self, position, velocity=None):
+        """
+        Test that a particular position for a given velocity is a value that
+        doesn't fall on a value that is solid.
+        """
+
+        x, y = self._updated_position(*position)
+        x_t, y_t = map(lambda i: int(i / constants.tilesize), (x, y))
+
+        # Test that the next position is within bounds.
+        width = self.location.location.width()
+        height = self.location.location.height()
+        if (x_t < 1 or x_t > width - 2 or
+            y_t < 1 or y_t > height - 2):
+            return False
+
+        # Test that the next position is solid.
+        if self.hitmap is not None:
+            x_hitmap, y_hitmap = self.hitmap
+            if (x < x_hitmap[0] or x > x_hitmap[1] or
+                y < y_hitmap[0] or y > y_hitmap[1]):
+                return False
+
+        # Perform corner testing if the intended direction is along a diagonal.
+        if velocity and all(velocity):
+            grid, hitmap = self.location.location.generate()
+            x, y = self.position
+            x2, y2 = x + self.width, y + self.height
+            x, y, x2, y2 = map(lambda x: int(x / constants.tilesize),
+                               (x, y, x2, y2))
+
+            x2 = min(x2, width - 1)
+            y2 = min(y2, height - 1)
+
+            if any([hitmap[y2][x2], hitmap[y][x2], hitmap[y2][x],
+                    hitmap[y][x]]):
+                return False
+
+        return True
+
+    def move(self, x_vel, y_vel, broadcast=True, response=False):
         """Start the sprite moving in any direction, or stop it from moving."""
+
         changed = x_vel != self.velocity[0] or y_vel != self.velocity[1]
         if not changed:
             return
+
         self.velocity = [x_vel, y_vel]
         self.layer = 1 if x_vel or y_vel else 0
-        self.broadcast_changes("x_vel", "y_vel", "layer")
+
+        grid, hitmap = self.location.location.generate()
+        self.hitmap = get_hitmap(self.position, hitmap)
+        if not response:
+            self.scheduler.event_happened()
+        else:
+            self.scheduler.deschedule()
+
+        if broadcast:
+            self.broadcast_changes(*self._movement_properties)
 
     def wander(self):
         directions = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1),
                       (0, -1), (1, -1)]
+        def calculate_next_position(velocity):
+            new_position = self._updated_position(*self.position,
+                                                  velocity=velocity)
+            return self._test_position(new_position, velocity)
+
         def callback():
-            self.move(*(random.choice(directions)))
+            usable_directions = filter(calculate_next_position, directions)
+            if not usable_directions:
+                # It's unlikely that we'll be moving in the future if we can't
+                # move now.
+                self.write_chat("I'm stuck!")
+                return
+
+            self.move(*(random.choice(usable_directions)))
             self.wandering = True
             self.schedule(random.randint(1, 4), self.stop_wandering)
+
         # Move the callback into the future so we can finish initializing the
         # entity.
         self.schedule(0.25, callback)
@@ -268,9 +384,11 @@ class Animat(Entity):
             return []
 
         locations = []
-        for rownum in range(len(hitmap)):
+        hitmap_len = len(hitmap)
+        for rownum in range(int(0.1 * hitmap_len), int(0.9 * hitmap_len)):
             row = hitmap[rownum]
-            for cellnum in range(len(row)):
+            row_len = len(row)
+            for cellnum in range(int(0.1 * row_len), int(0.9 * row_len)):
                 if not row[cellnum]:
                     locations.append((cellnum, rownum))
         return locations if locations else None

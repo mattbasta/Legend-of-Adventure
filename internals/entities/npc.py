@@ -17,18 +17,23 @@ class NPC(Animat, MarkovBot):
         self.image = "npc"
         self.view = "npc.static.down"
         self.height, self.width = 65, 65
+        self.offset = (-7.5, -65)
 
         self.messages = ["Hmmmm...", "So much to do!",
                          "*dumm dumm dee deedlee*"]
         self.chattering = False
         self.last_chat = ""
 
+        self._movement_properties += ("view", )
+
     def _unexpected_time(self):
         return random.randint(10, 20)
 
     def _on_event(self):
-        message = random.choice(self.messages)
-        self.write_chat(message)
+        if self.chattering:
+            # TODO: implement a way to reset this. Maybe a timer of some sort?
+            message = random.choice(self.messages)
+            self.write_chat(message)
 
         self.schedule(self._unexpected_time())
 
@@ -59,15 +64,11 @@ class NPC(Animat, MarkovBot):
         baseline["image"] = self.image
         return baseline
 
-    def move(self, x_vel, y_vel):
+    def move(self, x_vel, y_vel, broadcast=True, response=False):
         """Start the npc moving in any direction, or stop it from moving."""
-        changed = x_vel != self.velocity[0] or y_vel != self.velocity[1]
-        if not changed:
-            return
 
         old_velocity = self.velocity
-        self.velocity = [x_vel, y_vel]
-        self.layer = 1 if x_vel or y_vel else 0
+        super(NPC, self).move(x_vel, y_vel, broadcast=False, response=response)
 
         views = {(1, 0): "npc.%s.right",
                  (1, 1): "npc.%s.right",
@@ -83,5 +84,5 @@ class NPC(Animat, MarkovBot):
         elif any(old_velocity):
             self.view = views[tuple(old_velocity)] % "static"
 
-        self.broadcast_changes("x_vel", "y_vel", "layer", "view")
+        self.broadcast_changes(*self._movement_properties)
 

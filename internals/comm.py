@@ -9,6 +9,7 @@ import tornado.websocket
 
 import internals.constants as constants
 from internals.locations import Location
+from internals.scheduler import Scheduler
 
 
 REQUIRE_GUID = ("pos", "dir", "ups", "cha", )
@@ -36,8 +37,15 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.guid = None
         self.location = None
 
+        self.position = 0, 0
+        self.velocity = 0, 0
+        self.old_velocity = 0, 0
+
         self.chat_name = ""
         self.last_update = 0
+
+        self.scheduler = Scheduler(constants.tilesize / constants.speed / 1000,
+                                   self._on_schedule_event)
 
     def open(self):
         self.write_message("elo")
@@ -78,7 +86,6 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         try:
             x, y, x_dir, y_dir = map(int, map(float, data.split(":")))
         except ValueError:
-            raise
             self.write_message("errInvalid Position")
             return
 
@@ -91,18 +98,15 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             self.write_message("errBad Position")
             return
 
-        if self.position and False:
-            x2 = x - self.position[0]
-            y2 = y - self.position[1]
-            dist = math.sqrt(x2 * x2 + y2 * y2)
-            # TODO: This should take into account the time of last update.
-            if dist > 200:
-                self.write_message("errMoving too fast")
-                return
-
         # Perform the global position update before broadcasting in case
         # we're getting update spammed.
         self.position = (x, y)
+        self.velocity = (x_dir, y_dir)
+
+        # Also perform the rescheduling before we hit the database so the
+        # hitmapping isn't blocked on Redis.
+        self.scheduler.event_happened()
+
         outbound_redis.set("l:p:%s" % self.guid,
                            "%s:%d:%d" % (self.guid, x, y))
 
@@ -111,15 +115,14 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             return
         self.last_update = now
 
-        self._notify_location(self.location,
-                              "loc%s:%d:%d:%d:%d" %
-                                  (self.guid, x, y, x_dir, y_dir))
+        #self._notify_location(self.location,
+        #                      "loc%s:%d:%d:%d:%d" %
+        #                          (self.guid, x, y, x_dir, y_dir))
 
     def _on_chat(self, data):
         original_data = data
         if data.startswith("/"):
             return self._handle_command(data[1:])
-        print "Chat: %s" % data
 
         # Strip tags
         data = strip_tags(data)
@@ -189,8 +192,33 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.position = (avx, avy)
         CommHandler.add_client(self.location, self)
 
+    def _on_schedule_event(self, scheduled):
+        """Handle scheduled events regarding position."""
+
+        velocity = self.old_velocity if not scheduled else self.velocity
+        old_velocity = self.old_velocity
+        self.old_velocity = velocity
+
+        # Recalculate the new approximate position.
+        x, y = self.position
+        if scheduled:
+            duration = time.time() - self.scheduler.last_tick
+            duration *= 1000
+            x += velocity[0] * duration * constants.speed
+            y += velocity[1] * duration * constants.speed
+            self.position = x, y
+
+        self._notify_location(self.location,
+                              "loc%s:%d:%d:%d:%d" %
+                                  (self.guid, x, y,
+                                   self.velocity[0], self.velocity[1]),
+                              for_entities=scheduled)
+
+        return any(self.velocity)
+
     @classmethod
     def add_client(cls, location, client):
+        """Add a client to a level in the game."""
         loc_str = str(location)
         x, y = client.position
 
@@ -199,7 +227,8 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         locations[loc_str].append(client)
 
         # Subscribe to the location if we aren't subscribed already.
-        brukva.subscribe("location::%s" % loc_str)
+        brukva.subscribe("location::p::%s" % loc_str)
+        brukva.subscribe("location::e::%s" % loc_str)
         # Let everyone know that we're here.
         client._notify_global(
                 "enter",
@@ -227,14 +256,19 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         locations[loc_str].remove(client)
         if not locations[loc_str]:
             del locations[loc_str]
-            brukva.unsubscribe("location::%s" % loc_str)
+            brukva.unsubscribe("location::p::%s" % loc_str)
+            brukva.unsubscribe("location::e::%s" % loc_str)
 
-    def _notify_location(self, location, data):
+    def _notify_location(self, location, data, for_entities=False):
         """
         Broadcast a blob of data to all of the other listeners in a particular
         location.
+
+        If for_entities is True, the message will not be broadcast to other
+        players and will only be received by the appropriate entity server.
         """
-        outbound_redis.publish("location::%s" % location,
+        channel = "location::p::%s" if not for_entities else "location::pe::%s"
+        outbound_redis.publish(channel % location,
                                "%s>%s" % (location, data))
 
     def _notify_global(self, data_type, data):
