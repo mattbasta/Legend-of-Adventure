@@ -45,8 +45,6 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.chat_name = ""
         self.last_update = 0
 
-        self.touching_portal = None
-
         self.scheduler = Scheduler(constants.tilesize / constants.speed / 1000,
                                    self._on_schedule_event)
 
@@ -207,6 +205,8 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             loc = "%s:%s%s" % (sl.world, "%d:%d" % sl.coords, sublocs)
             self.location = Location(loc)
             self.position = self.parent_positions.pop()
+            avx, avy = map(lambda x: x / constants.tilesize, self.position)
+            avy += 1.3  # So we don't land back on the portal
         else:
             self.location = Location(data)
             self.position = avx, avy

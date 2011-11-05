@@ -390,9 +390,11 @@ var jgutils = {
                 var avatar = jgutils.avatars.get("local");
                 avatar.x = data.avatar.x * jgame.tilesize;
                 avatar.y = data.avatar.y * jgame.tilesize;
-                var x_map = jgutils.hitmapping.generate_x(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize),
-                    y_map = jgutils.hitmapping.generate_y(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
-                avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
+                if(data.hitmap) {
+                    var x_map = jgutils.hitmapping.generate_x(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize),
+                        y_map = jgutils.hitmapping.generate_y(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
+                    avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
+                }
 
                 if(avatar.image != data.avatar.image) {
                     jgame.images['avatar'] = null;
