@@ -309,7 +309,7 @@ class Animat(Entity):
 
         # Perform corner testing if the intended direction is along a diagonal.
         if velocity and all(velocity):
-            grid, hitmap = self.location.location.generate()
+            grid, hitmap, portals = self.location.location.generate()
             x, y = self.position
             x2, y2 = x + self.width, y + self.height
             x, y, x2, y2 = map(lambda x: int(x / constants.tilesize),
@@ -334,7 +334,7 @@ class Animat(Entity):
         self.velocity = [x_vel, y_vel]
         self.layer = 1 if x_vel or y_vel else 0
 
-        grid, hitmap = self.location.location.generate()
+        grid, hitmap, portals = self.location.location.generate()
         self.hitmap = get_hitmap(self.position, hitmap)
         if not response:
             self.scheduler.event_happened()

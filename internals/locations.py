@@ -1,8 +1,10 @@
+from copy import deepcopy
 import json
 import random
 
 import constants
 import entities.all as entities
+import levelbuilder.buildings as buildings
 from levelbuilder.levelbuilder import build_region
 import levelbuilder.towns as towns
 
@@ -11,6 +13,18 @@ class Location():
     """This is a class to load resources that may be required by the game."""
 
     def __init__(self, location_code):
+        """
+        Initialize a location based on a location ID.
+
+        All location IDs must be in the following format:
+
+        <world>:<x>:<y>[:<sublocation>[:...]]
+
+        A sublocation is defined as one of the following:
+
+        - b:<x>:<y>:<building_type>
+        - <sublocation_world_type>:<x>:<y>
+        """
         self.location_code = location_code
         scode = location_code.split(":")
         self.world = scode[0]
@@ -20,9 +34,11 @@ class Location():
 
         self._terrain_cache = None
         self._hitmap_cache = None
+        self._portal_cache = []
 
         # Parse sublocation information.
         while scode:
+            print scode
             subloc_type = scode[0]
             coords = int(scode[1]), int(scode[2])
             if subloc_type != "b":
@@ -31,6 +47,31 @@ class Location():
             else:
                 self.sublocations.append((subloc_type, coords, scode[3]))
                 scode = scode[4:]
+
+    def _reconstitute_sublocation(self, x):
+        build = []
+        for item in x:
+            if isinstance(item, (tuple, list)):
+                build.append(":".join(map(str, item)))
+            else:
+                build.append(str(item))
+        return ":".join(build)
+
+    def get_slide_code(self, x, y):
+        """
+        Get the code for a location if the player slides in any direction.
+        """
+        if self.sublocations:
+            sls = deepcopy(self.sublocations)
+            last_sl = list(sls[-1])
+            last_sl[1] = x, y
+            sls[-1] = last_sl
+
+            build = ":".join(map(self._reconstitute_sublocation, sls))
+            return "%s:%d:%d:%s" % (self.world, self.coords[0], self.coords[1],
+                                    build)
+        else:
+            return "%s:%d:%d" % (self.world, x, y)
 
     def is_town(self):
         random.seed(self.coords[0] * 1000 + self.coords[1])
@@ -59,8 +100,11 @@ class Location():
 
         # Uncomment to debug
         # return [entities.Child]
-
-        if self.is_town():
+        is_town = self.is_town()
+        if is_town and self.sublocations:
+            # TODO: Add different kinds of NPCs.
+            return [entities.Child, entities.Child]
+        elif is_town:
             return [entities.Trader, entities.Trader, entities.Child,
                     entities.Child, entities.Child, entities.Bully]
         return []
@@ -68,58 +112,84 @@ class Location():
     def generate(self):
         """Generate the static terrain elements for a particular location."""
 
-        if self._terrain_cache is not None and self._hitmap_cache is not None:
-            return self._terrain_cache, self._hitmap_cache
+        if (self._terrain_cache is not None and
+            self._hitmap_cache is not None and
+            self._portal_cache is not None):
+            return self._terrain_cache, self._hitmap_cache, self._portal_cache
 
         # TODO: Generate the level if it doesn't already automatically exist.
 
-        width, height = self.width(), self.height()
-        tileset, level = build_region(
-                self.coords[0], self.coords[1],
-                width, height)
-        hitmap = [[0 for x in range(width)] for
-                  y in range(height)]
-        if self.is_town():
+        # Only generate the world-level region if we're not in a sublocation.
+        tileset, level, hitmap = None, None, None
+        if not self.sublocations:
+            width, height = self.width(), self.height()
+            tileset, level = build_region(
+                    self.coords[0], self.coords[1],
+                    width, height)
+            hitmap = [[0 for x in range(width)] for
+                      y in range(height)]
+
+        portals = []
+
+        is_town = self.is_town()
+        if is_town and self.sublocations:
+            if self.sublocations[0][0] == "b":
+                level, hitmap, portals = buildings.build_interior(self)
+        elif is_town:
             # Already seeded by is_town method.
-            level, hitmap = towns.build_town(level, hitmap)
+            level, hitmap, portals = towns.build_town(level, hitmap)
 
         self._terrain_cache = level
         self._hitmap_cache = hitmap
+        self._portal_cache = portals
 
-        return level, hitmap
+        return level, hitmap, portals
+
+    def tileset(self):
+        """Return the name of the tileset to use with the location."""
+        if self.is_town() and self.sublocations:
+            return "interiors.png"
+        return "default.png"
+
+    def can_slide(self):
+        if self.is_town() and self.sublocations:
+            return False
+        return True
 
     def height(self):
-        if self.world == "o":
+        if not self.sublocations:
             return constants.level_height
         else:
-            return constants.level_height
+            return len(self.generate()[0])
 
     def width(self):
-        if self.world == "o":
+        if not self.sublocations:
             return constants.level_width
         else:
-            return constants.level_width
+            return len(self.generate()[0][0])
 
     def render(self, avx, avy):
         """Render the JSON representation of the level."""
 
-        level, hitmap = self.generate()
+        level, hitmap, portals = self.generate()
 
         return {"x": self.coords[0],
-                 "y": self.coords[1],
-                 "w": self.width(),
-                 "h": self.height(),
-                 "def_tile": 0,
-                 "avatar": {"x": avx, "y": avy,
-                            "image": "static/images/avatar.png"},
-                 "images": {"npc": "static/images/npc.png",
-                            "child1": "static/images/child1.png",
-                            "child2": "static/images/child2.png",
-                            "bully": "static/images/bully.png"},
-                 "tileset": "default.png",
-                 "level": level,
-                 "hitmap": hitmap,
-                 "port": constants.port}
+                "y": self.coords[1],
+                "w": self.width(),
+                "h": self.height(),
+                "def_tile": 0,
+                "avatar": {"x": avx, "y": avy,
+                           "image": "static/images/avatar.png"},
+                "images": {"npc": "static/images/npc.png",
+                           "child1": "static/images/child1.png",
+                           "child2": "static/images/child2.png",
+                           "bully": "static/images/bully.png"},
+                "tileset": self.tileset(),
+                "can_slide": self.can_slide(),
+                "level": level,
+                "hitmap": hitmap,
+                "portals": portals,
+                "port": constants.port}
 
     def __str__(self):
         return self.location_code

@@ -38,11 +38,14 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.location = None
 
         self.position = 0, 0
+        self.parent_positions = []
         self.velocity = 0, 0
         self.old_velocity = 0, 0
 
         self.chat_name = ""
         self.last_update = 0
+
+        self.touching_portal = None
 
         self.scheduler = Scheduler(constants.tilesize / constants.speed / 1000,
                                    self._on_schedule_event)
@@ -153,9 +156,9 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         self.guid = data
         # TODO: Once database access is available, this should pull the player
         # location from the database.
-        return self._load_level("%d:%d:%d:%d" % (0, 0, -1, -1))
+        return self._level_slide("%d:%d:%d:%d" % (0, 0, -1, -1))
 
-    def _load_level(self, data):
+    def _level_slide(self, data):
         x, y, avx, avy = 0, 0, 0, 0
         try:
             x, y, avx, avy = map(int, data.split(":"))
@@ -181,15 +184,36 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             elif avy > constants.level_height - 2:
                 avy = 0
 
-        if self.location:
+        if not self.location:
+            self._load_level("o:0:0", avx, avy)
+        else:
+            self._load_level(self.location.get_slide_code(x, y), avx, avy)
+
+    def _load_level(self, data, avx=None, avy=None):
+        """Send the client a level to load as the active level."""
+        sl = self.location
+        if sl:
             CommHandler.del_client(self)
 
         # Create the location
-        self.location = Location("o:%d:%d" % (x, y))
+        if data.startswith(":"):
+            self.parent_positions.append(self.position)
+            self.location = Location(str(sl) + data)
+        elif data == "..":
+            sublocs = map(sl._reconstitute_sublocation,
+                          sl.sublocations[:-1])
+            sublocs = ":%s" % ":".join(sublocs) if sublocs else ""
+
+            loc = "%s:%s%s" % (sl.world, "%d:%d" % sl.coords, sublocs)
+            self.location = Location(loc)
+            self.position = self.parent_positions.pop()
+        else:
+            self.location = Location(data)
+            self.position = avx, avy
+
         self.write_message(
                 "lev%s" % json.dumps(self.location.render(avx, avy)))
 
-        self.position = (avx, avy)
         CommHandler.add_client(self.location, self)
 
     def _on_schedule_event(self, scheduled):
@@ -213,6 +237,32 @@ class CommHandler(tornado.websocket.WebSocketHandler):
                                   (self.guid, x, y,
                                    self.velocity[0], self.velocity[1]),
                               for_entities=scheduled)
+
+        portals = self.location.generate()[2]
+        x_t, y_t = x / constants.tilesize, y / constants.tilesize
+        def touching_portal(p):
+            """Return whether the user is touching a portal, p."""
+            px, py, pw, ph = p["x"], p["y"], p["width"], p["height"]
+            return not (px + pw < x_t or x_t + 1 < px or
+                        py + ph < y_t - 1 or y_t < py)
+
+        # Perform portal hit testing if the user is in transit or has just
+        # stopped.
+        if scheduled or all(map(lambda x: not x, self.velocity)):
+            for portal in portals:
+                if touching_portal(portal):
+                    destination = portal["destination"]
+                    if destination.startswith(":"):
+                        destination = "%s:%s" % (str(self.location),
+                                                 destination)
+
+                    self.write_message("flv%s" % portal["destination"])
+                    self.velocity = 0, 0
+                    #self.scheduler.event_happened()
+                    self._load_level(portal["destination"],
+                                     portal["dest_coords"][0],
+                                     portal["dest_coords"][1])
+                break
 
         return any(self.velocity)
 

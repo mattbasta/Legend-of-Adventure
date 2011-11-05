@@ -156,7 +156,7 @@ class LocationHandler(object):
             e = entity(self)
 
             level = self.location.generate()
-            placeable_locations = e.get_placeable_locations(*level)
+            placeable_locations = e.get_placeable_locations(*level[:2])
 
             # Look at the avaialable locations for the entity.
             if placeable_locations is None:

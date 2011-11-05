@@ -14,10 +14,11 @@ function createImage(id, url) {
         // Refresh the tileset when requested, but not anything else.
         if(id == "tileset" && url != jgame.images["tileset"].attributes[0].value)
             delete jgame.images[id];
-        else
+        else {
             if(jgame.images_loaded == jgame.images_added)
                 loadutils.complete_task("images");
             return;
+        }
     }
     var i = new Image();
     jgame.images_added++;
@@ -331,14 +332,7 @@ var jgutils = {
 
         },
         load : function(x, y, av_x, av_y) {
-            // Remove everything level-specific
-            jgutils.timing.stop();
-            for(var av in jgutils.avatars.registry)
-                if(av != "local")
-                    jgutils.avatars.unregister(av);
-            if(jgame.follow_avatar != "local")
-                jgame.follow_avatar = "local";
-
+            jgutils.level.preprepare();
             loadutils.start_task(
                 "level_init",
                 ["images", "load", "comm", "comm_reg"],
@@ -353,40 +347,67 @@ var jgutils = {
             jgutils.comm.init();
             jgutils.comm.register(
                 x + ":" + y + ":" + av_x + ":" + av_y,
-                function(data) {
-                    jgame['port'] = data.port;
-                    jgame['level'] = data;
-
-                    jgutils.objects.registry = {};
-                    for(var i in jgutils.objects.layers) {
-                        var layer = jgutils.objects.layers[i];
-                        layer.child_objects = {};
-                        layer.updated = true;
-                    }
-                    jgutils.objects.redrawLayers();
-
-                    var avatar = jgutils.avatars.get("local");
-                    avatar.x = data.avatar.x * jgame.tilesize;
-                    avatar.y = data.avatar.y * jgame.tilesize;
-                    var x_map = jgutils.hitmapping.generate_x(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize),
-                        y_map = jgutils.hitmapping.generate_y(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
-                    avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
-
-                    if(avatar.image != data.avatar.image) {
-                        jgame.images['avatar'] = null;
-                        createImage('avatar', data.avatar.image);
-                    }
-                    for(var pref_img in data.images)
-                        createImage(pref_img, data.images[pref_img]);
-
-                    var tileset_url = "/static/images/tilesets/" + data.tileset;// :
-//                                        'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
-                    createImage("tileset", tileset_url);
-                    createImage("inventory", "/static/images/inventory.png");
-                    loadutils.complete_task("load");
-
-                }
+                jgutils.level.prepare()
             );
+        },
+        expect : function(level) {
+            jgutils.level.preprepare();
+            loadutils.start_task(
+                "level_init",
+                ["images", "load", "comm_reg"],
+                jgutils.level.init
+            );
+            var callback = jgutils.level.prepare(level);
+            jgutils.comm._level_callback = function(data) {
+                loadutils.complete_task("comm_reg");
+                callback(data);
+                jgutils.comm._level_callback = null;
+            };
+        },
+        preprepare : function() {
+            // Remove everything level-specific
+            jgutils.timing.stop();
+            chatutils.stopChat();
+            for(var av in jgutils.avatars.registry)
+                if(av != "local")
+                    jgutils.avatars.unregister(av);
+            if(jgame.follow_avatar != "local")
+                jgame.follow_avatar = "local";
+        },
+        prepare : function() {
+            return function(data) {
+                jgame['port'] = data.port;
+                jgame['level'] = data;
+
+                jgutils.objects.registry = {};
+                for(var i in jgutils.objects.layers) {
+                    var layer = jgutils.objects.layers[i];
+                    layer.child_objects = {};
+                    layer.updated = true;
+                }
+                jgutils.objects.redrawLayers();
+
+                var avatar = jgutils.avatars.get("local");
+                avatar.x = data.avatar.x * jgame.tilesize;
+                avatar.y = data.avatar.y * jgame.tilesize;
+                var x_map = jgutils.hitmapping.generate_x(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize),
+                    y_map = jgutils.hitmapping.generate_y(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
+                avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
+
+                if(avatar.image != data.avatar.image) {
+                    jgame.images['avatar'] = null;
+                    createImage('avatar', data.avatar.image);
+                }
+                for(var pref_img in data.images)
+                    createImage(pref_img, data.images[pref_img]);
+
+                var tileset_url = "/static/images/tilesets/" + data.tileset;// :
+//                                'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
+                createImage("tileset", tileset_url);
+                createImage("inventory", "/static/images/inventory.png");
+                loadutils.complete_task("load");
+
+            };
         },
         update : function() {
             var bgt_buffer = document.getElementById('bg_tile_full'),
@@ -477,13 +498,14 @@ var jgutils = {
 
             var obj_cont = document.getElementById('object_container');
             var bg_tile = document.getElementById('bg_tile_full'),
-                c = bg_tile.getContext("2d");
+                c = bg_tile.getContext("2d"),
+                tc = jgame.terrain_canvas;
 
-            c.drawImage(jgame.terrain_canvas,
-                        jgame.offset.x, jgame.offset.y,
-                        bg_tile.clientWidth, bg_tile.clientHeight,
-                        0, 0,
-                        bg_tile.clientWidth, bg_tile.clientHeight);
+            c.drawImage(tc,
+                        Math.max(jgame.offset.x, 0), Math.max(jgame.offset.y, 0),
+                        Math.min(bg_tile.clientWidth, tc.width), Math.min(bg_tile.clientHeight, tc.height),
+                        Math.max(n_x, 0), Math.max(n_y, 0),
+                        Math.min(bg_tile.clientWidth, tc.width), Math.min(bg_tile.clientHeight, tc.height));
 
             if(!moveavatar_x || resize) {
                 //bg_tile.style.left = n_x + 'px';
@@ -655,6 +677,9 @@ var jgutils = {
                         jdata,
                         jdata["layer"]
                     );
+                    break;
+                case "flv":
+                    jgutils.level.expect(body);
                     break;
                 case "lev":
                     jgutils.comm._level_callback(JSON.parse(body))
@@ -987,15 +1012,16 @@ var jgutils = {
                     avy = Math.floor(avy);
                     jgutils.level.load(x, y, avx, avy);
                 }
-                if(_y < 0 && avatar.y < jgame.tilesize / 2)
-                    begin_swap_region(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y);
-                else if(_y > 0 && avatar.y > (jgame.level.h - 0.5) * jgame.tilesize)
-                    begin_swap_region(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y);
-                else if(_x < 0 && avatar.x < jgame.tilesize / 2)
-                    begin_swap_region(jgame.level.x - 1, jgame.level.y, avatar.x, avatar.y);
-                else if(_x > 0 && avatar.x > (jgame.level.w - 0.5) * jgame.tilesize)
-                    begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
-
+                if(jgame.level.can_slide) {
+                    if(_y < 0 && avatar.y < jgame.tilesize / 2)
+                        begin_swap_region(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y);
+                    else if(_y > 0 && avatar.y >= (jgame.level.h - 1) * jgame.tilesize)
+                        begin_swap_region(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y);
+                    else if(_x < 0 && avatar.x < jgame.tilesize / 2)
+                        begin_swap_region(jgame.level.x - 1, jgame.level.y, avatar.x, avatar.y);
+                    else if(_x > 0 && avatar.x >= (jgame.level.w - 1) * jgame.tilesize)
+                        begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
+                }
             } else if(avatar.direction[0] || avatar.direction[1]) {
                 avatar.position = jgutils.avatars.get_avatar_sprite_direction(avatar.direction)[0].position;
                 // So it doesn't make sense to reset the avatar's direction,
