@@ -62,6 +62,24 @@ var jgutils = {
                 case 83: // S
                     jgame.keys.down = set;
                     break;
+                case 74: // J
+                    if(set)
+                        jgutils.inventory.cycle_back();
+                    break;
+                case 75: // K
+                    if(set)
+                        jgutils.inventory.cycle_forward();
+                    break;
+                case 76: // L
+                case 32: // Space
+                    if(set)
+                        jgutils.comm.send("use", 0);
+                    break;
+                case 81: // Q
+                case 85: // U
+                    if(set)
+                        jgutils.comm.send("drp", 0);
+                    break;
                 default:
                     var kb;
                     if(kb = jgame.keys.bindings[e.keyCode]) {
@@ -410,6 +428,7 @@ var jgutils = {
 //                                'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
                 createImage("tileset", tileset_url);
                 createImage("inventory", "/static/images/inventory.png");
+                jgutils.inventory.set_health(data.health);
                 loadutils.complete_task("load");
 
             };
@@ -530,9 +549,11 @@ var jgutils = {
     },
     inventory : {
         slots : [null, null, null, null, null],
+        health : 100,
         hovering : -1,
         selected : false,
         special : -1,
+        health_dwindle : null,
         activate_selected : function() {
             if(jgutils.inventory.hovering == -1)
                 return;
@@ -545,6 +566,19 @@ var jgutils = {
         clear : function(slot) {
             jgutils.inventory.slots[slot] = null;
             jgutils.inventory._redraw();
+        },
+        cycle_forward : function() {jgutils.comm.send("cyc", "f")},
+        cycle_back : function() {jgutils.comm.send("cyc", "b")},
+        set_health : function(health) {
+            jgutils.inventory.health = health;
+            jgutils.inventory._redraw();
+            if(health < 30)
+                if(!jgutils.inventory.health_dwindle)
+                    jgutils.inventory.health_dwindle = setInterval(jgutils.inventory._redraw, 100);
+            else if(jgutils.inventory.health_dwindle) {
+                clearInterval(jgutils.inventory.health_dwindle);
+                jgutils.inventory.health_dwindle = null;
+            }
         },
         _redraw : function() {
             var inventory = document.getElementById("canvas_inventory"),
@@ -599,6 +633,24 @@ var jgutils = {
                         draw_item(34 + i * 64, 22, 48, 48, sl[i]);
                 }
             }
+
+            // Redraw the health bar.
+            var health = jgutils.inventory.health / 10 * 14,
+                health_x = 0,
+                health_low = health < 3 * 14;
+            function get_y() {
+                if(!health_low)
+                    return 2;
+                return Math.random() * 10 < 3 ? Math.random() * 4 - 2 : 2;
+            }
+            while(health - 14 > 0) {
+                ctx.drawImage(ii, 65, 144, 13, 13,
+                              84 + health_x, get_y(), 13, 13);
+                health_x += 14;
+                health -= 14;
+            }
+            ctx.drawImage(ii, 65, 144, health, 13,
+                          84 + health_x, get_y(), health, 13);
         },
         _hover : function(e) {
             var oh = jgutils.inventory.hovering;
@@ -732,6 +784,10 @@ var jgutils = {
                         else
                             entity[key] = value;
                     }
+                    break;
+                case "hea":
+                    var h = parseInt(body);
+                    jgutils.inventory.set_health(h);
                     break;
                 case "inv":
                     var data = body.split("\n");

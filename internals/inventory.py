@@ -31,6 +31,17 @@ class InventoryManager(object):
         item = self.inventory[slot]
         self.write_message("chaitem daemon\nUsed %s" % item)
 
+    def cycle_items(self, direction):
+        """Cycle the items in the inventory one slot in `direction`"""
+        direction = -1 if direction == "b" else 1
+        count = len(self.inventory)
+        pos = lambda x: x % count
+        new_inv = {}
+        for i in range(count):
+            new_inv[i] = self.inventory[pos(i + direction)]
+        self.inventory = new_inv
+        self.update_inventory()
+
     def inventory_full(self):
         """Returns whether the inventory is full."""
         return len(self.inventory) == 5

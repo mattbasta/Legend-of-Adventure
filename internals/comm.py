@@ -38,6 +38,8 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
         self.guid = None
         self.location = None
 
+        self.health = 100
+
         self.position = 0, 0
         self.parent_positions = []
         self.velocity = 0, 0
@@ -57,13 +59,15 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
     def on_close(self):
         CommHandler.del_client(self)
         connections.remove(self)
+        self.location = None
 
     def on_message(self, message):
         callbacks = {"reg": self._register,
                      "lev": self._load_level,
                      "cha": self._on_chat,
                      "loc": self._on_position_update,
-                     "use": self.use_item,}
+                     "use": self.use_item,
+                     "cyc": self.cycle_items}
 
         m_type = message[:3]
 
@@ -215,13 +219,18 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
             self.location = Location(data)
             self.position = avx, avy
 
-        self.write_message(
-                "lev%s" % json.dumps(self.location.render(avx, avy)))
+        level = self.location.render(avx, avy)
+        level["health"] = self.health
+        self.write_message("lev%s" % json.dumps(level))
 
         CommHandler.add_client(self.location, self)
 
     def _on_schedule_event(self, scheduled):
         """Handle scheduled events regarding position."""
+
+        # If the user terminates while moving, stop updating them.
+        if not self.location:
+            return
 
         velocity = self.old_velocity if not scheduled else self.velocity
         old_velocity = self.old_velocity
@@ -262,13 +271,24 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
 
                     self.write_message("flv%s" % portal["destination"])
                     self.velocity = 0, 0
-                    #self.scheduler.event_happened()
                     self._load_level(portal["destination"],
                                      portal["dest_coords"][0],
                                      portal["dest_coords"][1])
-                break
+                    break
 
         return any(self.velocity)
+
+    def update_health(self, delta):
+        old_health = self.health
+        self.health += delta
+        self.health = min(max(self.health, 0), 100)
+        if self.health == old_health:
+            return
+
+        if self.health == 0:
+            self.write_message("die")
+        else:
+            self.write_message("hea%s" % self.health)
 
     @classmethod
     def add_client(cls, location, client):
