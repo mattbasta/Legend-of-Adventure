@@ -8,6 +8,7 @@ function guid() {return S4()+S4()+S4()+S4();}
 
 if(typeof WebSocket == "undefined" && typeof MozWebSocket != "undefined")
     WebSocket = MozWebSocket;
+var mozSmoothing = !(typeof $.browser.mozilla == "undefined");
 
 function createImage(id, url) {
     if(jgame.images[id]) {
@@ -84,7 +85,8 @@ var jgutils = {
         // TODO: Move these into jgutils.inventory.
         ci.mousedown(function() {jgutils.inventory.selected = true;
                                  jgutils.inventory._redraw();});
-        ci.mouseup(function() {jgutils.inventory.selected = false;
+        ci.mouseup(function() {jgutils.inventory.activate_selected();
+                               jgutils.inventory.selected = false;
                                jgutils.inventory._redraw();});
 
         // Setup the jgame instance
@@ -368,6 +370,7 @@ var jgutils = {
             // Remove everything level-specific
             jgutils.timing.stop();
             chatutils.stopChat();
+            createImage("items", "/static/images/items.png");
             for(var av in jgutils.avatars.registry)
                 if(av != "local")
                     jgutils.avatars.unregister(av);
@@ -530,6 +533,11 @@ var jgutils = {
         hovering : -1,
         selected : false,
         special : -1,
+        activate_selected : function() {
+            if(jgutils.inventory.hovering == -1)
+                return;
+            jgutils.comm.send("use", jgutils.inventory.hovering);
+        },
         set : function(slot, item) {
             jgutils.inventory.slots[slot] = item;
             jgutils.inventory._redraw();
@@ -542,10 +550,30 @@ var jgutils = {
             var inventory = document.getElementById("canvas_inventory"),
                 ctx = inventory.getContext("2d"),
                 ii = jgame.images["inventory"],
+                it = jgame.images["items"],
+                sl = jgutils.inventory.slots,
                 h = jgutils.inventory.hovering,
                 s = jgutils.inventory.special,
                 sel = jgutils.inventory.selected;
+            if(!ii)
+                return
+            if(mozSmoothing)
+                ctx.mozImageSmoothingEnabled = false;
             ctx.clearRect(0, 0, 374, 85);
+            function draw_item(x, y, h, w, code) {
+                var sy = 0, sx = 0;
+                if(code[0] == "w") {
+                    attributes = code.substr(1).split(".");
+                    sx = jgassets.weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
+                    sy = jgassets.weapon_order.indexOf(attributes[0]) * 24;
+                } else {
+                    var c = parseInt(code.substr(1));
+                    sx = c % 5 * 24;
+                    sy = Math.floor(c / 5) * 24;
+                }
+                ctx.drawImage(it, sx, sy, 24, 24,
+                              x, y, w, h);
+            }
             for(var i = 0; i < 5; i++) {
                 if(i == 0) {
                     var sx = 0;
@@ -555,6 +583,8 @@ var jgutils = {
                         sx = 80;
                     ctx.drawImage(ii, sx, 0, 80, 80,
                                   0, 0, 80, 80);
+                    if(sl[i])
+                        draw_item(10, 10, 60, 60, sl[i]);
                 } else {
                     var sx = 0;
                     if(h == i)
@@ -565,6 +595,8 @@ var jgutils = {
                                   26 + i * 64, 14, 16, 64);
                     ctx.drawImage(ii, sx + (i < 4 ? 16 : 48), 80, 16, 64,
                                   74 + i * 64, 14, 16, 64);
+                    if(sl[i])
+                        draw_item(34 + i * 64, 22, 48, 48, sl[i]);
                 }
             }
         },
@@ -609,7 +641,8 @@ var jgutils = {
             };
         },
         handle_message : function(message) {
-            console.log("Server message: [" + message.data + "]");
+            if(message.data.substr(0, 3) != "epu")
+                console.log("Server message: [" + message.data + "]");
             body = message.data.substr(3);
             switch(message.data.substr(0, 3)) {
                 case "add": // Add avatar
@@ -700,6 +733,18 @@ var jgutils = {
                             entity[key] = value;
                     }
                     break;
+                case "inv":
+                    var data = body.split("\n");
+                    for(var i = 0; i < data.length; i++) {
+                        // position:item_code
+                        var lined = data[i].split(":");
+                        lined[0] = parseInt(lined[0]);
+                        if(lined[1] == "")
+                            jgutils.inventory.clear(lined[0]);
+                        else
+                            jgutils.inventory.set(lined[0], lined[1]);
+                    }
+                    break;
                 case "err":
                     if(!!window.console) {
                         console.log("Error: " + body);
@@ -737,6 +782,7 @@ var jgutils = {
             var oc = document.getElementById('object_container');
 
             var layer = document.createElement('canvas');
+            //layer.mozImageSmoothingEnabled = false;
             layer.id = 'jglayer' + name;
             layer.width = jgame.level.w * jgame.tilesize;
             layer.height = jgame.level.h * jgame.tilesize;
@@ -850,6 +896,8 @@ var jgutils = {
         redrawBackground : function() {
             var bg_tile = document.getElementById('bg_tile'),
                 c = bg_tile.getContext('2d');
+            if(mozSmoothing)
+                c.mozImageSmoothingEnabled = false;
             var c_levlev = jgame.level.level,
                 c_tilesize = jgame.tilesize,
                 c_tileset = jgame.images["tileset"],

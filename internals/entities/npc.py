@@ -26,6 +26,9 @@ class NPC(Animat, MarkovBot):
 
         self._movement_properties += ("view", )
 
+    def get_prefix(self):
+        return "@"
+
     def _unexpected_time(self):
         return random.randint(10, 20)
 

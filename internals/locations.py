@@ -38,7 +38,6 @@ class Location():
 
         # Parse sublocation information.
         while scode:
-            print scode
             subloc_type = scode[0]
             coords = int(scode[1]), int(scode[2])
             if subloc_type != "b":

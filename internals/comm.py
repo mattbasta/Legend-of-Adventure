@@ -8,6 +8,7 @@ import redis
 import tornado.websocket
 
 import internals.constants as constants
+from internals.inventory import InventoryManager
 from internals.locations import Location
 from internals.scheduler import Scheduler
 
@@ -28,7 +29,7 @@ def strip_tags(data):
     data = re.compile(r'<[^<]*?>').sub('', data)
     return data.replace("<", "&lt;").replace(">", "&gt;")
 
-class CommHandler(tornado.websocket.WebSocketHandler):
+class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
 
     def __init__(self, application, request, **kwargs):
         super(CommHandler, self).__init__(application, request)
@@ -49,6 +50,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
                                    self._on_schedule_event)
 
     def open(self):
+        super(CommHandler, self).open()
         self.write_message("elo")
         connections.append(self)
 
@@ -60,7 +62,8 @@ class CommHandler(tornado.websocket.WebSocketHandler):
         callbacks = {"reg": self._register,
                      "lev": self._load_level,
                      "cha": self._on_chat,
-                     "loc": self._on_position_update,}
+                     "loc": self._on_position_update,
+                     "use": self.use_item,}
 
         m_type = message[:3]
 
@@ -152,6 +155,7 @@ class CommHandler(tornado.websocket.WebSocketHandler):
             self.write_message("errBad GUID")
             return
         self.guid = data
+        self.registered()
         # TODO: Once database access is available, this should pull the player
         # location from the database.
         return self._level_slide("%d:%d:%d:%d" % (0, 0, -1, -1))

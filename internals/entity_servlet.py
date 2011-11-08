@@ -143,6 +143,11 @@ class LocationHandler(object):
             self.ttl = t
             t.start()
 
+    def destroy_entity(self, entity):
+        """Destroy an entity and remove it from the fork."""
+        self.entities.remove(entity)
+        entity.destroy()
+
     def spawn_initial_entities(self, location):
         """
         Using data from a location, spawn the initial entities that will roam a

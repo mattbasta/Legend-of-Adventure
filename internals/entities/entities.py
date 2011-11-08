@@ -19,13 +19,17 @@ class Entity(object):
     def __init__(self, location, x=None, y=None, id=None):
         super(Entity, self).__init__()
 
-        self.id = id if id else "@%s" % uuid.uuid4().hex
+        self.id = id if id else "%s%s" % (self.get_prefix, uuid.uuid4().hex)
         self.height, self.width = 0, 0
         self.position = x, y
         self.location = location
         self.offset = (0, 0)
 
         self.remembered_distances = {}
+
+    def get_prefix(self):
+        """Get the prefix for the entity GUID."""
+        return "%"
 
     def forget(self, guid):
         """
