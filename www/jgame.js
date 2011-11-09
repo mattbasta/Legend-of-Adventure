@@ -165,7 +165,7 @@ var jgutils = {
                 y = ((y_orig / ts) | 0),
                 y2 = (((y_orig - 1) / ts)|0) + 1;
             //console.log("RM X: " + x + ", " + y + ", " + y2);
-            var x_min = 0, x_max = map[y].length * ts;
+            var x_min = -1 * ts, x_max = (map[y].length + 1) * ts;
             for(var i = x - 1; i >= 0; i--) {
                 if(map[y][i] || map[y2][i]) {
                     x_min = (i + 1) * ts;
@@ -364,7 +364,6 @@ var jgutils = {
             // ESC for chat
             jgutils.keys.addBinding(27, chatutils.stopChat, true);
 
-            jgutils.comm.init();
             jgutils.comm.register(
                 x + ":" + y + ":" + av_x + ":" + av_y,
                 jgutils.level.prepare()
@@ -680,16 +679,15 @@ var jgutils = {
         init : function() {
             if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
                 loadutils.complete_task("comm");
-                if(jgutils.comm.registrar)
-                    jgutils.comm.registrar();
                 return;
             }
             jgutils.comm.socket = new WebSocket("ws://" + document.domain + ":" + jgame.port + "/socket");
             jgutils.comm.socket.onopen = function(message) {
                 jgutils.comm.socket.onmessage = jgutils.comm.handle_message;
-                loadutils.complete_task("comm");
-                if(jgutils.comm.registrar)
+                if(jgutils.comm.registrar) {
                     jgutils.comm.registrar();
+                    jgutils.comm.registrar = null;
+                }
             };
         },
         handle_message : function(message) {
@@ -818,11 +816,13 @@ var jgutils = {
                     jgutils.comm.send("lev", position);
                 else
                     jgutils.comm.send("reg", jgutils.comm.local_id = guid());
+                loadutils.complete_task("comm");
             };
             if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
                 r();
             } else {
                 jgutils.comm.registrar = r;
+                jgutils.comm.init();
             }
         },
         send : function(header, body) {
