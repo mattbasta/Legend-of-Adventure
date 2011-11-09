@@ -63,7 +63,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         callbacks = {"reg": self._register,
-                     "lev": self._load_level,
+                     "lev": self._level_slide,
                      "cha": self._on_chat,
                      "loc": self._on_position_update,
                      "use": self.use_item,
