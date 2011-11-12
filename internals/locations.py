@@ -104,6 +104,7 @@ class Location():
             # TODO: Add different kinds of NPCs.
             return [entities.Child, entities.Child]
         elif is_town:
+            #return [entities.Bully]
             return [entities.Trader, entities.Trader, entities.Child,
                     entities.Child, entities.Child, entities.Bully]
         return []

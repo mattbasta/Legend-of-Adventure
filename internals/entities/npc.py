@@ -17,7 +17,7 @@ class NPC(Animat, MarkovBot):
         self.image = "npc"
         self.view = "npc.static.down"
         self.height, self.width = 65, 65
-        self.offset = (-7.5, -65)
+        #self.offset = (-7.5, -65)
 
         self.messages = ["Hmmmm...", "So much to do!",
                          "*dumm dumm dee deedlee*"]
@@ -33,7 +33,7 @@ class NPC(Animat, MarkovBot):
         return random.randint(10, 20)
 
     def _on_event(self):
-        if self.chattering:
+        if not self.chattering:
             # TODO: implement a way to reset this. Maybe a timer of some sort?
             message = random.choice(self.messages)
             self.write_chat(message)
@@ -71,7 +71,7 @@ class NPC(Animat, MarkovBot):
         """Start the npc moving in any direction, or stop it from moving."""
 
         old_velocity = self.velocity
-        super(NPC, self).move(x_vel, y_vel, broadcast=False, response=response)
+        super(NPC, self).move(x_vel, y_vel, broadcast=False)
 
         views = {(1, 0): "npc.%s.right",
                  (1, 1): "npc.%s.right",

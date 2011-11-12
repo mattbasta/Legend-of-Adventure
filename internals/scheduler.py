@@ -45,8 +45,6 @@ class Scheduler(object):
         """
         now = time.time()
 
-        if not self.timer:
-            self.last_tick = now
         self.deschedule()
         value = self.callback(scheduled=False)
         self.last_tick = now

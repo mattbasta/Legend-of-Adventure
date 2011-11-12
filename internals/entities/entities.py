@@ -23,7 +23,7 @@ class Entity(object):
         self.height, self.width = 0, 0
         self.position = x, y
         self.location = location
-        self.offset = (0, 0)
+        self.offset = 0, 0
 
         self.remembered_distances = {}
 
@@ -189,7 +189,8 @@ class Animat(Entity):
         self.scheduler = Scheduler(constants.tilesize / constants.speed / 1000,
                                    self._on_scheduled_event)
 
-        self.velocity = [0, 0]
+        self.velocity = 0, 0
+        self.old_velocity = None
         self.movement_effect = ""
 
         self.hitmap = None
@@ -272,21 +273,27 @@ class Animat(Entity):
         duration = time.time() - self.scheduler.last_tick
         duration *= 1000
 
-        # Calculate the updated position.
-        position = self._updated_position(*self.position, duration=duration)
-        if scheduled or True:
-            self.position = position
+        now_moving = any(self.velocity)
+        velocity = self.velocity if now_moving else self.old_velocity
+
+        if scheduled or not now_moving:
+            # Calculate the updated position.
+            self.position = self._updated_position(*self.position,
+                                                   velocity=velocity,
+                                                   duration=duration)
+
+        if scheduled:
             # Calculate the next position in this direction.
             future_position = self._updated_position(*self.position,
                                                      duration=duration)
             # If the next position isn't a valid place to move, stop moving.
             if not self._test_position(future_position, self.velocity):
                 self.write_chat("Oh no, I almost hit a wall.")
-                self.move(0, 0, response=True)
+                self.move(0, 0)
                 # Also don't keep calculating the next position.
                 return False
 
-        return any(self.velocity)
+        return now_moving
 
     def _test_position(self, position, velocity=None):
         """
@@ -294,7 +301,11 @@ class Animat(Entity):
         doesn't fall on a value that is solid.
         """
 
-        x, y = self._updated_position(*position)
+        if velocity and any(velocity):
+            x, y = self._updated_position(*position, velocity=velocity)
+        else:
+            x, y = position
+
         x_t, y_t = map(lambda i: int(i / constants.tilesize), (x, y))
 
         # Test that the next position is within bounds.
@@ -305,15 +316,14 @@ class Animat(Entity):
             return False
 
         # Test that the next position is solid.
-        if self.hitmap is not None:
-            x_hitmap, y_hitmap = self.hitmap
-            if (x < x_hitmap[0] or x > x_hitmap[1] or
-                y < y_hitmap[0] or y > y_hitmap[1]):
-                return False
+        hitmap = self.location.location.generate()[1]
+        x_hitmap, y_hitmap = get_hitmap((x, y), hitmap)
+        if (x < x_hitmap[0] or x + self.width > x_hitmap[1] or
+            y < y_hitmap[0] or y + self.height > y_hitmap[1]):
+            return False
 
         # Perform corner testing if the intended direction is along a diagonal.
         if velocity and all(velocity):
-            grid, hitmap, portals = self.location.location.generate()
             x, y = self.position
             x2, y2 = x + self.width, y + self.height
             x, y, x2, y2 = map(lambda x: int(x / constants.tilesize),
@@ -328,21 +338,27 @@ class Animat(Entity):
 
         return True
 
-    def move(self, x_vel, y_vel, broadcast=True, response=False):
+    def move(self, x_vel, y_vel, broadcast=True):
         """Start the sprite moving in any direction, or stop it from moving."""
 
         changed = x_vel != self.velocity[0] or y_vel != self.velocity[1]
         if not changed:
             return
 
-        self.velocity = [x_vel, y_vel]
-        self.layer = 1 if x_vel or y_vel else 0
+        self.old_velocity = self.velocity
+        self.velocity = x_vel, y_vel
+        now_moving = any(self.velocity)
+        self.layer = 1 if now_moving else 0
 
-        grid, hitmap, portals = self.location.location.generate()
-        self.hitmap = get_hitmap(self.position, hitmap)
-        if not response:
-            self.scheduler.event_happened()
-        else:
+        # Perform hitmapping, but don't take the Y offset into account. We want
+        # to hit the left edge properly, but the top edge might actually be
+        # representing the bottom edge.
+        self.hitmap = get_hitmap((self.position[0] - self.offset[0],
+                                  self.position[1]),
+                                 self.location.location.generate()[1])
+        self.scheduler.event_happened()
+        if not now_moving:
+            # Deschedule doesn't call event_happened.
             self.scheduler.deschedule()
 
         if broadcast:
