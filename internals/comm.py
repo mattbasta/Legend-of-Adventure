@@ -153,6 +153,12 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
             if chat_name:
                 self.chat_name = chat_name
             self.write_message("chagod\n/Got it, thanks")
+        if message.startswith("warp "):
+            location, avx, avy = message[5:].split(" ")
+            avx, avy = int(avx), int(avy)
+            self.write_message("flv%s" % location)
+            self._load_level(location, avx, avy)
+            self.write_message("chagod\n/Warping...")
 
     def _register(self, data):
         if data in ("local", ):
@@ -172,22 +178,29 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
             self.write_message("errInvalid level id")
             return
 
+        try:
+            level_width = self.location.width()
+            level_height = self.location.height()
+        except AttributeError:
+            level_width = constants.level_width
+            level_height = constants.level_height
+
         if avx == -1:
-            avx = constants.level_width / 2
+            avx =  level_width / 2
         else:
             avx = int(avx) / constants.tilesize
             if avx < 2:
-                avx = constants.level_width - 1
-            elif avx > constants.level_width - 2:
+                avx = level_width - 1
+            elif avx > level_width - 2:
                 avx = 0
 
         if avy == -1:
-            avy = constants.level_height / 2
+            avy = level_height / 2
         else:
             avy = int(avy) / constants.tilesize
             if avy < 2:
-                avy = constants.level_height - 1
-            elif avy > constants.level_height - 2:
+                avy = level_height - 1
+            elif avy > level_height - 2:
                 avy = 0
 
         if not self.location:

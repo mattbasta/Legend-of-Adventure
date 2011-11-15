@@ -6,6 +6,7 @@ import constants
 import entities.all as entities
 import levelbuilder.buildings as buildings
 from levelbuilder.levelbuilder import build_region
+import levelbuilder.dungeons as dungeons
 import levelbuilder.towns as towns
 
 
@@ -85,6 +86,8 @@ class Location():
         if self.is_town():
             return False
         random.seed(self.coords[0] * 1001 + self.coords[1] * 2 + 1)
+        if self.coords == (1, 0):
+            return True
         return random.randint(0, 5)
 
     def has_entities(self):
@@ -132,12 +135,18 @@ class Location():
         portals = []
 
         is_town = self.is_town()
+        is_dungeon = self.is_dungeon()
         if is_town and self.sublocations:
             if self.sublocations[0][0] == "b":
                 level, hitmap, portals = buildings.build_interior(self)
         elif is_town:
             # Already seeded by is_town method.
             level, hitmap, portals = towns.build_town(level, hitmap)
+        elif is_dungeon and self.sublocations:
+            level, hitmap, portals = dungeons.build_dungeon(self)
+        elif self.is_dungeon():
+            level, hitmap, portals = dungeons.overlay_portal(level, hitmap,
+                                                             self)
 
         self._terrain_cache = level
         self._hitmap_cache = hitmap
@@ -147,7 +156,9 @@ class Location():
 
     def tileset(self):
         """Return the name of the tileset to use with the location."""
-        if self.is_town() and self.sublocations:
+        if self.is_dungeon() and self.sublocations:
+            return "dungeons.png"
+        elif self.is_town() and self.sublocations:
             return "interiors.png"
         return "default.png"
 
@@ -173,8 +184,13 @@ class Location():
 
         level, hitmap, portals = self.generate()
 
-        return {"x": self.coords[0],
-                "y": self.coords[1],
+        if not self.sublocations:
+            x, y = self.coords
+        else:
+            x, y = self.sublocations[-1][1]
+
+        return {"x": x,
+                "y": y,
                 "w": self.width(),
                 "h": self.height(),
                 "def_tile": 0,

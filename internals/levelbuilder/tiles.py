@@ -50,3 +50,16 @@ def get_building_tiles(building, btype="buildings"):
                     "dest_coords": dest_crds})
 
     return (len(output[0]), len(output), output, hitmap, portals, )
+
+
+def overlay(grid, hitmap, structure, x, y):
+    """Place a structure on the tile grid."""
+
+    width, height, bt, hm, portals = structure
+    for row_num in range(height):
+        for tile in range(width):
+            grid[y + row_num][x + tile] = bt[row_num][tile]
+            hitmap[y + row_num][x + tile] = hm[row_num][tile]
+
+    return grid, hitmap, portals
+

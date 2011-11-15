@@ -4,7 +4,7 @@ import os
 import random
 
 from internals.constants import level_width, level_height
-from tiles import get_building_tiles
+from tiles import get_building_tiles, overlay
 
 
 BUILDINGS = ("plaza", "well", "church", "clock", "library",
@@ -28,18 +28,6 @@ ROAD_MINOR_TILES = {(0, 1, 1, 1): 78,
                     (1, 0, 1, 1): 79,
                     (1, 1, 0, 1): 83,
                     (1, 1, 1, 0): 84, }
-
-
-def overlay(grid, hitmap, building, x, y):
-    """Place a building on the tile grid."""
-
-    width, height, bt, hm, portals = building
-    for row_num in range(height):
-        for tile in range(width):
-            grid[y + row_num][x + tile] = bt[row_num][tile]
-            hitmap[y + row_num][x + tile] = hm[row_num][tile]
-
-    return grid, hitmap, portals
 
 
 def smooth_roads(grid):
