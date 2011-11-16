@@ -110,6 +110,11 @@ class Location():
             #return [entities.Bully]
             return [entities.Trader, entities.Trader, entities.Child,
                     entities.Child, entities.Child, entities.Bully]
+        else:
+            is_dungeon = self.is_dungeon()
+            if is_dungeon and self.sublocations:
+                return dungeons.get_entities(self)
+
         return []
 
     def generate(self):
