@@ -139,6 +139,13 @@ class Entity(object):
         print "Chat received %d %s" % (distance, message)
         pass
 
+    def write_chat(self, message):
+        """Write a line of text to the chats of nearby users."""
+        self.location.notify_location(
+                "cha",
+                "%s:%d:%d\n%s" % (self.id, self.position[0],
+                                  self.position[1], message))
+
     def _get_properties(self):
         return {"x": self.position[0] / constants.tilesize,
                 "y": self.position[1] / constants.tilesize,
@@ -147,7 +154,6 @@ class Entity(object):
                 "layer": 0,
                 "x_vel": 0,
                 "y_vel": 0,
-                "movement": {"type": "static"},
                 "image": None,
                 "view": {"type": "static"},
                 "offset": {"x": self.offset[0],
@@ -412,13 +418,6 @@ class Animat(Entity):
                 if not row[cellnum]:
                     locations.append((cellnum, rownum))
         return locations if locations else None
-
-    def write_chat(self, message):
-        """Write a line of text to the chats of nearby users."""
-        self.location.notify_location(
-                "cha",
-                "%s:%d:%d\n%s" % (self.id, self.position[0],
-                                  self.position[1], message))
 
     def _get_properties(self):
         baseline = super(Animat, self)._get_properties()

@@ -6,6 +6,7 @@ import threading
 import redis
 
 import internals.constants as constants
+import internals.entities.items as items
 from internals.entities.entities import Animat
 from internals.locations import Location
 
@@ -61,6 +62,7 @@ class LocationHandler(object):
         inbound_redis = redis.Redis(host=redis_host, port=int(port))
         pubsub = inbound_redis.pubsub()
         pubsub.subscribe("global::enter")
+        pubsub.subscribe("global::drop")
         pubsub.subscribe("location::p::%s" % self.location)
         pubsub.subscribe("location::pe::%s" % self.location)
 
@@ -73,6 +75,10 @@ class LocationHandler(object):
             if (event["channel"] == "global::enter" and
                 location == str(self.location)):
                 self.on_enter(full_message_data)
+                continue
+            if (event["channel"] == "global::drop" and
+                location == str(self.location)):
+                self.spawn_drop(full_message_data)
                 continue
 
             message_type = full_message_data[:3]
@@ -186,6 +192,13 @@ class LocationHandler(object):
     def spawn_entity(self, entity):
         """Send the command necessary to spawn an entity to the client."""
         self.notify_location("spa", "%s\n%s" % (entity.id, str(entity)))
+
+    def spawn_drop(self, command):
+        guid, item, x, y = command.split(":")
+        x, y = map(int, (x, y))
+        entity = items.ItemEntity(item, x, y, self)
+        self.entities.append(entity)
+        self.spawn_entity(entity)
 
     def notify_location(self, command, message):
         """A shortcut for broadcasting a message to the location."""

@@ -48,5 +48,8 @@ var jgassets = {
         "spite": ["Spiteful", 11],
         "ether": ["Ether", 12],
         "ancie": ["Ancient", 13]
+    },
+    "item_hover": function(ticks, data) {
+        return [0, (Math.sin(ticks / 1000 * 2 * Math.PI) + 1) / 2 * -10];
     }
 };

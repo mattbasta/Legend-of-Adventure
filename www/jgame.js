@@ -78,7 +78,7 @@ var jgutils = {
                 case 81: // Q
                 case 85: // U
                     if(set)
-                        jgutils.comm.send("drp", 0);
+                        jgutils.comm.send("dro", 0);
                     break;
                 default:
                     var kb;
@@ -242,7 +242,7 @@ var jgutils = {
         },
         unregister : function(id) {
             if(!(id in jgutils.avatars.registry))
-                return;
+                return false;
             delete jgutils.avatars.registry[id];
             var av = document.getElementById("avatar_" + id);
             av.parentNode.removeChild(av);
@@ -712,7 +712,9 @@ var jgutils = {
                     jgutils.avatars.draw();
                     break;
                 case "del": // Remove avatar
-                    jgutils.avatars.unregister(body);
+                    var success = jgutils.avatars.unregister(body);
+                    if(!success)
+                        jgutils.objects.remove(body);
                     break;
                 case "loc": // Change avatar position and direction
                     var data = body.split(":");
@@ -866,13 +868,22 @@ var jgutils = {
                     for(co in layer.child_objects) {
                         var child = layer.child_objects[co],
                             li = child.last_view,
-                            ii = child.image;
+                            ii = child.image,
+                            base_x = child.x + child.offset.x,
+                            base_y = child.y + child.offset.y;
                         if(!(ii in jgame.images))
                             continue
+
+                        if("movement" in child) {
+                            var movement_offset = frameutils.get(child.movement.type, child.movement,
+                                                                 jgutils.timing.last % 3000, 0);
+                            base_x += movement_offset[0];
+                            base_y += movement_offset[1];
+                        }
                         if("sprite" in li)
                             context.drawImage(jgame.images[ii], li.sprite.x, li.sprite.y,
                                               li.sprite.swidth, li.sprite.sheight,
-                                              child.x + child.offset.x, child.y + child.offset.y,
+                                              base_x, base_y,
                                               child.height, child.width);
                         else
                             context.drawImage(jgame.images[li.image], child.x + child.offset.x, child.y.offset.y);
@@ -918,7 +929,6 @@ var jgutils = {
             var updated = proto.updated;
             proto.updated = false;
 
-            // TODO: This should be moved out of here
             if(typeof proto.view == "string")
                 proto.view = jgassets[proto.view];
 
@@ -942,6 +952,9 @@ var jgutils = {
 
         },
         remove : function(id) {
+            if(!(id in jgutils.objects.registry))
+                return false;
+            var proto = jgutils.objects.registry[id];
             delete jgutils.objects.registry[id];
             delete jgutils.objects.layers[proto.registry_layer].child_objects[id];
         }
@@ -1295,7 +1308,7 @@ var frameutils = {
                 return data.sequence[otick];
             case "callback":
                 if((typeof data.callback) == "string")
-                    return eval(data.callback); // I know, I know.
+                    return jgassets[data.callback](ticks, data);
                 else
                     return data.callback(ticks);
         }

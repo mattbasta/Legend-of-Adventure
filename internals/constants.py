@@ -12,7 +12,7 @@ speed = 0.2  # Pixels per tick
 
 entity_despawn_time = 60 * 10
 
-MESSAGES_WITH_GUIDS = ("loc", "add", "del", "cha")
+MESSAGES_WITH_GUIDS = ("loc", "add", "del", "cha", "giv")
 PLAYER_RANGES = 3
 
 TICK = 1.0 / framerate

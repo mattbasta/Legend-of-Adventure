@@ -43,6 +43,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
         self.position = 0, 0
         self.parent_positions = []
         self.velocity = 0, 0
+        self.direction = 0, 1
         self.old_velocity = 0, 0
 
         self.chat_name = ""
@@ -67,6 +68,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
                      "cha": self._on_chat,
                      "loc": self._on_position_update,
                      "use": self.use_item,
+                     "dro": self.drop_item,
                      "cyc": self.cycle_items}
 
         m_type = message[:3]
@@ -108,8 +110,10 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
 
         # Perform the global position update before broadcasting in case
         # we're getting update spammed.
-        self.position = (x, y)
-        self.velocity = (x_dir, y_dir)
+        self.position = x, y
+        self.velocity = x_dir, y_dir
+        if any((x_dir, y_dir)):
+            self.direction = x_dir, y_dir
 
         # Also perform the rescheduling before we hit the database so the
         # hitmapping isn't blocked on Redis.
