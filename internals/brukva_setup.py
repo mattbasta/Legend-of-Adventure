@@ -22,11 +22,11 @@ def setup_brukva(client):
         if location in comm.locations:
             for client in comm.locations[location]:
                 message_type = message[:3]
-                if guid and client.guid == guid and message_type != "giv":
-                    continue
                 if message_type == "giv":
                     if client.guid == guid:
                         client.give_item(message.split(":")[1])
+                    continue
+                if guid and client.guid == guid:
                     continue
                 client.write_message(message)
 

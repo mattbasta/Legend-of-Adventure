@@ -17,11 +17,9 @@ class ItemEntity(Entity):
         self.item_code = item_code
 
     def on_player_range(self, guid, distance):
-        self.write_chat("Distance: %d" % distance)
         if distance >= 1 or guid.startswith("%"):
             return
 
-        self.write_chat("Giving to %s" % guid)
         # Give thine self to a nearby entity/player.
         self.location.notify_location("giv", "%s:%s" % (guid, self.item_code))
 

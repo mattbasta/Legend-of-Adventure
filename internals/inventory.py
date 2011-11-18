@@ -22,7 +22,6 @@ class InventoryManager(object):
         for i in range(5):
             if i in self.inventory:
                 continue
-            print "Placing %s at %d" % (item_code, i)
             self.inventory[i] = item_code
             self.update_inventory(i)
             return True
@@ -48,7 +47,6 @@ class InventoryManager(object):
             return
 
         item_code = self.inventory[slot]
-        print "Player %s dropping %s" % (self.guid, item_code)
 
         # Delete the item from the user's inventory.
         new_inv = {}
