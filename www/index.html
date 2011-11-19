@@ -45,7 +45,8 @@ window.jgame = {
             ]
         }
     },
-    tilesize : 50
+    tilesize : 50,
+    canvases: {}
 };
 $(document).ready(function(){
     jgutils.setup();
@@ -55,19 +56,12 @@ $(document).ready(function(){
 </script>
 <style type="text/css">
 html,body {height:100%;}
-body {background:#222 url(/static/images/ajax-loader.gif) no-repeat center center;}
-#bg_tile_wrap,
-#object_wrapper {
-    position:absolute;
-    top:0;
-    left:0;
-    overflow:hidden;
-    height:100%;
-    width:100%;
+body {
+    background:#222 url(/static/images/ajax-loader.gif) no-repeat center center;
+    overflow: hidden;
 }
-#object_wrapper {z-index:15;}
+#bg_tile_wrap,
 #bg_tile_wrap {z-index:5;}
-#bg_tile {display:none;}
 #bg_tile_full {
     position:absolute;
     top:0;
@@ -98,7 +92,7 @@ body {background:#222 url(/static/images/ajax-loader.gif) no-repeat center cente
     left:0.5em;
     z-index:100007;
     font-size:20px;
-    background:rgba(0,0,0,0.8);
+    background:#000);
     color:#fff;
     border-radius:5px;
     padding:0.1em 0.25em;
@@ -138,11 +132,7 @@ CFInstall.check({
         <canvas id="canvas_inventory" width="374" height="85"></canvas>
     </div>
     <div id="bg_tile_wrap">
-        <canvas id="bg_tile_full"></canvas>
-        <canvas id="bg_tile"></canvas>
-    </div>
-    <div id="object_wrapper">
-        <div id="object_container" style="position:absolute;"></div>
+        <canvas id="output_full"></canvas>
     </div>
 </div>
 </body>

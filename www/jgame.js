@@ -126,8 +126,13 @@ var jgutils = {
             w : document.body.offsetWidth,
             h : document.body.offsetHeight
         };
-        jgame["terrain_canvas"] = null;
         jgame["location_id"] = "";
+        jgame["canvases"] = {
+            output: document.getElementById("output_full"),
+            terrain: document.createElement("canvas"),
+            objects: document.createElement("canvas"),
+            avatars: document.createElement("canvas")
+        };
 
         jgutils.avatars.register(
             "local",
@@ -148,6 +153,9 @@ var jgutils = {
             // Update the scene to make sure everything is onscreen.
             jgutils.level.update();
             jgutils.level.setCenterPosition(true);
+            if(jgutils.drawing._drawing) {
+                jgutils.drawing.callback(true); // Force a re-render
+            }
         });
     },
     user : {
@@ -207,6 +215,7 @@ var jgutils = {
     avatars : {
         avatar_offsets : {x: 0, y: 0},
         registry : {},
+        draw_order : [],
         register : function(id, properties, nodraw) {
             if(!properties.dirty)
                 properties.dirty = true;
@@ -216,39 +225,23 @@ var jgutils = {
                 properties.hitmap = [0, Infinity, Infinity, 0];
             jgutils.avatars.registry[id] = properties;
 
-            // Create the canvas
-            var canv = document.createElement("canvas");
-            canv.id = "avatar_" + id;
-            canv.width = jgame.avatar.w;
-            canv.height = jgame.avatar.h;
-            canv.style.position = "absolute";
-            canv.style.left = ((properties.x - jgame.offset.x) | 0) + "px";
-            canv.style.top = ((properties.y - jgame.offset.y) | 0) + "px";
-            canv.style.zIndex = (properties.y - jgame.offset.y) | 0;
-
-            canv.jg_hidden = false;
-
-            document.getElementById("object_wrapper").appendChild(canv);
-
-            properties["canvas"] = canv;
+            properties.hidden = false;
+            properties.canvas = document.createElement("canvas");
             if(!("direction" in properties))
-                properties["direction"] = [0, 1];
-            properties["cycle_position"] = 0;
-            properties["sprite_cycle"] = 0;
+                properties.direction = [0, 1];
+            properties.cycle_position = 0;
+            properties.sprite_cycle = 0;
 
             if(!nodraw)
-                jgutils.avatars.draw();
+                jgutils.avatars.redrawAvatars();
 
         },
         unregister : function(id) {
             if(!(id in jgutils.avatars.registry))
                 return false;
             delete jgutils.avatars.registry[id];
-            var av = document.getElementById("avatar_" + id);
-            av.parentNode.removeChild(av);
         },
         get : function(id) {return jgutils.avatars.registry[id];},
-        get_element : function(id) {return document.getElementById("avatar_" + id);},
         draw : function(id) {
             function _draw(avatar) {
                 var av = jgutils.avatars.registry[avatar];
@@ -256,7 +249,7 @@ var jgutils = {
                     return;
                 if(!(av.image in jgame.images))
                     return;
-                var context = document.getElementById('avatar_' + avatar).getContext('2d');
+                var context = av.canvas.getContext('2d');
                 context.clearRect(0, 0, jgame.avatar.w, jgame.avatar.h);
                 context.drawImage(jgame.images[av.image],
                                   (av.position % 3) * 32, ((av.position / 3) | 0) * 32,
@@ -266,9 +259,27 @@ var jgutils = {
             }
             if(typeof id != "undefined")
                 return _draw(id);
-            for(var avatar in jgutils.avatars.registry)
-                _draw(avatar);
+        },
+        redrawAvatars : function() {
+            var dirty = false,
+                avatars = [];
+            for(var avatar in jgutils.avatars.registry) {
+                var a = jgutils.avatars.registry[avatar];
+                dirty = dirty || a.dirty;
+                avatars[avatars.length] = jgutils.avatars.registry[avatar];
+            }
+            if(!dirty)
+                return;
 
+            var avatar_canvas = jgame.canvases.avatars,
+                ctx = avatar_canvas.getContext("2d");
+            avatars = avatars.sort(function(a, b) {return a.y - b.y;});
+            ctx.clearRect(jgame.offset.x, jgame.offset.y, jgame.offset.w, jgame.offset.h);
+            jgutils.drawing.changed.avatars = true;
+            for(var i = 0; i < avatars.length; i++) {
+                var avatar = avatars[i];
+                ctx.drawImage(avatar.canvas, avatar.x - 7, avatar.y - jgame.avatar.h);
+            }
         },
         get_avatar_sprite_direction : function(direction) {
             if(direction[0] < 0)
@@ -286,37 +297,7 @@ var jgutils = {
             avatar.y = y * jgame.tilesize;
             jgutils.level.setCenterPosition(resize);
         },
-        setAvatarOffset : function(x, y) {jgutils.avatars.avatar_offsets = {x: x, y: y};},
-        reposition : function(movefollow_x, movefollow_y) {
-            var x = jgutils.avatars.avatar_offsets.x,
-                y = jgutils.avatars.avatar_offsets.y;
-            for(var avatar in jgutils.avatars.registry) {
-                var av = jgutils.avatars.registry[avatar],
-                    canv = av["canvas"],
-                    follower = jgame.follow_avatar == avatar;
-                var xpos = av.x + x,
-                    ypos = av.y - jgame.avatar.h + y;
-                /*
-                if(xpos < -75 || ypos < -100 || xpos > jgame.offset.w || ypos > jgame.offset.h) {
-                    if(!canv.jg_hidden) {
-                        canv.style.display = "none";
-                        canv.jg_hidden = true;
-                    }
-                    continue;
-                } else {
-                    if(canv.jg_hidden) {
-                        canv.style.display = "block";
-                        canv.jg_hidden = false;
-                    }
-                }
-                */
-                if(follower && movefollow_x || !follower)
-                    canv.style.left = (xpos | 0) + "px";
-                if(follower && movefollow_y || !follower)
-                    canv.style.top = (ypos | 0) + "px";
-                canv.style.zIndex = ypos;
-            }
-        }
+        setAvatarOffset : function(x, y) {jgutils.avatars.avatar_offsets = {x: x, y: y};}
     },
     keys : {
         addBinding : function(keyCode, callback, multiple) {
@@ -343,7 +324,7 @@ var jgutils = {
             // Get everything looking decent and positioned correctly
             jgutils.level.update();
             jgutils.inventory._redraw();
-            jgutils.avatars.draw();
+            jgutils.avatars.redrawAvatars();
 
             // Start everything back up
             jgutils.drawing.init();
@@ -433,25 +414,26 @@ var jgutils = {
             };
         },
         update : function() {
-            var bgt_buffer = document.getElementById('bg_tile_full'),
-                bgt = document.getElementById('bg_tile');
-            var dtile_h;
+            var output_buffer = jgame.canvases.output,
+                output = jgame.canvases.terrain;
             var level_h = jgame.level.h * jgame.tilesize,
                 level_w = jgame.level.w * jgame.tilesize;
 
-            var bgh_c = bgt.height != level_h,
-                bgw_c = bgt.width != level_w;
-            if(bgw_c || bgh_c) {
-                bgt.height = level_h;
-                bgt.width = level_w;
-                jgutils.drawing.redrawBackground();
+            // Resize the output canvas if the window size has changed.
+            if(output.height != level_h ||
+               output.width != level_w) {
+                for(var canvas in jgame.canvases) {
+                    jgame.canvases[canvas].height = level_h;
+                    jgame.canvases[canvas].width = level_w;
+                }
+                //jgutils.drawing.redrawBackground();
             }
-            bgt_buffer.height = jgame.offset.h;
-            bgt_buffer.width = jgame.offset.w;
+            output_buffer.height = jgame.offset.h;
+            output_buffer.width = jgame.offset.w;
 
+            // Adjust the window offsets to recent the game.
             if(jgame.offset.h > level_h)
                 jgame.offset.y = ((jgame.offset.h / 2 - level_h / 2) | 0) * -1;
-
             if(jgame.offset.w > level_w)
                 jgame.offset.x = ((jgame.offset.w / 2 - level_w / 2) | 0) * -1;
 
@@ -519,31 +501,17 @@ var jgutils = {
             var n_x = jgame.offset.x * -1,
                 n_y = jgame.offset.y * -1;
 
-            var obj_cont = document.getElementById('object_container');
-            var bg_tile = document.getElementById('bg_tile_full'),
-                c = bg_tile.getContext("2d"),
-                tc = jgame.terrain_canvas;
+            var output = jgame.canvases.output,
+                terrain = jgame.canvases.terrain;
 
-            c.drawImage(tc,
-                        Math.max(jgame.offset.x, 0), Math.max(jgame.offset.y, 0),
-                        Math.min(bg_tile.clientWidth, tc.width), Math.min(bg_tile.clientHeight, tc.height),
-                        Math.max(n_x, 0), Math.max(n_y, 0),
-                        Math.min(bg_tile.clientWidth, tc.width), Math.min(bg_tile.clientHeight, tc.height));
-
-            if(!moveavatar_x || resize) {
-                //bg_tile.style.left = n_x + 'px';
-                obj_cont.style.left = (n_x | 0) + 'px';
-            }
-            if(!moveavatar_y || resize) {
-                //bg_tile.style.top = n_y + 'px';
-                obj_cont.style.top = (n_y | 0) + 'px';
-            }
+            jgutils.drawing.state = [
+                Math.max(jgame.offset.x, 0), Math.max(jgame.offset.y, 0),
+                Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height),
+                Math.max(n_x, 0), Math.max(n_y, 0),
+                Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height)
+            ];
 
             jgutils.avatars.setAvatarOffset(n_x, n_y)
-            jgutils.avatars.reposition(
-                moveavatar_x || resize,
-                moveavatar_y || resize
-            );
         }
     },
     inventory : {
@@ -708,8 +676,7 @@ var jgutils = {
                          y: data[2] * 1},
                         true
                     );
-                    jgutils.avatars.reposition(true, true);
-                    jgutils.avatars.draw();
+                    jgutils.avatars.draw(data[0]);
                     break;
                 case "del": // Remove avatar
                     var success = jgutils.avatars.unregister(body);
@@ -719,13 +686,11 @@ var jgutils = {
                 case "loc": // Change avatar position and direction
                     var data = body.split(":");
                     var av = jgutils.avatars.registry[data[0]];
-                    av.x = data[1] * 1;
-                    av.y = data[2] * 1;
+                    av.x = parseInt(data[1]);
+                    av.y = parseInt(data[2]);
                     var new_direction = [data[3] * 1, data[4] * 1];
                     if(jgame.follow_avatar == data[0])
                         jgutils.level.setCenterPosition(true);
-                    else
-                        jgutils.avatars.reposition(false, false);
 
                     if((new_direction[0] == 0 && new_direction[1] == 0) && (av.direction[0] || av.direction[1])) {
                         var sp_dir = jgutils.avatars.get_avatar_sprite_direction(av.direction);
@@ -742,6 +707,7 @@ var jgutils = {
                     }
                     av.direction = new_direction;
                     jgutils.avatars.draw(data[0]);
+                    jgutils.avatars.redrawAvatars();
                     break;
                 case "cha": // Chat message
                     var data = body.split("\n"),
@@ -837,18 +803,9 @@ var jgutils = {
         layers : {},
         registry : {},
         createLayer : function(name) {
-            var oc = document.getElementById('object_container');
-
             var layer = document.createElement('canvas');
-            //layer.mozImageSmoothingEnabled = false;
-            layer.id = 'jglayer' + name;
-            layer.width = jgame.level.w * jgame.tilesize;
-            layer.height = jgame.level.h * jgame.tilesize;
-            layer.style.position = 'absolute';
-            layer.style.top = '0';
-            layer.style.left = '0';
-            oc.appendChild(layer);
-
+            layer.height = jgame.canvases.objects.height;
+            layer.width = jgame.canvases.objects.width;
             var x = (jgutils.objects.layers[name] = {
                 obj : layer,
                 child_objects : {},
@@ -858,12 +815,14 @@ var jgutils = {
             return x;
         },
         redrawLayers : function() {
-            var layers = jgutils.objects.layers;
-            for(l in layers) {
+            var layers = jgutils.objects.layers,
+                updated = false;
+            for(var l in layers) {
                 var layer = layers[l];
-                if(layer.updated) {
+                if(l > 2 || layer.updated) {
+                    updated = true;
                     var context = layer.obj.getContext('2d');
-                    context.clearRect(0,0,layer.obj.offsetWidth,layer.obj.offsetHeight);
+                    context.clearRect(0, 0, layer.obj.width, layer.obj.height);
 
                     for(co in layer.child_objects) {
                         var child = layer.child_objects[co],
@@ -894,6 +853,16 @@ var jgutils = {
                     }
                     layer.updated = false;
                 }
+            }
+            if(!updated)
+                return;
+            var layer_canvas = jgame.canvases.objects,
+                c = layer_canvas.getContext("2d");
+            c.clearRect(jgame.offset.x, jgame.offset.y, jgame.offset.w, jgame.offset.h);
+            jgutils.drawing.changed.objects = true;
+            for(var layer_id in layers) {
+                var layer = layers[layer_id].obj;
+                c.drawImage(layer, 0, 0);
             }
         },
         create : function(id, proto, layer) {
@@ -960,18 +929,70 @@ var jgutils = {
         }
     },
     drawing : {
+        _drawing : false,
         init : function() {jgutils.drawing.redrawBackground();},
         forceRecenter : function() {jgutils.level.setCenterPosition(true);},
+        order : ["terrain", "objects", "avatars"],
+        state : null,
+        changed : {
+            terrain: false,
+            objects: false,
+            avatars: false
+        },
+        callback : null,
+        start : function() {
+            jgutils.drawing._drawing = true;
+            var reqAnimFrame;
+            if("requestAnimationFrame" in window)
+                reqAnimFrame = window.requestAnimationFrame;
+            else if("mozRequestAnimationFrame" in window)
+                reqAnimFrame = window.mozRequestAnimationFrame;
+            else if("webkitRequestAnimationFrame" in window)
+                reqAnimFrame = window.webkitRequestAnimationFrame;
+            else if("oRequestAnimationFrame" in window)
+                reqAnimFrame = window.oRequestAnimationFrame;
+            else
+                reqAnimFrame = function(callback) {setTimeout(1000 / 30, callback);};
+
+            var draw_callback = function(forced, foo) {
+                var draw_order = jgutils.drawing.order,
+                    output = jgame.canvases.output.getContext("2d"),
+                    state = jgutils.drawing.state,
+                    changed = jgutils.drawing.changed;
+                if(state && (changed.terrain || changed.objects || changed.avatars)) {
+                    for(var i = 0; i < draw_order.length; i++) {
+                        output.drawImage(
+                            jgame.canvases[draw_order[i]],
+                            state[0], state[1], state[2], state[3],
+                            state[4], state[5], state[6], state[7]
+                        );
+                        changed[draw_order[i]] = false;
+                    }
+                }
+                if(jgutils.drawing._drawing && typeof forced == "number")
+                    reqAnimFrame(draw_callback);
+            };
+            jgutils.drawing.callback = draw_callback;
+            reqAnimFrame(draw_callback);
+        },
+        stop : function() {
+            jgutils.drawing._drawing = false;
+            jgutils.drawing.callback = null;
+        },
         redrawBackground : function() {
-            var bg_tile = document.getElementById('bg_tile'),
-                c = bg_tile.getContext('2d');
-            if(mozSmoothing)
-                c.mozImageSmoothingEnabled = false;
-            var c_levlev = jgame.level.level,
+            var output = jgame.canvases.terrain,
                 c_tilesize = jgame.tilesize,
-                c_tileset = jgame.images["tileset"],
+                c_tileset = jgame.images["tileset"];
+
+            if(!c_tileset)
+                return;
+            var c = output.getContext("2d"),
+                c_levlev = jgame.level.level,
                 c_tiles_w = 5,
                 c_tile_w = c_tileset.width / c_tiles_w;
+
+            if(mozSmoothing)
+                c.mozImageSmoothingEnabled = false;
 
             var yy = 0;
             for(var y = 0; y < jgame.level.h; y++) {
@@ -991,19 +1012,24 @@ var jgutils = {
                 }
                 yy += c_tilesize;
             }
-            jgame.terrain_canvas = bg_tile;
+            jgutils.drawing.changed.terrain = true;
         }
     },
     timing : {
         registers : {},
         timer : null,
         last : 0,
-        start : function() { jgutils.timing.timer = setInterval(jgutils.timing.tick, jgame.fps); },
+        start : function() {
+            jgutils.timing.tick();
+            jgutils.drawing.start();
+            jgutils.timing.timer = setInterval(jgutils.timing.tick, jgame.fps);
+        },
         stop : function() {
             if(typeof jgutils.timing.timer == 'undefined')
                 return;
             clearTimeout(jgutils.timing.timer);
             jgutils.timing.last = 0;
+            jgutils.drawing.stop();
         },
         unregister : function(id) {delete jgutils.timing.registers[id];},
         every : function(id, callback, seconds) {
@@ -1053,7 +1079,8 @@ var jgutils = {
                 adjusted_direction = adjust_diagonal(direction),
                 // Calculate the distance that the player has tried to move.
                 adjusted_increment_x = adjusted_direction[0] * _val,
-                adjusted_increment_y = adjusted_direction[1] * _val;
+                adjusted_increment_y = adjusted_direction[1] * _val,
+                do_redraw_avs = false;
 
             if(player_moving) {
                 // Perform hit mapping against the terrain.
@@ -1122,6 +1149,7 @@ var jgutils = {
                     avatar.cycle_position = 0;
                     avatar.sprite_cycle = 0;
                     jgutils.avatars.draw("local");
+                    do_redraw_avs = true;
                     update_location()
                 }
                 do_setcenter = true;
@@ -1151,10 +1179,10 @@ var jgutils = {
                 avatar.cycle_position = 0;
                 avatar.dirty = true;
                 jgutils.avatars.draw("local");
+                do_redraw_avs = true;
                 update_location();
             }
 
-            var do_reposition_avs = false;
             for(var av in jgutils.avatars.registry) {
                 var a = jgutils.avatars.registry[av];
                 if(a.direction[0] || a.direction[1]) {
@@ -1162,7 +1190,6 @@ var jgutils = {
                         var adjusted_dir = adjust_diagonal(a.direction);
                         a.x += adjusted_dir[0] * _val;
                         a.y += adjusted_dir[1] * _val;
-                        do_reposition_avs = true;
                     }
                     var sp_dir = jgutils.avatars.get_avatar_sprite_direction(a.direction);
                     if(a.sprite_cycle++ == sp_dir[avatar.cycle_position].duration) {
@@ -1173,12 +1200,13 @@ var jgutils = {
 
                         jgutils.avatars.draw(av);
                     }
+                    do_redraw_avs = true;
                 }
             }
             if(do_setcenter)
                 jgutils.level.setCenterPosition();
-            else if(do_reposition_avs)
-                jgutils.avatars.reposition();
+            if(do_redraw_avs)
+                jgutils.avatars.redrawAvatars();
 
             // Update Objects
             var objects = jgutils.objects,

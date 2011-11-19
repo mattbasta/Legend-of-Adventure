@@ -40,6 +40,7 @@ class ItemEntity(Entity):
 
         base = super(ItemEntity, self)._get_properties()
         base["image"] = "items"
+        base["layer"] = 3
         base["view"] = {"type": "static",
                         "sprite": {"x": sprite_x,
                                    "y": sprite_y,
