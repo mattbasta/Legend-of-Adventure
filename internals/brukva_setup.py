@@ -1,3 +1,5 @@
+import brukva
+
 import internals.comm as comm
 import internals.constants as constants
 
@@ -47,6 +49,11 @@ def setup_brukva(client):
 
     def on_message(message):
         """Route an inbound message to the proper function."""
+
+        if isinstance(message, brukva.ResponseError):
+            print "Encountered Brukva ResponseError"
+            print message
+            return
 
         # Subscription and unsubscription messages should be ignored.
         if message.kind != "message":
