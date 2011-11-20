@@ -3,11 +3,12 @@ from threading import Timer
 import uuid
 
 import internals.constants as constants
+from animat_sprite import AnimatSprite
 from entities import Animat
 from markov import MarkovBot
 
 
-class NPC(Animat, MarkovBot):
+class NPC(AnimatSprite, Animat, MarkovBot):
     """A non-playable character."""
 
     def __init__(self, *args):
@@ -15,7 +16,7 @@ class NPC(Animat, MarkovBot):
 
         self.schedule(self._unexpected_time())
         self.image = "npc"
-        self.view = "npc.static.down"
+        self.view = "animat.static.down"
         self.height, self.width = 65, 65
         #self.offset = (-7.5, -65)
 
@@ -23,8 +24,6 @@ class NPC(Animat, MarkovBot):
                          "*dumm dumm dee deedlee*"]
         self.chattering = False
         self.last_chat = ""
-
-        self._movement_properties += ("view", )
 
     def get_prefix(self):
         return "@"
@@ -60,32 +59,4 @@ class NPC(Animat, MarkovBot):
             if self.last_chat:
                 self.train_response(self.last_chat, message)
             self.last_chat = message
-
-    def _get_properties(self):
-        baseline = super(NPC, self)._get_properties()
-        baseline["view"] = self.view
-        baseline["image"] = self.image
-        return baseline
-
-    def move(self, x_vel, y_vel, broadcast=True, response=False):
-        """Start the npc moving in any direction, or stop it from moving."""
-
-        old_velocity = self.velocity
-        super(NPC, self).move(x_vel, y_vel, broadcast=False)
-
-        views = {(1, 0): "npc.%s.right",
-                 (1, 1): "npc.%s.right",
-                 (0, 1): "npc.%s.down",
-                 (-1, 1): "npc.%s.left",
-                 (-1, 0): "npc.%s.left",
-                 (-1, -1): "npc.%s.left",
-                 (0, -1): "npc.%s.up",
-                 (1, -1): "npc.%s.right"}
-
-        if any(self.velocity):
-            self.view = views[tuple(self.velocity)] % "spr"
-        elif any(old_velocity):
-            self.view = views[tuple(old_velocity)] % "static"
-
-        self.broadcast_changes(*self._movement_properties)
 

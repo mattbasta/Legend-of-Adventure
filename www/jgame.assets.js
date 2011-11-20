@@ -1,36 +1,36 @@
 var jgassets = {
-    "npc.spr.left":
+    "animat.spr.left":
         {"type": "sequence",
          "duration": 14, "positions": 2,
          "sequence": [
             {"sprite": {"x": 0, "y": 32, "swidth": 32, "sheight": 32}},
             {"sprite": {"x": 64, "y": 32, "swidth": 32, "sheight": 32}}
          ]},
-    "npc.spr.right":
+    "animat.spr.right":
         {"type": "sequence",
          "duration": 14, "positions": 2,
          "sequence": [
             {"sprite": {"x": 0, "y": 64, "swidth": 32, "sheight": 32}},
             {"sprite": {"x": 64, "y": 64, "swidth": 32, "sheight": 32}}
          ]},
-    "npc.spr.down":
+    "animat.spr.down":
         {"type": "sequence",
          "duration": 14, "positions": 2,
          "sequence": [
             {"sprite": {"x": 0, "y": 0, "swidth": 32, "sheight": 32}},
             {"sprite": {"x": 64, "y": 0, "swidth": 32, "sheight": 32}}
          ]},
-    "npc.spr.up":
+    "animat.spr.up":
         {"type": "sequence",
          "duration": 14, "positions": 2,
          "sequence": [
             {"sprite": {"x": 0, "y": 96, "swidth": 32, "sheight": 32}},
             {"sprite": {"x": 64, "y": 96, "swidth": 32, "sheight": 32}}
          ]},
-    "npc.static.left": {"type": "static", "sprite": {"x": 32, "y": 32, "swidth": 32, "sheight": 32}},
-    "npc.static.right": {"type": "static", "sprite": {"x": 32, "y": 64, "swidth": 32, "sheight": 32}},
-    "npc.static.down": {"type": "static", "sprite": {"x": 32, "y": 0, "swidth": 32, "sheight": 32}},
-    "npc.static.up": {"type": "static", "sprite": {"x": 32, "y": 96, "swidth": 32, "sheight": 32}},
+    "animat.static.left": {"type": "static", "sprite": {"x": 32, "y": 32, "swidth": 32, "sheight": 32}},
+    "animat.static.right": {"type": "static", "sprite": {"x": 32, "y": 64, "swidth": 32, "sheight": 32}},
+    "animat.static.down": {"type": "static", "sprite": {"x": 32, "y": 0, "swidth": 32, "sheight": 32}},
+    "animat.static.up": {"type": "static", "sprite": {"x": 32, "y": 96, "swidth": 32, "sheight": 32}},
     "weapon_order": ["sw", "bo", "ma", "ax", "ha", "st"],
     "weapon_prefixes_order": ["plain", "forged", "sharp", "broad", "old", "leg", "fla", "agile", "bane", "ench", "evil", "spite", "ether", "ancie"],
     "weapon_prefixes": {

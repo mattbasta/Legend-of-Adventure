@@ -8,7 +8,7 @@ from internals.levelbuilder.tiles import get_building_tiles, overlay
 
 DUNGEON_PORTAL = get_building_tiles("dungeon_portal", "landscape_features")
 
-ROOM_TYPES = ["room", "treasure_room", "mob_drop", "stairwell"]
+ROOM_TYPES = ["room", "treasure_room", "mob_drop", ]
 MOVABLE_DIRECTIONS = ((0, 1), (1, 0), (0, -1), (-1, 0), )
 
 # 20x20 playable area with 4 tiles for passages on each side.
@@ -118,6 +118,10 @@ def _build_dungeon_layout(location):
 
     This function is seeded by the get_offset function.
     """
+
+    if location._dungeon_cache:
+        return location._dungeon_cache
+
     # Offset: position of starting location from top left of dungeon grid.
     offset_x, offset_y = get_offset(location)
     # Width: size of the dungeon grid.
@@ -209,7 +213,7 @@ def _build_dungeon_layout(location):
                                      row))
 
     # Give a bunch of the terminal rooms some stuff.
-    special_rooms = ["boss", ]
+    special_rooms = ["boss", "angel"]
     for sp_room in special_rooms:
         room = random.choice(terminal_rooms)
         terminal_rooms.remove(room)
@@ -221,5 +225,6 @@ def _build_dungeon_layout(location):
         terminal_rooms.remove(room)
         room["type"] = "stairwell"
 
+    location._dungeon_cache = rooms
     return rooms
 

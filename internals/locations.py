@@ -33,6 +33,8 @@ class Location():
         self.sublocations = []
         scode = scode[3:]
 
+        self._dungeon_cache = None
+
         self._terrain_cache = None
         self._hitmap_cache = None
         self._portal_cache = []
@@ -114,6 +116,11 @@ class Location():
             is_dungeon = self.is_dungeon()
             if is_dungeon and self.sublocations:
                 return dungeons.get_entities(self)
+            else:
+                sp_ents = []
+                for i in range(random.randint(2, 5)):
+                    sp_ents.append(entities.Sheep)
+                return sp_ents
 
         return []
 

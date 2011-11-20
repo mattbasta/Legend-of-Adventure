@@ -10,6 +10,12 @@ if(typeof WebSocket == "undefined" && typeof MozWebSocket != "undefined")
     WebSocket = MozWebSocket;
 var mozSmoothing = !(typeof $.browser.mozilla == "undefined");
 
+var lockImages = false;
+function toggleImageLock() {
+    lockImages = !lockImages;
+    if(!lockImages && jgame.images_loaded == jgame.images_added)
+        loadutils.complete_task("images");
+}
 function createImage(id, url) {
     if(jgame.images[id]) {
         // Refresh the tileset when requested, but not anything else.
@@ -25,7 +31,7 @@ function createImage(id, url) {
     jgame.images_added++;
     i.onload = function() {
         jgame.images_loaded++;
-        if(jgame.images_loaded == jgame.images_added)
+        if(!lockImages && jgame.images_loaded == jgame.images_added)
             loadutils.complete_task("images");
     };
     i.src = url;
@@ -133,6 +139,10 @@ var jgutils = {
             objects: document.createElement("canvas"),
             avatars: document.createElement("canvas")
         };
+
+        jgame["show_fps"] = false;
+        jgame["show_epu"] = false;
+        jgame["filter_console"] = false;
 
         jgutils.avatars.register(
             "local",
@@ -324,6 +334,7 @@ var jgutils = {
             // Get everything looking decent and positioned correctly
             jgutils.level.update();
             jgutils.inventory._redraw();
+            jgutils.objects.redrawLayers()
             jgutils.avatars.redrawAvatars();
 
             // Start everything back up
@@ -368,6 +379,7 @@ var jgutils = {
             // Remove everything level-specific
             jgutils.timing.stop();
             chatutils.stopChat();
+            toggleImageLock(); // Set the image lock.
             createImage("items", "/static/images/items.png");
             for(var av in jgutils.avatars.registry)
                 if(av != "local")
@@ -386,7 +398,6 @@ var jgutils = {
                     layer.child_objects = {};
                     layer.updated = true;
                 }
-                jgutils.objects.redrawLayers();
 
                 var avatar = jgutils.avatars.get("local");
                 avatar.x = data.avatar.x * jgame.tilesize;
@@ -408,6 +419,7 @@ var jgutils = {
 //                                'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
                 createImage("tileset", tileset_url);
                 createImage("inventory", "/static/images/inventory.png");
+                toggleImageLock(); // Release the image lock.
                 jgutils.inventory.set_health(data.health);
                 loadutils.complete_task("load");
 
@@ -659,8 +671,9 @@ var jgutils = {
             };
         },
         handle_message : function(message) {
-            if(message.data.substr(0, 3) != "epu")
-                console.log("Server message: [" + message.data + "]");
+            if(jgame.show_epu || message.data.substr(0, 3) != "epu")
+                if(!jgame.filter_console || message.data.indexOf(jgame.filter_console) > -1)
+                    console.log("Server message: [" + message.data + "]");
             body = message.data.substr(3);
             switch(message.data.substr(0, 3)) {
                 case "add": // Add avatar
@@ -712,12 +725,6 @@ var jgutils = {
                 case "cha": // Chat message
                     var data = body.split("\n"),
                         metadata = data[0].split(":");
-                    if(metadata.length > 1) {
-                        var av = jgutils.avatars.registry[jgame.follow_avatar],
-                            distance = Math.sqrt(Math.pow(av.x - metadata[1] * 1, 2) + Math.pow(av.y - metadata[2] * 1, 2)) / jgame.tilesize;
-                        if(distance > 12)
-                            break;
-                    }
                     chatutils.handleMessage(data[1]);
                     break;
                 case "spa": // Spawn object
@@ -824,10 +831,12 @@ var jgutils = {
                     var context = layer.obj.getContext('2d');
                     context.clearRect(0, 0, layer.obj.width, layer.obj.height);
 
-                    for(co in layer.child_objects) {
+                    for(var co in layer.child_objects) {
                         var child = layer.child_objects[co],
-                            li = child.last_view,
-                            ii = child.image,
+                            li = child.last_view;
+                        if(!li)
+                            continue;
+                        var ii = child.image,
                             base_x = child.x + child.offset.x,
                             base_y = child.y + child.offset.y;
                         if(!(ii in jgame.images))
@@ -866,7 +875,6 @@ var jgutils = {
             }
         },
         create : function(id, proto, layer) {
-            layer = layer ? layer : 1;
             var lay;
             if(!(layer in jgutils.objects.layers))
                 lay = jgutils.objects.createLayer(layer);
@@ -881,6 +889,9 @@ var jgutils = {
             proto["start_y"] = proto.y;
             lay.child_objects[id] = proto;
             lay.updated = true;
+
+            // jgutils.objects.update(proto, 0, 0);
+
             jgutils.objects.registry[id] = proto;
         },
         simple_collision : function(x, y, x2, y2, radius) {
@@ -889,7 +900,7 @@ var jgutils = {
             var dist = Math.sqrt(x * x + y * y);
             return dist < radius;
         },
-        update : function(proto, otick, ftick, mod_sec, speed) {
+        update : function(proto, otick, speed) {
             // Speed is denoted in pixels per tick.
 
             if(!otick)
@@ -934,6 +945,7 @@ var jgutils = {
         forceRecenter : function() {jgutils.level.setCenterPosition(true);},
         order : ["terrain", "objects", "avatars"],
         state : null,
+        last_draw : 0,
         changed : {
             terrain: false,
             objects: false,
@@ -955,7 +967,8 @@ var jgutils = {
                 reqAnimFrame = function(callback) {setTimeout(1000 / 30, callback);};
 
             var draw_callback = function(forced, foo) {
-                var draw_order = jgutils.drawing.order,
+                var now = (new Date()).getTime(),
+                    draw_order = jgutils.drawing.order,
                     output = jgame.canvases.output.getContext("2d"),
                     state = jgutils.drawing.state,
                     changed = jgutils.drawing.changed;
@@ -969,6 +982,9 @@ var jgutils = {
                         changed[draw_order[i]] = false;
                     }
                 }
+                if(jgame.show_fps)
+                    output.fillText((1000 / (now - jgutils.drawing.last_draw)) | 0 + "", 0, 20);
+                jgutils.drawing.last_draw = now;
                 if(jgutils.drawing._drawing && typeof forced == "number")
                     reqAnimFrame(draw_callback);
             };
@@ -1211,7 +1227,7 @@ var jgutils = {
             // Update Objects
             var objects = jgutils.objects,
                 object_registry = jgutils.objects.registry;
-            for(objid in jgutils.objects.registry) {
+            for(var objid in jgutils.objects.registry) {
                 var obj = object_registry[objid];
 
                 var mod_sec = (obj.mod_seconds ? obj.mod_seconds : 1000),
@@ -1219,7 +1235,7 @@ var jgutils = {
                     otick = ticks / mod_dur % mod_sec;
 
                 // Outsourced for easy update as well as setup.
-                if(jgutils.objects.update(obj, otick, ticks, mod_sec, _val))
+                if(jgutils.objects.update(obj, otick, _val))
                     jgutils.objects.layers[obj.registry_layer].updated = true;
             }
 

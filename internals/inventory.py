@@ -34,7 +34,8 @@ class InventoryManager(object):
         item = self.inventory[slot]
         if item.startswith("w"):
             # TODO: Tweak this to the direction of the player.
-            self._notify_location("atk%s:%s:%d:%d" % (self.guid, item,
+            self._notify_location(self.location,
+                                  "atk%s:%s:%d:%d" % (self.guid, item,
                                                       self.position[0],
                                                       self.position[1]))
         else:

@@ -10,6 +10,8 @@ from internals.hitmapping import get_hitmap
 from internals.scheduler import Scheduler
 
 
+DIRECTIONS = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1),
+              (1, -1)]
 SQRT1_2 = sqrt(float(1) / 2)
 
 
@@ -25,6 +27,7 @@ class Entity(object):
         self.location = location
         self.offset = 0, 0
 
+        self.remembered_positions = {}
         self.remembered_distances = {}
 
     def get_prefix(self):
@@ -40,6 +43,7 @@ class Entity(object):
         """
         if guid in self.remembered_distances:
             del self.remembered_distances[guid]
+            del self.remembered_positions[guid]
 
     def can_despawn(self):
         # TODO: Implement this!
@@ -119,6 +123,7 @@ class Entity(object):
                 return
         self.on_player_range(guid, distance)
         self.remembered_distances[guid] = distance
+        self.remembered_positions[guid] = x, y
 
     def on_player_range(self, guid, distance):
         """
@@ -195,14 +200,20 @@ class Animat(Entity):
         self.scheduler = Scheduler(constants.tilesize / constants.speed / 1000,
                                    self._on_scheduled_event)
 
+        self.layer = 0
+        self.image = None
+        self.view = None
+
         self.velocity = 0, 0
         self.old_velocity = None
+        self.should_weight_directions = False
         self.movement_effect = ""
 
         self.hitmap = None
 
         # Properties that are changed on moevement.
-        self._movement_properties = ("x_vel", "y_vel", "layer", "x", "y", )
+        self._movement_properties = ("x_vel", "y_vel", "layer", "x", "y",
+                                     "view", )
 
     def destroy(self, notify=True):
         super(Animat, self).destroy(notify)
@@ -215,6 +226,7 @@ class Animat(Entity):
         We want to make sure we unregister all scheduled events that are
         focused around the user being despawned.
         """
+        super(Animat, self).forget(guid)
         for timer in self.timers:
             if timer[2] == guid:
                timer[1].cancel()
@@ -288,6 +300,8 @@ class Animat(Entity):
                                                    velocity=velocity,
                                                    duration=duration)
 
+        can_redirect = not scheduled
+        should_redirect = None
         if scheduled:
             # Calculate the next position in this direction.
             future_position = self._updated_position(*self.position,
@@ -297,9 +311,52 @@ class Animat(Entity):
                 self.write_chat("Oh no, I almost hit a wall.")
                 self.move(0, 0)
                 # Also don't keep calculating the next position.
-                return False
+                now_moving = False
+                can_redirect = True
+
+        if self.should_weight_directions:
+            optimal_direction = self._get_best_direction(weighted=True)
+            if (optimal_direction is not None and
+                optimal_direction != self.velocity):
+                should_redirect = optimal_direction
+
+        if should_redirect:
+            self.move(*should_redirect, event=False)
 
         return now_moving
+
+    def _get_best_direction(self, weighted=False):
+        def calculate_next_position(velocity):
+            new_position = self._updated_position(*self.position,
+                                                  velocity=velocity)
+            return self._test_position(new_position, velocity)
+
+        usable_directions = filter(calculate_next_position, DIRECTIONS)
+
+        if weighted:
+            weights = dict((direction,
+                            self._get_direction_weight(direction)) for
+                           direction in
+                           usable_directions)
+
+            if weights:
+                max_weight = max(*weights.values())
+                usable_directions = filter(lambda d: weights[d] == max_weight,
+                                           usable_directions)
+
+        if len(usable_directions) == 1:
+            return usable_directions[0]
+        elif not usable_directions:
+            # It's unlikely that we'll be moving in the future if we can't
+            # move now.
+            self.write_chat("I'm stuck!")
+            return
+
+        return random.choice(usable_directions)
+
+    def _get_direction_weight(self, direction):
+        """To be implemented by inheriting classes."""
+        return 0
 
     def _test_position(self, position, velocity=None):
         """
@@ -344,7 +401,7 @@ class Animat(Entity):
 
         return True
 
-    def move(self, x_vel, y_vel, broadcast=True):
+    def move(self, x_vel, y_vel, broadcast=True, event=True):
         """Start the sprite moving in any direction, or stop it from moving."""
 
         changed = x_vel != self.velocity[0] or y_vel != self.velocity[1]
@@ -362,31 +419,22 @@ class Animat(Entity):
         self.hitmap = get_hitmap((self.position[0] - self.offset[0],
                                   self.position[1]),
                                  self.location.location.generate()[1])
-        self.scheduler.event_happened()
-        if not now_moving:
-            # Deschedule doesn't call event_happened.
-            self.scheduler.deschedule()
+
+        if event:
+            self.scheduler.event_happened()
+            if not now_moving:
+                # Deschedule doesn't call event_happened.
+                self.scheduler.deschedule()
 
         if broadcast:
             self.broadcast_changes(*self._movement_properties)
 
     def wander(self):
-        directions = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1),
-                      (0, -1), (1, -1)]
-        def calculate_next_position(velocity):
-            new_position = self._updated_position(*self.position,
-                                                  velocity=velocity)
-            return self._test_position(new_position, velocity)
-
         def callback():
-            usable_directions = filter(calculate_next_position, directions)
-            if not usable_directions:
-                # It's unlikely that we'll be moving in the future if we can't
-                # move now.
-                self.write_chat("I'm stuck!")
+            best_direction = self._get_best_direction()
+            if not best_direction:
                 return
-
-            self.move(*(random.choice(usable_directions)))
+            self.move(*best_direction)
             self.wandering = True
             self.schedule(random.randint(1, 4), self.stop_wandering)
 
@@ -423,6 +471,11 @@ class Animat(Entity):
         baseline = super(Animat, self)._get_properties()
         baseline["x_vel"] = self.velocity[0]
         baseline["y_vel"] = self.velocity[1]
+
+        baseline["image"] = self.image
+        baseline["layer"] = self.layer
+        baseline["view"] = self.view
+
         return baseline
 
         #"sprite": {"x": 0, "y": 0,

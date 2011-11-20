@@ -1,8 +1,13 @@
+import math
+
 import brukva
 
 import internals.comm as comm
 import internals.constants as constants
 
+
+def distance(pos1, pos2):
+    return math.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2)
 
 def setup_brukva(client):
     """Adds the appropriate handlers for a brukva client connection."""
@@ -22,12 +27,21 @@ def setup_brukva(client):
         guid = get_guid(message)
 
         if location in comm.locations:
+            message_type = message[:3]
+            if message_type == "giv":
+                message_data = message.split(":")[1]
+            elif message_type == "cha":
+                pos = message.split("\n", 1)[0].split(":")[-2:]
+                pos = map(int, pos)
+
             for client in comm.locations[location]:
-                message_type = message[:3]
                 if message_type == "giv":
                     if client.guid == guid:
-                        client.give_item(message.split(":")[1])
+                        client.give_item(message_data)
                     continue
+                elif message_type == "cha":
+                    if distance(pos, client.position) > 5 * constants.tilesize:
+                        continue
                 if guid and client.guid == guid:
                     continue
                 client.write_message(message)
