@@ -144,7 +144,8 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
             data = '<span>%s</span>%s' % (self.chat_name, data)
 
         self._notify_location(self.location,
-                "cha%s:\n%s" % (self.guid, data))
+                "cha%s:%d:%d\n%s" % (self.guid, self.position[0],
+                                     self.position[1], data))
 
     def _handle_command(self, message):
         """Handle an admin message through chat."""

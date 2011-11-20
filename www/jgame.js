@@ -438,6 +438,11 @@ var jgutils = {
                     jgame.canvases[canvas].height = level_h;
                     jgame.canvases[canvas].width = level_w;
                 }
+                for(var layer_id in jgutils.objects.layers) {
+                    var layer = jgutils.objects.layers[layer_id];
+                    layer.obj.height = level_h;
+                    layer.obj.width = level_w;
+                }
                 //jgutils.drawing.redrawBackground();
             }
             output_buffer.height = jgame.offset.h;
