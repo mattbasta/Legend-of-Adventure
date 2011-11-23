@@ -10,7 +10,7 @@ class PeacefulAnimat(Animat):
     """
 
     def __init__(self, *args, **kwargs):
-        super(PeacefulAnimat, self).__init__(*args, **args)
+        super(PeacefulAnimat, self).__init__(*args, **kwargs)
 
         self.fleeing = set()
 

@@ -51,5 +51,8 @@ var jgassets = {
     },
     "item_hover": function(ticks, data) {
         return [0, (Math.sin(ticks / 1000 * 2 * Math.PI) + 1) / 2 * -10];
+    },
+    "sheep_bounce": function(ticks, data) {
+        return [0, Math.abs(Math.sin(ticks / 500 * 2 * Math.PI)) * -5];
     }
 };

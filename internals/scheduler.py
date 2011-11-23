@@ -16,7 +16,7 @@ class Scheduler(object):
 
     def deschedule(self):
         """Call this function before disposing of a client or entity."""
-        if self.timer:
+        if self.timer is not None:
             self.timer.cancel()
             self.timer = None
 

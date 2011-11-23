@@ -88,9 +88,9 @@ class Location():
         if self.is_town():
             return False
         random.seed(self.coords[0] * 1001 + self.coords[1] * 2 + 1)
-        if self.coords == (1, 0):
+        if self.coords[0] == 1 and self.coords[1] == 0:
             return True
-        return random.randint(0, 5)
+        return random.randint(0, 5) == 0
 
     def has_entities(self):
         return True
@@ -211,7 +211,9 @@ class Location():
                 "images": {"npc": "static/images/npc.png",
                            "child1": "static/images/child1.png",
                            "child2": "static/images/child2.png",
-                           "bully": "static/images/bully.png"},
+                           "bully": "static/images/bully.png",
+                           "sheep": "static/images/sheep.png",
+                           "wolf": "static/images/wolf.png"},
                 "tileset": self.tileset(),
                 "can_slide": self.can_slide(),
                 "level": level,

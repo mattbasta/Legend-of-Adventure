@@ -208,6 +208,7 @@ class Animat(Entity):
         self.old_velocity = None
         self.should_weight_directions = False
         self.movement_effect = ""
+        self.speed = 1
 
         self.hitmap = None
 
@@ -276,8 +277,8 @@ class Animat(Entity):
         if all(velocity):
             velocity = map(lambda x: x * SQRT1_2, velocity)
 
-        new_x = x + velocity[0] * duration * constants.speed
-        new_y = y + velocity[1] * duration * constants.speed
+        new_x = x + velocity[0] * duration * constants.speed * self.speed
+        new_y = y + velocity[1] * duration * constants.speed * self.speed
         return new_x, new_y  # Be aware that this doesn't return an int!
 
     def _on_scheduled_event(self, scheduled):

@@ -6,6 +6,16 @@ function S4() {return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
 // Simplified GUID function
 function guid() {return S4()+S4()+S4()+S4();}
 
+String.prototype.explode = function(value, count) {
+    var split = this.split(value);
+    if(!count || count >= split.length)
+        return split;
+    var last_segment = split.slice(count);
+    split = split.slice(0, count);
+    split.push(last_segment.join(value));
+    return split;
+};
+
 if(typeof WebSocket == "undefined" && typeof MozWebSocket != "undefined")
     WebSocket = MozWebSocket;
 var mozSmoothing = !(typeof $.browser.mozilla == "undefined");
@@ -750,11 +760,11 @@ var jgutils = {
                     jgutils.comm._level_callback(JSON.parse(body))
                     break;
                 case "epu":
-                    var body = body.split(":", 2),
+                    var body = body.explode(":", 1),
                         data = body[1].split("\n"),
                         entity = jgutils.objects.registry[body[0]];
                     for(var i = 0; i < data.length; i++) {
-                        var line = data[i].split("=", 2),
+                        var line = data[i].explode("=", 2),
                             key = line[0],
                             value = JSON.parse(line[1]);
                         if(key == "x" || key == "y")
@@ -847,7 +857,7 @@ var jgutils = {
                         if(!(ii in jgame.images))
                             continue
 
-                        if("movement" in child) {
+                        if("movement" in child && child.movement) {
                             var movement_offset = frameutils.get(child.movement.type, child.movement,
                                                                  jgutils.timing.last % 3000, 0);
                             base_x += movement_offset[0];
@@ -914,6 +924,9 @@ var jgutils = {
             var updated = proto.updated;
             proto.updated = false;
 
+            if(!proto.view)
+                return;
+
             if(typeof proto.view == "string")
                 proto.view = jgassets[proto.view];
 
@@ -929,8 +942,8 @@ var jgutils = {
             if(proto.x_vel || proto.y_vel) {
                 updated = true;
                 var adjusted_velocity = adjust_diagonal([proto.x_vel, proto.y_vel]);
-                proto.x += adjusted_velocity[0] * speed;
-                proto.y += adjusted_velocity[1] * speed;
+                proto.x += adjusted_velocity[0] * speed * proto.speed;
+                proto.y += adjusted_velocity[1] * speed * proto.speed;
             }
 
             return updated;
