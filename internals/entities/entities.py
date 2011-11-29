@@ -99,6 +99,15 @@ class Entity(object):
             else:
                 self.on_chat(guid, chat_data,
                              distance=self.remembered_distances[guid])
+        else:
+            self._handle_message(type, message)
+
+    def _handle_message(self, type, message):
+        """
+        For use by inherited classes. Called when an unrecognized message is
+        passed for inspection.
+        """
+        pass
 
     def _player_movement(self, guid, x, y):
         """

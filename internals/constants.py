@@ -15,4 +15,9 @@ entity_despawn_time = 60 * 10
 MESSAGES_WITH_GUIDS = ("loc", "add", "del", "cha", "giv")
 PLAYER_RANGES = 3
 
+# The distance that an attack startles an entity from.
+FLEE_DISTANCE = 15 * tilesize
+# The distance that an attack hurts from.
+HURT_DISTANCE = 1.6 * tilesize
+
 TICK = 1.0 / framerate
