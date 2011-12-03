@@ -89,7 +89,11 @@ class SentientAnimat(Harmable, Animat):
             return False
         else:
             best_direction = self._get_best_direction(weighted=True)
-            if best_direction != self.velocity:
+            if best_direction is None:
+                self.move(0, 0)
+                self.schedule(3, self.wander)
+                return False
+            elif best_direction != self.velocity:
                 self.move(*best_direction)
 
             self.schedule(REEVALUATE_TIME, self._reevaluate_behavior)
@@ -134,6 +138,8 @@ class SentientAnimat(Harmable, Animat):
             return get_flee_delta()
         elif self.chasing:
             return get_chase_delta()
+        else:
+            return 0
 
     def _handle_message(self, type, message):
         """Here, we're going to intercept attack commands and process them."""

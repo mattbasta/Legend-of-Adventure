@@ -18,6 +18,11 @@ class HostileAnimat(SentientAnimat):
             self.harmed_by(attacked_with)
 
     def on_player_range(self, guid, distance):
+        if guid.startswith("!!"):
+            return
+        if self.chasing:
+            return
+
         if distance < CHASE_DISTANCE:
             self.chase(guid)
 

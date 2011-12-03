@@ -28,9 +28,21 @@ class Wolf(AnimatSprite, HostileAnimat):
 
         self.width, self.height = 65, 65
         self.image = "wolf"
-        self.speed = 0.85
+        self.speed = 0.90
 
-        self.health = 20
+        self.health = 24
 
         self.wander()
+
+    def get_prefix(self):
+        return "%swolf_" % super(Wolf, self).get_prefix()
+
+    def on_player_range(self, guid, distance):
+        """
+        This keeps wolves from just up and attacking each other pointlessly.
+        """
+        if guid.startswith(self.get_prefix()):
+            return
+
+        super(Wolf, self).on_player_range(guid, distance)
 

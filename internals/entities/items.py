@@ -16,6 +16,9 @@ class ItemEntity(Entity):
 
         self.item_code = item_code
 
+    def get_prefix(self):
+        return "!!"
+
     def on_player_range(self, guid, distance):
         if distance >= 1 or guid.startswith("%"):
             return

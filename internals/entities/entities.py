@@ -196,6 +196,12 @@ class Entity(object):
 
         self.location.notify_location("epu", "%s:%s" % (self.id, command))
 
+        # Notify all of the entities of where we're at.
+        for entity in self.location.entities:
+            if entity is self:
+                continue
+            entity._player_movement(self.id, self.position[0], self.position[1])
+
 
 class Animat(Entity):
     """
@@ -333,6 +339,11 @@ class Animat(Entity):
 
         if should_redirect:
             self.move(*should_redirect, event=False)
+        elif now_moving:
+            # We're moving, didn't stop, and didn't hit a wall.
+            for entity in self.location.entities:
+                entity._player_movement(self.id, self.position[0],
+                                        self.position[1])
 
         return now_moving
 
