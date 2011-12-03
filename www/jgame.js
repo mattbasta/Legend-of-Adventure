@@ -648,8 +648,8 @@ var jgutils = {
         },
         _hover : function(e) {
             var oh = jgutils.inventory.hovering;
-            var x = e.offsetX ? e.offsetX : e.layerX,
-                y = e.offsetY ? e.offsetY : e.layerY;
+            var x = e.clientX,
+                y = window.innerHeight - e.pageY;
             if(x < 80) {
                 jgutils.inventory.hovering = 0;
             } else if(y > 14) {
