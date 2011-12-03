@@ -17,6 +17,8 @@ PLAYER_RANGES = 3
 
 # The distance that an attack startles an entity from.
 FLEE_DISTANCE = 15 * tilesize
+# The distance that a hostile mob will notice a player/entity from.
+CHASE_DISTANCE = 15 * tilesize
 # The distance that an attack hurts from.
 HURT_DISTANCE = 1.6 * tilesize
 

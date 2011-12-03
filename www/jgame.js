@@ -763,6 +763,8 @@ var jgutils = {
                     var body = body.explode(":", 1),
                         data = body[1].split("\n"),
                         entity = jgutils.objects.registry[body[0]];
+                    if(!entity)
+                        break;
                     for(var i = 0; i < data.length; i++) {
                         var line = data[i].explode("=", 2),
                             key = line[0],
@@ -882,7 +884,7 @@ var jgutils = {
                 return;
             var layer_canvas = jgame.canvases.objects,
                 c = layer_canvas.getContext("2d");
-            c.clearRect(jgame.offset.x, jgame.offset.y, jgame.offset.w, jgame.offset.h);
+            c.clearRect(0, 0, layer_canvas.width, layer_canvas.height);
             jgutils.drawing.changed.objects = true;
             for(var layer_id in layers) {
                 var layer = layers[layer_id].obj;

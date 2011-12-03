@@ -252,7 +252,8 @@ class Animat(Entity):
         def callback_wrapper():
             for t in self.timers:
                 if t[0] == ts:
-                    self.timers.remove(t)
+                    if t in self.timers:
+                        self.timers.remove(t)
                 elif t[0] > ts:
                     break
             callback()
@@ -350,7 +351,7 @@ class Animat(Entity):
                            usable_directions)
 
             if weights:
-                max_weight = max(*weights.values())
+                max_weight = max(*(weights.values()))
                 usable_directions = filter(lambda d: weights[d] == max_weight,
                                            usable_directions)
 

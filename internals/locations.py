@@ -120,6 +120,8 @@ class Location():
                 sp_ents = []
                 for i in range(random.randint(2, 5)):
                     sp_ents.append(entities.Sheep)
+                for i in range(random.randint(0, 3)):
+                    sp_ents.append(entities.Wolf)
                 return sp_ents
 
         return []

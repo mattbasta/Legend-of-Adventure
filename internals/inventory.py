@@ -35,9 +35,10 @@ class InventoryManager(object):
         if item.startswith("w"):
             # TODO: Tweak this to the direction of the player.
             self._notify_location(self.location,
-                                  "atk%s" % ":".join((self.guid, item,
-                                                      str(self.position[0]),
-                                                      str(self.position[1]))))
+                                  "atk%s" % ":".join(
+                                      (self.guid, item,
+                                       str(int(self.position[0])),
+                                       str(int(self.position[1])))))
         else:
             pass
         self.write_message("chaitem daemon\nUsed %s" % item)

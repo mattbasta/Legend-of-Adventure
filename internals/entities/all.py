@@ -1,4 +1,5 @@
 from animals import Sheep
+from animals import Wolf
 
 from trader import Trader
 from child import Child

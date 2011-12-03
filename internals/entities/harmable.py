@@ -1,12 +1,19 @@
+from random import randint
+
 from items import WEAPONS, WEAPON_PREFIXES
 
 
 class Harmable(object):
+    """
+    A harmable entity is an entity that is both capable of taking damage and
+    dying.
+    """
 
     def __init__(self, *args, **kwargs):
         super(Harmable, self).__init__(*args, **kwargs)
 
         self.health = 100
+        self.max_health = self.health
 
     def harm(self, damage):
         """Harm the entity by an amount of damage."""
@@ -34,4 +41,16 @@ class Harmable(object):
         print "%s has died." % self.id
         self.location.notify_location("die", self.id)
         self.location.destroy_entity(self)
+
+        for item_code in self.get_drops():
+            code = ("%s:%s:%d:%d" % (self.id, item_code,
+                                     self.position[0] + randint(-3, 3),
+                                     self.position[1] + randint(-3, 3)))
+            self.location.spawn_drop(code)
+
+    def get_drops(self):
+        """
+        Return an iterable of item codes that the entity should drop on death.
+        """
+        return []
 
