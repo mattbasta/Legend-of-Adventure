@@ -9,12 +9,18 @@ def get_hitmap(position, hitmap):
     X and Y of the entity, respectively.
     """
     x, y = position
-    x, y = floor(x / tilesize), floor(y / tilesize)
-    x, y = map(int, (x, y))
+    x, y = x / tilesize, y / tilesize
+    x2, y2 = x + 1, y + 1
+    x, y, x2, y2 = map(floor, (x, y, x2, y2))
 
-    x2, y2 = position
-    x2, y2 = floor(x2 / tilesize) + 1, floor(y2 / tilesize) + 1
+    x, y = map(int, (x, y))
     x2, y2 = map(int, (x2, y2))
+
+    x = min(x, len(hitmap[0]) - 1)
+    y = min(y, len(hitmap) - 1)
+
+    x = max(x, 0)
+    y = max(y, 0)
 
     x_min, y_min = 0, 0
     x_max, y_max = len(hitmap[y]) * tilesize, len(hitmap) * tilesize
