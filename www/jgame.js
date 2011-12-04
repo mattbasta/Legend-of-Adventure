@@ -848,8 +848,11 @@ var jgutils = {
                     var context = layer.obj.getContext('2d');
                     context.clearRect(0, 0, layer.obj.width, layer.obj.height);
 
-                    for(var co in layer.child_objects) {
-                        var child = layer.child_objects[co],
+                    var sorted_cos = Object.keys(layer.child_objects).sort(function(a, b) {
+                        return jgutils.objects.registry[a].y - jgutils.objects.registry[b].y;
+                    });
+                    for(var co = 0; co < sorted_cos.length; co++) {
+                        var child = layer.child_objects[sorted_cos[co]],
                             li = child.last_view;
                         if(!li)
                             continue;
