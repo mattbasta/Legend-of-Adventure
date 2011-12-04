@@ -200,9 +200,14 @@ class LocationHandler(object):
         self.entities.append(entity)
         self.spawn_entity(entity)
 
-    def notify_location(self, command, message):
+    def notify_location(self, command, message, to_entities=False):
         """A shortcut for broadcasting a message to the location."""
         self.outbound_redis.publish(
                 "location::e::%s" % self.location,
                 "%s>%s%s" % (self.location, command, message))
+
+        if to_entities:
+            full_message = "%s%s" % (command, message)
+            for entity in self.entities:
+                entity.handle_message(full_message)
 

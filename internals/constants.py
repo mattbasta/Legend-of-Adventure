@@ -16,10 +16,10 @@ MESSAGES_WITH_GUIDS = ("loc", "add", "del", "cha", "giv")
 PLAYER_RANGES = 3
 
 # The distance that an attack startles an entity from.
-FLEE_DISTANCE = 15 * tilesize
+FLEE_DISTANCE = 15
 # The distance that a hostile mob will notice a player/entity from.
-CHASE_DISTANCE = 15 * tilesize
+CHASE_DISTANCE = 25
 # The distance that an attack hurts from.
-HURT_DISTANCE = 1.6 * tilesize
+HURT_DISTANCE = 1.6
 
 TICK = 1.0 / framerate

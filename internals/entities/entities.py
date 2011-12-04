@@ -21,6 +21,8 @@ class Entity(object):
     def __init__(self, location, x=None, y=None, id=None):
         super(Entity, self).__init__()
 
+        self.dead = False
+
         self.id = id if id else "%s%s" % (self.get_prefix(), uuid.uuid4().hex)
         self.height, self.width = 0, 0
         self.position = x, y
@@ -123,16 +125,14 @@ class Entity(object):
         distance /= constants.tilesize
         distance = round(distance / constants.PLAYER_RANGES)
         distance *= constants.PLAYER_RANGES
-        if distance > 35:  # The threshold of uncaring.
-            return
 
         if guid in self.remembered_distances:
             old_distance = self.remembered_distances[guid]
             if old_distance == distance:
                 return
-        self.on_player_range(guid, distance)
         self.remembered_distances[guid] = distance
         self.remembered_positions[guid] = x, y
+        self.on_player_range(guid, distance)
 
     def on_player_range(self, guid, distance):
         """
@@ -181,6 +181,9 @@ class Entity(object):
         Broadcast a set of changed properties to the location. This should also
         update other entities of relevant information.
         """
+        if self.dead:
+            return
+
         props = self._get_properties()
         def get_prop(key, value=None):
             if value is None:
@@ -212,7 +215,7 @@ class Animat(Entity):
     def __init__(self, *args, **kwargs):
         super(Animat, self).__init__(*args, **kwargs)
         self.timers = []
-        self.scheduler = Scheduler(constants.tilesize / constants.speed / 1000,
+        self.scheduler = Scheduler(constants.tilesize / constants.speed / 1000 / 2,
                                    self._on_scheduled_event)
 
         self.layer = 0
@@ -236,6 +239,10 @@ class Animat(Entity):
 
         # Since we're being destroyed, delete all of our planned events.
         self.deschedule_all()
+        # Shut the scheduler up, too.
+        if self.scheduler.timer is not None:
+            self.scheduler.timer.cancel()
+            self.scheduler.timer = None
 
     def forget(self, guid):
         """
@@ -256,6 +263,7 @@ class Animat(Entity):
 
         # Provide a means of cleaning up the timer list.
         def callback_wrapper():
+            if self.dead: return
             for t in self.timers:
                 if t[0] == ts:
                     if t in self.timers:
@@ -305,6 +313,8 @@ class Animat(Entity):
         recalculate hitmaps.
         """
 
+        if self.dead: return
+
         duration = time.time() - self.scheduler.last_tick
         duration *= 1000
 
@@ -342,6 +352,8 @@ class Animat(Entity):
         elif now_moving:
             # We're moving, didn't stop, and didn't hit a wall.
             for entity in self.location.entities:
+                if entity is self:
+                    continue
                 entity._player_movement(self.id, self.position[0],
                                         self.position[1])
 
@@ -396,8 +408,8 @@ class Animat(Entity):
         # Test that the next position is within bounds.
         width = self.location.location.width()
         height = self.location.location.height()
-        if (x_t < 1 or x_t > width - 2 or
-            y_t < 1 or y_t > height - 2):
+        if (x_t < 2 or x_t > width - 2.5 or
+            y_t < 2 or y_t > height - 2.5):
             return False
 
         # Test that the next position is solid.

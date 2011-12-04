@@ -41,7 +41,7 @@ class Wolf(AnimatSprite, HostileAnimat):
         """
         This keeps wolves from just up and attacking each other pointlessly.
         """
-        if guid.startswith(self.get_prefix()):
+        if guid.startswith(self.get_prefix()) and guid != self.chasing:
             return
 
         super(Wolf, self).on_player_range(guid, distance)

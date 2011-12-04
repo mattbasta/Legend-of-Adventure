@@ -12,6 +12,7 @@ class Harmable(object):
     def __init__(self, *args, **kwargs):
         super(Harmable, self).__init__(*args, **kwargs)
 
+        self.dead = False  # Used for debugging
         self.health = 100
         self.max_health = self.health
 
@@ -25,6 +26,10 @@ class Harmable(object):
 
     def harmed_by(self, item):
         """Harm the entity with an item."""
+        if not item:
+            self.harm(2)
+            return
+
         item_code = item[1:].split(".")
         damage = WEAPON_PREFIXES.index(item_code[1]) / 2 + 1
         damage *= 1 + (int(item_code[2]) - 1) / 10
@@ -38,9 +43,13 @@ class Harmable(object):
     def die(self):
         """Kill the entity."""
 
+        self.dead = True
+
         print "%s has died." % self.id
         self.location.notify_location("die", self.id)
         self.location.destroy_entity(self)
+        for entity in self.location.entities:
+            entity.forget(self.id)
 
         for item_code in self.get_drops():
             code = ("%s:%s:%d:%d" % (self.id, item_code,

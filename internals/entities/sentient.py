@@ -1,6 +1,6 @@
 from math import sqrt
 
-from internals.constants import CHASE_DISTANCE, FLEE_DISTANCE, HURT_DISTANCE
+from internals.constants import CHASE_DISTANCE, FLEE_DISTANCE, tilesize
 from entities import Animat
 from items import WEAPONS, WEAPON_PREFIXES
 from harmable import Harmable
@@ -10,6 +10,22 @@ FLEE = 1
 CHASE = 2
 
 REEVALUATE_TIME = 1
+
+
+def get_guid_position(guid, self):
+    """Get the position of an entity the hard way."""
+    # FIXME: This function is called once per direction per update per entity. !!!!!
+    # A good solution might be to have a function for the entity to precache all of
+    # the stuff that it needs, then do the direction testing.
+    try:
+        entity = (e for e in self.location.entities if e.id == self.chasing).next()
+        position = entity.position
+        # Since we look it up, we'd might as well store it.
+        self.remembered_positions[guid] = position
+        return position
+    except StopIteration:
+        # It's probably a player, not an entity :-/
+        return self.remembered_positions[guid]
 
 
 class SentientAnimat(Harmable, Animat):
@@ -58,9 +74,20 @@ class SentientAnimat(Harmable, Animat):
 
         if not any(self.velocity):
             best_direction = self._get_best_direction()
-            self.move(*best_direction)
+            if best_direction is None:
+                self.move(0, 0)
+                self.wander()
+                return
+            else:
+                self.move(*best_direction)
 
         self.schedule(REEVALUATE_TIME, self._reevaluate_behavior)
+
+    def attack(self, guid):
+        x, y = get_guid_position(guid, self)
+        self.location.notify_location(
+            "atk", "%s:%s:%d:%d" % (self.id, self.holding_item or "", x, y),
+            to_entities=True)
 
     def wander(self):
         if self.fleeing or self.chasing:
@@ -81,12 +108,17 @@ class SentientAnimat(Harmable, Animat):
         should flee in.
         """
 
-        if not (self.chasing or
-                any(self.remembered_distances[x] < FLEE_DISTANCE * 1.5 for
-                    x in self.fleeing)):
+        is_fleeing = self.fleeing
+        if self.fleeing:
+            if all(self.remembered_distances[x] > FLEE_DISTANCE for
+                   x in self.fleeing):
+                if_fleeing = False
+
+        if not self.chasing and not is_fleeing:
             self.move(0, 0)
-            self.schedule(3, self.wander)
-            return False
+            self.schedule(2, self.wander)
+            if not self.fleeing:
+                return False
         else:
             best_direction = self._get_best_direction(weighted=True)
             if best_direction is None:
@@ -96,8 +128,8 @@ class SentientAnimat(Harmable, Animat):
             elif best_direction != self.velocity:
                 self.move(*best_direction)
 
-            self.schedule(REEVALUATE_TIME, self._reevaluate_behavior)
-            return True
+        self.schedule(REEVALUATE_TIME, self._reevaluate_behavior)
+        return True
 
     def _get_direction_weight(self, direction):
         """
@@ -105,15 +137,15 @@ class SentientAnimat(Harmable, Animat):
         """
         x, y = self._updated_position(*self.position,
                                       velocity=direction)
-        def get_gdelta(guid):
+        def get_gdelta(position):
             """Return the distance of the GUID to the entity."""
-            g_x, g_y = self.remembered_positions[guid]
+            g_x, g_y = position
             return sqrt((x - g_x) ** 2 + (y - g_y) ** 2)
 
         def get_flee_delta():
             flee_delta = 0
             for guid in self.fleeing:
-                g_delta = get_gdelta(guid)
+                g_delta = get_gdelta(self.remembered_positions[guid])
                 if g_delta > 1.5 * FLEE_DISTANCE:
                     return 0
                 g_delta -= self.remembered_distances[guid]
@@ -122,9 +154,11 @@ class SentientAnimat(Harmable, Animat):
             return flee_delta
 
         def get_chase_delta():
-            g_delta = get_gdelta(self.chasing)
-            if g_delta > 2.5 * CHASE_DISTANCE:
-                return 0
+            # Get the position straight from the location handler. We want this
+            # to be incredibly fresh. Do it as a generator so it only loops
+            # until we find the right one. Use next() to get the first one.
+            g_delta = get_gdelta(get_guid_position(self.chasing, self))
+            g_delta /= tilesize
             g_delta -= self.remembered_distances[self.chasing]
 
             return 0 - g_delta
@@ -150,11 +184,15 @@ class SentientAnimat(Harmable, Animat):
             return
 
         guid, item, x, y = message.split(":")
+        if guid == self.id:
+            return
+
         position = map(float, [x, y])
         position = map(int, position)
         attack_distance = sqrt((self.position[0] - position[0]) ** 2 +
                                (self.position[1] - position[1]) ** 2)
 
+        attack_distance /= tilesize
         self._attacked(attack_distance, guid, item)
 
     def _attacked(attack_distance, attacked_by, attacked_with):
