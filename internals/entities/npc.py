@@ -2,13 +2,13 @@ import random
 from threading import Timer
 import uuid
 
-import internals.constants as constants
+from internals.constants import HURT_DISTANCE
 from animat_sprite import AnimatSprite
-from entities import Animat
 from markov import MarkovBot
+from sentient import SentientAnimat
 
 
-class NPC(AnimatSprite, Animat, MarkovBot):
+class NPC(AnimatSprite, SentientAnimat, MarkovBot):
     """A non-playable character."""
 
     def __init__(self, *args):
@@ -22,8 +22,11 @@ class NPC(AnimatSprite, Animat, MarkovBot):
 
         self.messages = ["Hmmmm...", "So much to do!",
                          "*dumm dumm dee deedlee*"]
+        self.talking = True
         self.chattering = False
         self.last_chat = ""
+
+        self.health = 50
 
     def get_prefix(self):
         return "@"
@@ -32,7 +35,7 @@ class NPC(AnimatSprite, Animat, MarkovBot):
         return random.randint(10, 20)
 
     def _on_event(self):
-        if not self.chattering:
+        if not self.chattering and self.talking:
             # TODO: implement a way to reset this. Maybe a timer of some sort?
             message = random.choice(self.messages)
             self.write_chat(message)
@@ -48,7 +51,9 @@ class NPC(AnimatSprite, Animat, MarkovBot):
         self.write_chat(message)
 
     def on_chat(self, guid, message, distance=0):
-        print "Received chat (%d): %s" % (distance, message)
+        if self.disable_chatbot:
+            return
+
         if distance <= 10:
             if not self.chattering:
                 self.chattering = True
@@ -59,4 +64,12 @@ class NPC(AnimatSprite, Animat, MarkovBot):
             if self.last_chat:
                 self.train_response(self.last_chat, message)
             self.last_chat = message
+
+    def _attacked(self, attack_distance, attacked_by, attacked_with):
+        super(NPC, self)._attacked(attack_distance, attacked_by, attacked_with)
+        if attack_distance < HURT_DISTANCE * 2.5:
+            if self.holding_item and self.holding_item.startswith("w"):
+                self.chase(attacked_by)
+            else:
+                self.flee(attacked_by)
 

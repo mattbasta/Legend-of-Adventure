@@ -55,6 +55,8 @@ class MarkovBot(object):
 
         self._word_count = 0
 
+        self.disable_chatbot = False
+
     def _add_tokens(self, tokens):
         if DEBUG:
             print "adding tokens:", tokens

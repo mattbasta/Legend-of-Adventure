@@ -374,7 +374,7 @@ class Animat(Entity):
                            usable_directions)
 
             if weights:
-                max_weight = max(*(weights.values()))
+                max_weight = max(weights.values())
                 usable_directions = filter(lambda d: weights[d] == max_weight,
                                            usable_directions)
 

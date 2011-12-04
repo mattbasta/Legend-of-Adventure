@@ -1,6 +1,7 @@
 from math import sqrt
 
-from internals.constants import CHASE_DISTANCE, FLEE_DISTANCE, tilesize
+from internals.constants import (CHASE_DISTANCE, FLEE_DISTANCE, HURT_DISTANCE,
+                                 tilesize)
 from entities import Animat
 from items import WEAPONS, WEAPON_PREFIXES
 from harmable import Harmable
@@ -195,6 +196,11 @@ class SentientAnimat(Harmable, Animat):
         attack_distance /= tilesize
         self._attacked(attack_distance, guid, item)
 
-    def _attacked(attack_distance, attacked_by, attacked_with):
-        pass
+    def _attacked(self, attack_distance, attacked_by, attacked_with):
+        """
+        This should not be overridden if the inheriting class's _attacked
+        implementation harms the entity.
+        """
+        if attack_distance < HURT_DISTANCE:
+            self.harmed_by(attacked_with)
 

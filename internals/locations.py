@@ -110,8 +110,20 @@ class Location():
             return [entities.Child, entities.Child]
         elif is_town:
             #return [entities.Bully]
-            return [entities.Trader, entities.Trader, entities.Child,
-                    entities.Child, entities.Child, entities.Bully]
+            spawn = []
+            for i in range(random.randint(0, 2)):
+                spawn.append(entities.Trader)
+            for i in range(random.randint(0, 4)):
+                spawn.append(entities.Child)
+            for i in range(random.randint(0, 2)):
+                spawn.append(entities.Bully)
+
+            # Towns always have at least two soldiers.
+            for i in range(random.randint(2, 4)):
+                spawn.append(entities.Soldier)
+
+            return spawn
+
         else:
             is_dungeon = self.is_dungeon()
             if is_dungeon and self.sublocations:
@@ -214,6 +226,9 @@ class Location():
                            "child1": "static/images/child1.png",
                            "child2": "static/images/child2.png",
                            "bully": "static/images/bully.png",
+                           "soldier1": "static/images/soldier1.png",
+                           "soldier2": "static/images/soldier2.png",
+                           "soldier3": "static/images/soldier3.png",
                            "sheep": "static/images/sheep.png",
                            "wolf": "static/images/wolf.png"},
                 "tileset": self.tileset(),
