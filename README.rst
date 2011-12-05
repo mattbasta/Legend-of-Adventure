@@ -39,3 +39,10 @@ Other dependencies can be resolved with: ::
     pip install -r requirements.txt
 
 
+Special Thanks
+==============
+
+* Josh Stitt - Music Composition
+* Ralph Hinkle - Sounds
+* LordBagardo - Mob Sprites
+
