@@ -70,10 +70,11 @@ class Soldier(NPC):
             self._chase_queue.remove(guid)
         elif self.chasing == guid:
             self.chasing = None
-            # Pop the first element in the chase queue and start chasing it.
-            to_chase = self._chase_queue[0]
-            self._chase_queue = self._chase_queue[1:]
-            self.chase(to_chase)
+            if self._chase_queue:
+                # Pop the first element in the chase queue and start chasing it.
+                to_chase = self._chase_queue[0]
+                self._chase_queue = self._chase_queue[1:]
+                self.chase(to_chase)
 
         super(Soldier, self).forget(guid)
 
