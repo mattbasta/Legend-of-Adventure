@@ -960,6 +960,8 @@ var jgutils = {
             var proto = jgutils.objects.registry[id];
             delete jgutils.objects.registry[id];
             delete jgutils.objects.layers[proto.registry_layer].child_objects[id];
+            jgutils.objects.layers[proto.registry_layer].updated = true;
+            jgutils.objects.redrawLayers();
         }
     },
     drawing : {
