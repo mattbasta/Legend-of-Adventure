@@ -20,6 +20,13 @@ class Soldier(NPC):
 
         self._chase_queue = []
 
+        self.messages = ["Get back here, criminal!",
+                         "We don't take kindly to your type around here!",
+                         "Get out of our town!"]
+
+    def _get_unexpected_time(self):
+        return random.randint(2, 4)
+
     def _attacked(self, attack_distance, attacked_by, attacked_with):
         """Always attack any attacker."""
         super(Soldier, self)._attacked(attack_distance, attacked_by,
@@ -50,10 +57,13 @@ class Soldier(NPC):
             return
 
         if self.chasing:
-            print "Soldier pushing %s to attack queue" % guid
             self._chase_queue.append(guid)
         else:
             super(Soldier, self).chase(guid)
+
+        if self.chasing:
+            print "Soldier set to talk"
+            self.talking = True
 
     def forget(self, guid):
         if guid in self._chase_queue:
@@ -66,4 +76,8 @@ class Soldier(NPC):
             self.chase(to_chase)
 
         super(Soldier, self).forget(guid)
+
+        if not self.chasing:
+            print "Soldier set to silent"
+            self.talking = False
 

@@ -32,7 +32,7 @@ class NPC(AnimatSprite, SentientAnimat, MarkovBot):
         return "@"
 
     def _unexpected_time(self):
-        return random.randint(10, 20)
+        return random.randint(5, 12)
 
     def _on_event(self):
         if not self.chattering and self.talking:

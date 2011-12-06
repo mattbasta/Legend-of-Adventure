@@ -10,7 +10,7 @@ from harmable import Harmable
 FLEE = 1
 CHASE = 2
 
-REEVALUATE_TIME = 1
+REEVALUATE_TIME = 0.675
 
 
 def get_guid_position(guid, self):
