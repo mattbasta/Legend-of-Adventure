@@ -1,5 +1,6 @@
 import random
 
+from internals.constants import HURT_DISTANCE
 from npc import NPC
 from sentient import CHASE
 
@@ -17,9 +18,19 @@ class Soldier(NPC):
         self.health = 75
         self.prefer_behavior = CHASE
 
+        self._chase_queue = []
+
     def _attacked(self, attack_distance, attacked_by, attacked_with):
         """Always attack any attacker."""
-        super(Soldier, self)._attacked(attack_distance, attacked_by, attacked_with)
+        super(Soldier, self)._attacked(attack_distance, attacked_by,
+                                       attacked_with)
+
+        # If we're already chasing someone, fight off the person that's now
+        # attacking us.
+        if attack_distance < HURT_DISTANCE and self.chasing != attacked_by:
+            self._chase_queue.insert(0, self.chasing)
+            self.chasing = None
+
         self.chase(attacked_by)
 
     def get_placeable_locations(self, grid, hitmap):
@@ -33,4 +44,26 @@ class Soldier(NPC):
                 if grid[y][x] in (131, 96, ):
                     street_locations.append((x, y))
         return street_locations
+
+    def chase(self, guid):
+        if self.chasing == guid or guid in self._chase_queue:
+            return
+
+        if self.chasing:
+            print "Soldier pushing %s to attack queue" % guid
+            self._chase_queue.append(guid)
+        else:
+            super(Soldier, self).chase(guid)
+
+    def forget(self, guid):
+        if guid in self._chase_queue:
+            self._chase_queue.remove(guid)
+        elif self.chasing == guid:
+            self.chasing = None
+            # Pop the first element in the chase queue and start chasing it.
+            to_chase = self._chase_queue[0]
+            self._chase_queue = self._chase_queue[1:]
+            self.chase(to_chase)
+
+        super(Soldier, self).forget(guid)
 
