@@ -13,14 +13,25 @@ import internals.brukva_setup as brukva_setup
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 brukva_client = None
+local_settings = {"port": constants.port,
+                  "tilesize": constants.tilesize}
 
 
+index_cache = None
 class LOAHandler(tornado.web.RequestHandler):
     """Server of the main page."""
 
     def get(self):
-        with open("www/index.html") as index:
-            self.write(index.read())
+        global index_cache
+        if not index_cache:
+            with open("www/index.html") as index:
+                index_cache = index.read()
+                for setting in local_settings:
+                    index_cache = index_cache.replace(
+                            "%%(%s)s" % setting,
+                            str(local_settings[setting]))
+
+        self.write(index_cache)
 
 
 settings = {"static_path": os.path.join(current_dir, "www"),
@@ -36,10 +47,11 @@ def start():
 
     config_path = os.path.join(os.path.dirname(__file__),
                                "config.conf")
-    local_settings = {"port": constants.port}
+    new_local_settings = {}
     if os.path.exists(config_path):
         with open(config_path) as config_file:
-            local_settings = json.loads(config_file.read())
+            new_local_settings = json.loads(config_file.read())
+    local_settings.update(new_local_settings)
     port = local_settings["port"]
     application.listen(local_settings["port"])
 

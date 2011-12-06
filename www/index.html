@@ -14,7 +14,7 @@
 <script type="text/javascript">
 <!--
 window.jgame = {
-    port : 8080,
+    port : %(port)s,
     fps : 30,
     cdn : 0,
     speed : 0.2,
@@ -45,7 +45,7 @@ window.jgame = {
             ]
         }
     },
-    tilesize : 50,
+    tilesize : %(tilesize)s,
     canvases: {}
 };
 $(document).ready(function(){
