@@ -45,4 +45,5 @@ Special Thanks
 * Josh Stitt - Music Composition
 * Ralph Hinkle - Sounds
 * LordBagardo - Mob Sprites
+* Kazzador - Zombie Sprite
 

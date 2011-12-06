@@ -39,6 +39,9 @@ class Location():
         self._hitmap_cache = None
         self._portal_cache = []
 
+        self._dungeon_cache = None
+        self._town_cache = None
+
         # Parse sublocation information.
         while scode:
             subloc_type = scode[0]
@@ -76,21 +79,32 @@ class Location():
             return "%s:%d:%d" % (self.world, x, y)
 
     def is_town(self):
+        if self._town_cache is not None:
+            return self._town_cache
         random.seed(self.coords[0] * 1000 + self.coords[1])
 
         # We need to seed before we test for forced towns because this also
         # seeds the town generator.
         if self.coords == (0, 0):
+            self._town_cache
             return True
-        return random.randint(0, 5) == 0
+        self._town_cache = random.randint(0, 5) == 0
+        return self._town_cache
 
     def is_dungeon(self):
+        if self._dungeon_cache is not None:
+            return self._dungeon_cache
+
         if self.is_town():
+            self._dungon_cache = False
             return False
         random.seed(self.coords[0] * 1001 + self.coords[1] * 2 + 1)
         if self.coords[0] == 1 and self.coords[1] == 0:
+            self._dungon_cache = True
             return True
-        return random.randint(0, 5) == 0
+
+        self._dungon_cache = random.randint(0, 5) == 0
+        return self._dungeon_cache
 
     def has_entities(self):
         return True
@@ -127,16 +141,16 @@ class Location():
         else:
             is_dungeon = self.is_dungeon()
             if is_dungeon and self.sublocations:
+                # In the dungeon
                 return dungeons.get_entities(self)
             else:
+                # Outside of the dungeon
                 sp_ents = []
                 for i in range(random.randint(2, 5)):
                     sp_ents.append(entities.Sheep)
                 for i in range(random.randint(0, 3)):
                     sp_ents.append(entities.Wolf)
                 return sp_ents
-
-        return []
 
     def generate(self):
         """Generate the static terrain elements for a particular location."""
@@ -205,6 +219,20 @@ class Location():
         else:
             return len(self.generate()[0][0])
 
+    def _get_images(self):
+        if self.is_dungeon():
+            return dungeons.get_images()
+        else:
+            return {"npc": "static/images/npc.png",
+                    "child1": "static/images/child1.png",
+                    "child2": "static/images/child2.png",
+                    "bully": "static/images/bully.png",
+                    "soldier1": "static/images/soldier1.png",
+                    "soldier2": "static/images/soldier2.png",
+                    "soldier3": "static/images/soldier3.png",
+                    "sheep": "static/images/sheep.png",
+                    "wolf": "static/images/wolf.png"}
+
     def render(self, avx, avy):
         """Render the JSON representation of the level."""
 
@@ -222,15 +250,7 @@ class Location():
                 "def_tile": 0,
                 "avatar": {"x": avx, "y": avy,
                            "image": "static/images/avatar.png"},
-                "images": {"npc": "static/images/npc.png",
-                           "child1": "static/images/child1.png",
-                           "child2": "static/images/child2.png",
-                           "bully": "static/images/bully.png",
-                           "soldier1": "static/images/soldier1.png",
-                           "soldier2": "static/images/soldier2.png",
-                           "soldier3": "static/images/soldier3.png",
-                           "sheep": "static/images/sheep.png",
-                           "wolf": "static/images/wolf.png"},
+                "images": self._get_images(),
                 "tileset": self.tileset(),
                 "can_slide": self.can_slide(),
                 "level": level,

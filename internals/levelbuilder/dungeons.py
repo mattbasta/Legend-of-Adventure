@@ -3,6 +3,7 @@ import math
 import random
 from random import randint
 
+import internals.entities.all as entities
 from internals.levelbuilder.tiles import get_building_tiles, overlay
 
 
@@ -107,8 +108,23 @@ def get_offset(location):
 
 def get_entities(location):
     room = _get_room(location)
+    # No need to seed the random number generator, _get_room>get_offset does it
+    # for us :)
+
+    if room["type"] in ("stairwell", "lobby", ):
+        # These rooms don't have mobs.
+        return []
+    elif room["type"] == "room":
+        spawn = []
+        spawn.append(entities.Zombie)
+        return spawn
+
     # TODO: This should return a list of entities.
     return []
+
+
+def get_images():
+    return {"zombie": "static/images/zombie.png"}
 
 
 def _build_dungeon_layout(location):

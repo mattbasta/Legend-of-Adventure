@@ -6,4 +6,6 @@ from child import Child
 from soldier import Soldier
 from trader import Trader
 
+from dungeon_mobs import *
+
 from items import ItemEntity
