@@ -52,18 +52,18 @@ def build_dungeon(location):
 
     # Draw the main floor.
     draw_tiles(4, 4, width - 8, height - 8)
-    draw_tiles(4, height - 4, width - 8, 1, tile=6, walkable=False)
+    draw_tiles(4, height - 4, width - 8, 1, tile=6, walkable=1)
 
     if room["passages"][0, 1]:
         draw_tiles(12, 24, 4, 4)
     if room["passages"][1, 0]:
         draw_tiles(24, 12, 4, 4)
-        draw_tiles(24, 16, 4, 1, tile=6, walkable=False)
+        draw_tiles(24, 16, 4, 1, tile=6, walkable=1)
     if room["passages"][0, -1]:
         draw_tiles(12, 0, 4, 4)
     if room["passages"][-1, 0]:
         draw_tiles(0, 12, 4, 4)
-        draw_tiles(0, 16, 4, 1, tile=6, walkable=False)
+        draw_tiles(0, 16, 4, 1, tile=6, walkable=1)
 
     if room["type"] == "lobby":
         draw_tiles(11, 9, 6, 6, tile=10)
