@@ -4,8 +4,8 @@ redis = "127.0.0.1:6379"
 port = 8080
 
 level_grad_resolution = 4
-level_width = 100
-level_height = 100
+level_width = 75
+level_height = 75
 tilesize = 50
 framerate = 30  # FPS
 speed = 0.2  # Pixels per tick
