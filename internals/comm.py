@@ -35,7 +35,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
         super(CommHandler, self).__init__(application, request)
 
         # Define variables to store state information.
-        self.guid = None
+        self.id = None
         self.location = None
 
         self.health = 100
@@ -77,7 +77,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
             print "Message: [%s]" % message
 
         # Filter out bad requests.
-        if m_type in REQUIRE_GUID and not self.guid:
+        if m_type in REQUIRE_GUID and not self.id:
             self.write_message("errNot Registered")
             return
         if m_type in REQUIRE_SCENE and self.location is None:
@@ -119,8 +119,8 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
         # hitmapping isn't blocked on Redis.
         self.scheduler.event_happened()
 
-        outbound_redis.set("l:p:%s" % self.guid,
-                           "%s:%d:%d" % (self.guid, x, y))
+        outbound_redis.set("l:p:%s" % self.id,
+                           "%s:%d:%d" % (self.id, x, y))
 
         now = time.time() * 1000
         if now - self.last_update < 5:
@@ -129,7 +129,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
 
         #self._notify_location(self.location,
         #                      "loc%s:%d:%d:%d:%d" %
-        #                          (self.guid, x, y, x_dir, y_dir))
+        #                          (self.id, x, y, x_dir, y_dir))
 
     def _on_chat(self, data):
         original_data = data
@@ -144,7 +144,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
             data = '<span>%s</span>%s' % (self.chat_name, data)
 
         self._notify_location(self.location,
-                "cha%s:%d:%d\n%s" % (self.guid, self.position[0],
+                "cha%s:%d:%d\n%s" % (self.id, self.position[0],
                                      self.position[1], data))
 
     def _handle_command(self, message):
@@ -169,7 +169,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
         if data in ("local", ):
             self.write_message("errBad GUID")
             return
-        self.guid = data
+        self.id = data
         self.registered()
         # TODO: Once database access is available, this should pull the player
         # location from the database.
@@ -265,7 +265,7 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
 
         self._notify_location(self.location,
                               "loc%s:%d:%d:%d:%d" %
-                                  (self.guid, x, y,
+                                  (self.id, x, y,
                                    self.velocity[0], self.velocity[1]),
                               for_entities=scheduled)
 
@@ -324,25 +324,25 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
         # Let everyone know that we're here.
         client._notify_global(
                 "enter",
-                "%s>%s:%d:%d" % (loc_str, client.guid, x, y))
+                "%s>%s:%d:%d" % (loc_str, client.id, x, y))
 
         client_set = "l:c:%s" % loc_str
         for rclient in outbound_redis.smembers(client_set):
             client_location = outbound_redis.get("l:p:%s" % rclient)
             client.write_message("add%s" % client_location)
-        outbound_redis.sadd(client_set, client.guid)
-        outbound_redis.set("l:p:%s" % client.guid,
-                           "%s:%d:%d" % (client.guid, client.position[0],
+        outbound_redis.sadd(client_set, client.id)
+        outbound_redis.set("l:p:%s" % client.id,
+                           "%s:%d:%d" % (client.id, client.position[0],
                                          client.position[1]))
 
     @classmethod
     def del_client(cls, client):
-        if not client.location or not client.guid:
+        if not client.location or not client.id:
             return
 
-        outbound_redis.srem("l:c:%s" % str(client.location), client.guid)
-        outbound_redis.delete("l:p:%s" % client.guid)
-        client._notify_location(client.location, "del%s" % client.guid)
+        outbound_redis.srem("l:c:%s" % str(client.location), client.id)
+        outbound_redis.delete("l:p:%s" % client.id)
+        client._notify_location(client.location, "del%s" % client.id)
 
         loc_str = str(client.location)
         locations[loc_str].remove(client)

@@ -36,13 +36,13 @@ def setup_brukva(client):
 
             for client in comm.locations[location]:
                 if message_type == "giv":
-                    if client.guid == guid:
+                    if client.id == guid:
                         client.give_item(message_data)
                     continue
                 elif message_type == "cha":
                     if distance(pos, client.position) > CHAT_DISTANCE * tilesize:
                         continue
-                if guid and client.guid == guid:
+                if guid and client.id == guid:
                     continue
                 client.write_message(message)
 
@@ -54,7 +54,7 @@ def setup_brukva(client):
         guid, foo = client_data.split(":", 1)
         if location in comm.locations:
             for client in comm.locations[location]:
-                if client.guid == guid:
+                if client.id == guid:
                     continue
                 client.write_message("add%s" % client_data)
 
