@@ -5,10 +5,13 @@ from npc import NPC
 from sentient import CHASE
 
 
+PLACEABLE_LOCATIONS = (131, 96, )
+
+
 class Soldier(NPC):
 
-    def __init__(self, *args):
-        super(Soldier, self).__init__(*args)
+    def __init__(self, *args, **kwargs):
+        super(Soldier, self).__init__(*args, **kwargs)
         self.disable_chatbot = True
         self.talking = False
         self.image = "soldier%d" % random.randint(1, 3)
@@ -40,6 +43,9 @@ class Soldier(NPC):
 
         self.chase(attacked_by)
 
+    def can_place_at(self, x, y, grid, hitmap):
+        return grid[y][x] in PLACEABLE_LOCATIONS
+
     def get_placeable_locations(self, grid, hitmap):
         """
         Return a list of acceptable coordinates to place the soldier at. We
@@ -48,7 +54,7 @@ class Soldier(NPC):
         street_locations = []
         for y in range(len(grid)):
             for x in range(len(grid[y])):
-                if grid[y][x] in (131, 96, ):
+                if grid[y][x] in PLACEABLE_LOCATIONS:
                     street_locations.append((x, y))
         return street_locations
 

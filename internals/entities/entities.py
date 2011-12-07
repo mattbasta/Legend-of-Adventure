@@ -23,7 +23,8 @@ class Entity(object):
 
         self.dead = False
 
-        self.id = id if id else "%s%s" % (self.get_prefix(), uuid.uuid4().hex)
+        self.id = id if id else "%s%s" % (self.get_prefix(),
+                                          uuid.uuid4().hex[:8])
         self.height, self.width = 0, 0
         self.position = x, y
         self.location = location
@@ -480,6 +481,9 @@ class Animat(Entity):
         self.move(0, 0)
         self.wandering = False
         self.schedule(random.randint(1, 3), self.wander)
+
+    def can_place_at(self, x, y, grid, hitmap):
+        return not hitmap[y][x]
 
     def get_placeable_locations(self, grid, hitmap):
         """

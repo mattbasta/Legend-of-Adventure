@@ -12,6 +12,9 @@ class Trader(NPC):
                          "Come back anytime.",
                          "Got somethin' that might interest ya. Heh heh heh!"]
 
+    def can_place_at(self, x, y, grid, hitmap):
+        return grid[y][x] == ROAD_MATERIAL
+
     def get_placeable_locations(self, grid, hitmap):
         """
         Return a list of 2-tuples containing the X,Y coordinates of locations
