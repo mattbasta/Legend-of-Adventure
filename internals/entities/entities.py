@@ -224,7 +224,7 @@ class Animat(Entity):
         self.view = None
 
         self.velocity = 0, 0
-        self.old_velocity = None
+        self.old_velocity = 0, 0
         self.should_weight_directions = False
         self.movement_effect = ""
         self.speed = 1

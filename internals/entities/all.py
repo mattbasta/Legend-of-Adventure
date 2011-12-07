@@ -3,6 +3,7 @@ from animals import Wolf
 
 from bully import Bully
 from child import Child
+from homely import Homely
 from soldier import Soldier
 from trader import Trader
 

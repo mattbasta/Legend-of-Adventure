@@ -5,7 +5,7 @@ from npc import NPC
 from sentient import CHASE
 
 
-PLACEABLE_LOCATIONS = (131, 96, )
+PLACEABLE_LOCATIONS = (131, 96, 0, )
 
 
 class Soldier(NPC):
@@ -52,7 +52,7 @@ class Soldier(NPC):
         self.chase(attacked_by)
 
     def can_place_at(self, x, y, grid, hitmap):
-        return grid[y][x] in PLACEABLE_LOCATIONS
+        return grid[y][x] in PLACEABLE_LOCATIONS and not hitmap[y][x]
 
     def get_placeable_locations(self, grid, hitmap):
         """
@@ -62,7 +62,7 @@ class Soldier(NPC):
         street_locations = []
         for y in range(len(grid)):
             for x in range(len(grid[y])):
-                if grid[y][x] in PLACEABLE_LOCATIONS:
+                if grid[y][x] in PLACEABLE_LOCATIONS and not hitmap[y][x]:
                     street_locations.append((x, y))
         return street_locations
 
