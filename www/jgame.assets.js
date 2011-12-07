@@ -54,5 +54,8 @@ var jgassets = {
     },
     "sheep_bounce": function(ticks, data) {
         return [0, Math.abs(Math.sin(ticks / 500 * 2 * Math.PI)) * -5];
+    },
+    "shake": function(ticks, data) {
+        return [Math.random() * 10 - 5, Math.random() * 10 - 5];
     }
 };

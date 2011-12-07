@@ -111,20 +111,28 @@ def get_entities(location):
     # No need to seed the random number generator, _get_room>get_offset does it
     # for us :)
 
+    spawn = []
     if room["type"] in ("stairwell", "lobby", ):
         # These rooms don't have mobs.
         return []
     elif room["type"] == "room":
-        spawn = []
-        spawn.append(entities.Zombie)
-        return spawn
-
-    # TODO: This should return a list of entities.
-    return []
+        for i in range(randint(0, 4)):
+            spawn.append(entities.Zombie)
+    elif room["type"] == "mob_drop":
+        for i in range(randint(0, 2)):
+            spawn.append(entities.DeathWaker)
+        for i in range(randint(2, 4)):
+            spawn.append(entities.Zombie)
+    elif room["type"] == "angel":
+        spawn.append(entities.FallenAngel)
+    print location, room["type"]
+    return spawn
 
 
 def get_images():
-    return {"zombie": "static/images/zombie.png"}
+    return {"zombie": "static/images/zombie.png",
+            "death_waker": "static/images/death_waker.png",
+            "fallen_angel": "static/images/fallen_angel.png"}
 
 
 def _build_dungeon_layout(location):

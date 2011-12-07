@@ -22,6 +22,6 @@ FLEE_DISTANCE = 15
 # The distance that a hostile mob will notice a player/entity from.
 CHASE_DISTANCE = 25
 # The distance that an attack hurts from.
-HURT_DISTANCE = 1.6
+HURT_DISTANCE = 1
 
 TICK = 1.0 / framerate
