@@ -124,8 +124,8 @@ class Entity(object):
         distance = sqrt((x - self.position[0]) ** 2 +
                         (y - self.position[1]) ** 2)
         distance /= constants.tilesize
-        distance = round(distance / constants.PLAYER_RANGES)
-        distance *= constants.PLAYER_RANGES
+
+        distance = int(distance)
 
         if guid in self.remembered_distances:
             old_distance = self.remembered_distances[guid]

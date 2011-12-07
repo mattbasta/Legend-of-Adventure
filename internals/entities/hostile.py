@@ -10,6 +10,10 @@ class HostileAnimat(SentientAnimat):
     entity or player that comes near it.
     """
 
+    def __init__(self, *args, **kwargs):
+        super(HostileAnimat, self).__init__(*args, **kwargs)
+        self.does_attack = True
+
     def _attacked(self, attack_distance, attacked_by, attacked_with):
         if attack_distance < HURT_DISTANCE:
             self.harmed_by(attacked_with)

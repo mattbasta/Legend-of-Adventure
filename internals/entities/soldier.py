@@ -23,6 +23,8 @@ class Soldier(NPC):
 
         self._chase_queue = []
 
+        self.does_attack = True
+
         self.messages = ["Get back here, criminal!",
                          "We don't take kindly to your type around here!",
                          "Get out of our town!"]

@@ -1,4 +1,5 @@
 from math import sqrt
+import time
 
 from internals.constants import (CHASE_DISTANCE, FLEE_DISTANCE, HURT_DISTANCE,
                                  tilesize)
@@ -45,6 +46,9 @@ class SentientAnimat(Harmable, Animat):
 
         self.prefer_behavior = FLEE
 
+        self.does_attack = False
+        self.last_attack = 0
+
     def forget(self, guid):
         super(SentientAnimat, self).forget(guid)
 
@@ -85,6 +89,11 @@ class SentientAnimat(Harmable, Animat):
         self.schedule(REEVALUATE_TIME, self._reevaluate_behavior)
 
     def attack(self, guid):
+        now = time.time()
+        if now - self.last_attack < 1.5:
+            return
+        self.last_attack = now
+
         x, y = get_guid_position(guid, self)
         self.location.notify_location(
             "atk", "%s:%s:%d:%d" % (self.id, self.holding_item or "", x, y),
@@ -121,6 +130,13 @@ class SentientAnimat(Harmable, Animat):
             if not self.fleeing:
                 return False
         else:
+
+            # Toss out an attack if we can.
+            if (self.chasing and self.does_attack and
+                self.remembered_distances[self.chasing] <=
+                    1.5 * HURT_DISTANCE):
+                self.attack(self.chasing)
+
             best_direction = self._get_best_direction(weighted=True)
             if best_direction is None:
                 self.move(0, 0)
@@ -138,6 +154,7 @@ class SentientAnimat(Harmable, Animat):
         """
         x, y = self._updated_position(*self.position,
                                       velocity=direction)
+
         def get_gdelta(position):
             """Return the distance of the GUID to the entity."""
             g_x, g_y = position
@@ -201,6 +218,6 @@ class SentientAnimat(Harmable, Animat):
         This should not be overridden if the inheriting class's _attacked
         implementation harms the entity.
         """
-        if attack_distance < HURT_DISTANCE:
+        if attack_distance <= HURT_DISTANCE:
             self.harmed_by(attacked_with)
 
