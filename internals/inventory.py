@@ -92,9 +92,7 @@ class InventoryManager(object):
         self.update_inventory()
 
     def empty_inventory(self):
-        count = len(self.inventory)
-        for i in range(count):
-            self.inventory[i] = None
+        self.inventory = {}
         self.update_inventory()
 
     def inventory_full(self):
