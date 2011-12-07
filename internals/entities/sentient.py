@@ -1,4 +1,5 @@
 from math import sqrt
+from random import randint
 import time
 
 from internals.constants import (CHASE_DISTANCE, FLEE_DISTANCE, HURT_DISTANCE,
@@ -86,7 +87,8 @@ class SentientAnimat(Harmable, Animat):
             else:
                 self.move(*best_direction)
 
-        self.schedule(REEVALUATE_TIME, self._reevaluate_behavior)
+        self.schedule(REEVALUATE_TIME + randint(5, 7) / 11,
+                      self._reevaluate_behavior)
 
     def attack(self, guid):
         now = time.time()
@@ -112,6 +114,18 @@ class SentientAnimat(Harmable, Animat):
 
         super(SentientAnimat, self).stop_wandering()
 
+    def _on_scheduled_event(self, *args, **kwargs):
+        """
+        Recalculate all of the distances that we've seen. Don't wait for the
+        other person to move.
+        """
+        super(SentientAnimat, self)._on_scheduled_event(*args, **kwargs)
+        s_x, s_y = self.position
+        for guid in self.remembered_positions:
+            x, y = self.remembered_positions[guid]
+            self.remembered_distances[guid] = sqrt((s_x - x) ** 2 +
+                                                   (s_y - y) ** 2) / tilesize
+
     def _reevaluate_behavior(self):
         """
         Decide whether we should still be fleeing, and if so, what direction we
@@ -132,10 +146,14 @@ class SentientAnimat(Harmable, Animat):
         else:
 
             # Toss out an attack if we can.
-            if (self.chasing and self.does_attack and
-                self.remembered_distances[self.chasing] <=
-                    1.5 * HURT_DISTANCE):
-                self.attack(self.chasing)
+            if self.chasing:
+                if (self.does_attack and
+                    self.remembered_distances[self.chasing] <=
+                        1.5 * HURT_DISTANCE):
+                    self.attack(self.chasing)
+                if self.remembered_distances[self.chasing] < 2:
+                    self.move(0, 0)
+
 
             best_direction = self._get_best_direction(weighted=True)
             if best_direction is None:
@@ -145,7 +163,8 @@ class SentientAnimat(Harmable, Animat):
             elif best_direction != self.velocity:
                 self.move(*best_direction)
 
-        self.schedule(REEVALUATE_TIME, self._reevaluate_behavior)
+        self.schedule(REEVALUATE_TIME + randint(5, 7) / 11,
+                      self._reevaluate_behavior)
         return True
 
     def _get_direction_weight(self, direction):
