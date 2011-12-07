@@ -23,17 +23,23 @@ class Soldier(NPC):
 
         self._chase_queue = []
 
+        self.holding_item = "wsw.forged.70"
         self.does_attack = True
 
         self.messages = ["Get back here, criminal!",
                          "We don't take kindly to your type around here!",
                          "Get out of our town!"]
 
+    def get_prefix(self):
+        return "%ssoldier_" % super(Soldier, self).get_prefix()
+
     def _get_unexpected_time(self):
         return random.randint(2, 4)
 
     def _attacked(self, attack_distance, attacked_by, attacked_with):
         """Always attack any attacker."""
+        if attacked_by.startswith(self.get_prefix()):
+            return
         super(Soldier, self)._attacked(attack_distance, attacked_by,
                                        attacked_with)
 

@@ -5,7 +5,7 @@ from internals.constants import (CHASE_DISTANCE, FLEE_DISTANCE, HURT_DISTANCE,
                                  tilesize)
 from entities import Animat
 from items import WEAPONS, WEAPON_PREFIXES
-from harmable import Harmable
+from internals.harmable import Harmable
 
 
 FLEE = 1

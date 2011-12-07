@@ -3,7 +3,8 @@ import math
 import brukva
 
 import internals.comm as comm
-from internals.constants import CHAT_DISTANCE, MESSAGES_WITH_GUIDS, tilesize
+from internals.constants import (CHAT_DISTANCE, HURT_DISTANCE,
+                                 MESSAGES_WITH_GUIDS, tilesize)
 
 
 def distance(pos1, pos2):
@@ -33,12 +34,18 @@ def setup_brukva(client):
             elif message_type == "cha":
                 pos = message.split("\n", 1)[0].split(":")[-2:]
                 pos = map(int, pos)
+            elif message_type == "atk":
+                atk_by, atk_with, atk_x, atk_y = message[3:].split(":", 3)
+                atk_pos = map(float, (atk_x, atk_y))
 
             for client in comm.locations[location]:
                 if message_type == "giv":
                     if client.id == guid:
                         client.give_item(message_data)
                     continue
+                elif message_type == "atk":
+                    atk_dist = distance(client.position, atk_pos)
+                    client._attacked(atk_dist, atk_by, atk_with)
                 elif message_type == "cha":
                     if distance(pos, client.position) > CHAT_DISTANCE * tilesize:
                         continue

@@ -36,35 +36,48 @@ class InventoryManager(object):
             # TODO: Tweak this to the direction of the player.
             self._notify_location(self.location,
                                   "atk%s" % ":".join(
-                                      (self.guid, item,
+                                      (self.id, item,
                                        str(int(self.position[0])),
                                        str(int(self.position[1])))))
         else:
             pass
         self.write_message("chaitem daemon\nUsed %s" % item)
 
-    def drop_item(self, slot):
+    def drop_item(self, slot, direction=None, update=True):
+        """
+        Throw an item (usually with the U key).
+
+        If `direction` is set to `None`, the item will be thrown in the
+        direction that the player is facing. Otherwise, the direction
+        specified will be used. `direction` is not converted to a unit vector.
+
+        If `update` is set to False, the inventory dictionary will not be
+        modified and the updated inventory will not be sent to the client.
+        """
         slot = int(slot)
         if slot not in self.inventory:
             return
 
         item_code = self.inventory[slot]
 
-        # Delete the item from the user's inventory.
-        new_inv = {}
-        for i in range(len(self.inventory)):
-            if i == slot:
-                continue
-            new_inv[len(new_inv)] = self.inventory[i]
-        self.inventory = new_inv
-        self.update_inventory()
+        if update:
+            # Delete the item from the user's inventory.
+            new_inv = {}
+            for i in range(len(self.inventory)):
+                if i == slot:
+                    continue
+                new_inv[len(new_inv)] = self.inventory[i]
+            self.inventory = new_inv
+            self.update_inventory()
 
         dx, dy = self.position
-        dx += (self.direction[0] * 3 + 0.5) * constants.tilesize
-        dy += (self.direction[1] * 3 - 0.5) * constants.tilesize
+        if direction is None:
+            direction = self.direction
+        dx += (direction[0] * 3 + 0.5) * constants.tilesize
+        dy += (direction[1] * 3 - 0.5) * constants.tilesize
 
         self._notify_global("drop", "%s>%s:%s:%d:%d" % (str(self.location),
-                                                        self.guid, item_code,
+                                                        self.id, item_code,
                                                         dx, dy))
 
     def cycle_items(self, direction):
@@ -76,6 +89,12 @@ class InventoryManager(object):
         for i in range(count):
             new_inv[i] = self.inventory[pos(i + direction)]
         self.inventory = new_inv
+        self.update_inventory()
+
+    def empty_inventory(self):
+        count = len(self.inventory)
+        for i in range(count):
+            self.inventory[i] = None
         self.update_inventory()
 
     def inventory_full(self):

@@ -1,6 +1,7 @@
 import json
 import logging
 import math
+import random
 import re
 import time
 
@@ -8,6 +9,7 @@ import redis
 import tornado.websocket
 
 import internals.constants as constants
+from internals.harmable import Harmable
 from internals.inventory import InventoryManager
 from internals.locations import Location
 from internals.scheduler import Scheduler
@@ -29,7 +31,8 @@ def strip_tags(data):
     data = re.compile(r'<[^<]*?>').sub('', data)
     return data.replace("<", "&lt;").replace(">", "&gt;")
 
-class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
+class CommHandler(Harmable, InventoryManager,
+                  tornado.websocket.WebSocketHandler):
 
     def __init__(self, application, request, **kwargs):
         super(CommHandler, self).__init__(application, request)
@@ -37,8 +40,6 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
         # Define variables to store state information.
         self.id = None
         self.location = None
-
-        self.health = 100
 
         self.position = 0, 0
         self.parent_positions = []
@@ -296,17 +297,55 @@ class CommHandler(InventoryManager, tornado.websocket.WebSocketHandler):
 
         return any(self.velocity)
 
-    def update_health(self, delta):
-        old_health = self.health
-        self.health += delta
-        self.health = min(max(self.health, 0), 100)
-        if self.health == old_health:
+    def _attacked(self, attack_distance, attacked_by, attacked_with):
+        """Handle an attack on the player."""
+        if attacked_by == self.id:
             return
+        print self.id, "attacked by", attacked_by
+        if attack_distance < constants.HURT_DISTANCE:
+            self.harmed_by(attacked_with)
 
+    def update_health(self):
         if self.health == 0:
-            self.write_message("die")
+            self.write_message("dth")
         else:
             self.write_message("hea%s" % self.health)
+
+    def harm(self, damage):
+        super(CommHandler, self).harm(damage)
+        self.update_health()
+
+    def die(self):
+        """
+        Since the Harmable class implements die() for entities, we need to
+        build a player-compatible version.
+        """
+
+        print self.id, "has died."
+        # Notify everyone that we've died.
+        self._notify_location(self.location, "die%s" % self.id)
+
+        # Spit out all of our items.
+        for item_id in self.inventory:
+            if self.inventory[item_id] is None:
+                # We could probably break, but I want to be sure I don't change
+                # this in the future.
+                continue
+            self.drop_item(0, direction=(random.randint(-1, 1),
+                                         random.randint(-1, 1)),
+                           update=False)
+
+        # Clear out the inventory.
+        self.empty_inventory()
+
+        # Go back to the start.
+        self._handle_command("warp o:0:0 50 50")
+
+        self.health = self.max_health
+        self.update_health()
+
+    def get_drops(self):
+        return self.inventory.values()
 
     @classmethod
     def add_client(cls, location, client):

@@ -1,6 +1,6 @@
 from random import randint
 
-from items import WEAPONS, WEAPON_PREFIXES
+from entities.items import WEAPONS, WEAPON_PREFIXES
 
 
 class Harmable(object):
@@ -22,6 +22,7 @@ class Harmable(object):
         print "%d damage was done to %s" % (damage, self.id)
         self.health -= damage
         if self.health <= 0:
+            self.health = 0
             self.die()
 
     def harmed_by(self, item):
@@ -32,7 +33,7 @@ class Harmable(object):
 
         item_code = item[1:].split(".")
         damage = WEAPON_PREFIXES.index(item_code[1]) / 2 + 1
-        damage *= 1 + (int(item_code[2]) - 1) / 10
+        damage *= 1 + int(item_code[2])
 
         self.harm(damage)
 
