@@ -67,6 +67,13 @@ class SentientAnimat(Harmable, Animat):
         self.fleeing.add(guid)
         self._behavior_changed()
 
+    def stop_fleeing(self, guid):
+        """Stop fleeign from a GUID."""
+        if guid not in self.fleeing:
+            return
+
+        self.fleeing.discard(guid)
+
     def chase(self, guid):
         """Mark a GUID as an entity to chase."""
         if guid == self.chasing:
@@ -171,6 +178,7 @@ class SentientAnimat(Harmable, Animat):
         """
         Returns the signed delta of distances with tracked GUIDs.
         """
+
         x, y = self._updated_position(*self.position,
                                       velocity=direction)
 
@@ -182,9 +190,7 @@ class SentientAnimat(Harmable, Animat):
         def get_flee_delta():
             flee_delta = 0
             for guid in self.fleeing:
-                g_delta = get_gdelta(self.remembered_positions[guid])
-                if g_delta > 1.5 * FLEE_DISTANCE:
-                    return 0
+                g_delta = get_gdelta(get_guid_position(guid, self))
                 g_delta -= self.remembered_distances[guid]
 
                 flee_delta += g_delta
