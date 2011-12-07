@@ -331,8 +331,8 @@ class CommHandler(Harmable, InventoryManager,
                 # We could probably break, but I want to be sure I don't change
                 # this in the future.
                 continue
-            self.drop_item(0, direction=(random.randint(-1, 1),
-                                         random.randint(-1, 1)),
+            self.drop_item(item_id, direction=(random.randint(-1, 1),
+                                               random.randint(-1, 1)),
                            update=False)
 
         # Clear out the inventory.
