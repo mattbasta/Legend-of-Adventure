@@ -336,7 +336,7 @@ class Animat(Entity):
                                                      duration=duration)
             # If the next position isn't a valid place to move, stop moving.
             if not self._test_position(future_position, self.velocity):
-                self.write_chat("Oh no, I almost hit a wall.")
+                #self.write_chat("Oh no, I almost hit a wall.")
                 self.move(0, 0)
                 # Also don't keep calculating the next position.
                 now_moving = False
