@@ -39,11 +39,20 @@ Other dependencies can be resolved with: ::
     pip install -r requirements.txt
 
 
+--------------
 Special Thanks
-==============
+--------------
+
+Graphics
+========
+
+* LordBagardo - Mob Sprites
+* Kazzador - Zombie Sprite
+
+Audio
+=====
 
 * Josh Stitt - Music Composition
 * Ralph Hinkle - Sounds
-* LordBagardo - Mob Sprites
-* Kazzador - Zombie Sprite
+* Ron Corbin - Zombie SFX (youtube.com/mrontheborder)
 
