@@ -303,6 +303,8 @@ class Animat(Entity):
     def _updated_position(self, x, y, velocity=None, duration=250):
         if velocity is None:
             velocity = self.velocity
+
+        # Adjust for diagonals
         if all(velocity):
             velocity = map(lambda x: x * SQRT1_2, velocity)
 
@@ -318,7 +320,7 @@ class Animat(Entity):
         recalculate hitmaps.
         """
 
-        if self.dead: return
+        if self.dead: return False
 
         duration = time.time() - self.scheduler.last_tick
         duration *= 1000
@@ -352,7 +354,7 @@ class Animat(Entity):
                 optimal_direction != self.velocity):
                 should_redirect = optimal_direction
 
-        if should_redirect:
+        if scheduled and should_redirect:
             self.move(*should_redirect, event=False)
         elif now_moving:
             # We're moving, didn't stop, and didn't hit a wall.

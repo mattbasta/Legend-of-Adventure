@@ -35,6 +35,7 @@ def get_hitmap(position, hitmap):
                 break
     except IndexError:
         print y, y2, ii
+        print x, x2, x_min
         raise
 
     for i in range(x + 1, len(hitmap[y])):
@@ -43,10 +44,15 @@ def get_hitmap(position, hitmap):
             break
 
     # Calculate the Y min and max
-    for i in range(y, -1, -1):
-        if hitmap[i][x] or hitmap[i][x2]:
-            y_min = (i + 1) * tilesize
-            break
+    try:
+        for i in range(y, -1, -1):
+            if hitmap[i][x] or hitmap[i][x2]:
+                y_min = (i + 1) * tilesize
+                break
+    except IndexError:
+        print y, y2, ii
+        print x, x2, y_min
+        raise
 
     for i in range(y + 1, len(hitmap[y])):
         if hitmap[i][x] or hitmap[i][x2]:

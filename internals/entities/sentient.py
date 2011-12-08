@@ -83,8 +83,6 @@ class SentientAnimat(Harmable, Animat):
         self._behavior_changed()
 
     def _behavior_changed(self):
-        self.scheduler.event_happened()
-
         if not any(self.velocity):
             best_direction = self._get_best_direction()
             if best_direction is None:
@@ -126,12 +124,14 @@ class SentientAnimat(Harmable, Animat):
         Recalculate all of the distances that we've seen. Don't wait for the
         other person to move.
         """
-        super(SentientAnimat, self)._on_scheduled_event(*args, **kwargs)
+        output = super(SentientAnimat, self)._on_scheduled_event(*args, **kwargs)
         s_x, s_y = self.position
         for guid in self.remembered_positions:
             x, y = self.remembered_positions[guid]
             self.remembered_distances[guid] = sqrt((s_x - x) ** 2 +
                                                    (s_y - y) ** 2) / tilesize
+
+        return output
 
     def _reevaluate_behavior(self):
         """
