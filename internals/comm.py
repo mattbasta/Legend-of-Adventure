@@ -303,7 +303,7 @@ class CommHandler(Harmable, InventoryManager,
             return
         print self.id, "attacked by", attacked_by
         if attack_distance < constants.HURT_DISTANCE:
-            self.harmed_by(attacked_with)
+            self.harmed_by(attacked_with, guid=attacked_by)
 
     def update_health(self):
         if self.health == 0:

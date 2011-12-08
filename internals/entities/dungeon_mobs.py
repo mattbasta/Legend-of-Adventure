@@ -48,6 +48,7 @@ class Zombie(EvilDoer, HostileAnimat):
     def _on_event(self):
         self.write_chat(choice(["UURrrrrGGHHHH", "auughghhhHHHHH",
                                 "MMMUuuuhhhhhh", "BLLuuuhhrrrrrrr"]))
+        self.make_sound("zombie_groan")
         self.schedule(randint(5, 8))
 
     def get_prefix(self):
@@ -61,6 +62,10 @@ class Zombie(EvilDoer, HostileAnimat):
             return
 
         super(Zombie, self).on_player_range(guid, distance)
+
+    def harm(self, damage):
+        super(Zombie, self).harm(damage)
+        self.make_sound("zombie_attack")
 
 
 class DeathWaker(EvilDoer, SentientAnimat):

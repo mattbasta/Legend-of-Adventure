@@ -253,7 +253,10 @@ class Location():
         return {"daylight": "static/music/daylight"}
 
     def _get_sounds(self):
-        return {"bleat": "static/sounds/bleat"}
+        # Buzz automatically adds the appropriate file type.
+        return {"bleat": "static/sounds/bleat",
+                "zombie_groan": "static/sounds/zombie_groan",
+                "zombie_attack": "static/sounds/zombie_attack"}
 
     def render(self, avx, avy):
         """Render the JSON representation of the level."""

@@ -244,5 +244,5 @@ class SentientAnimat(Harmable, Animat):
         implementation harms the entity.
         """
         if attack_distance <= HURT_DISTANCE:
-            self.harmed_by(attacked_with)
+            self.harmed_by(attacked_with, guid=attacked_by)
 

@@ -16,7 +16,7 @@ class HostileAnimat(SentientAnimat):
 
     def _attacked(self, attack_distance, attacked_by, attacked_with):
         if attack_distance < HURT_DISTANCE:
-            self.harmed_by(attacked_with)
+            self.harmed_by(attacked_with, guid=attacked_by)
 
             if attacked_by != self.chasing:
                 self.chase(attacked_by)

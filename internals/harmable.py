@@ -3,6 +3,8 @@ from random import randint
 from entities.items import WEAPONS, WEAPON_PREFIXES
 
 
+HARM_PREFIXES = {"^": 15}
+
 class Harmable(object):
     """
     A harmable entity is an entity that is both capable of taking damage and
@@ -25,10 +27,16 @@ class Harmable(object):
             self.health = 0
             self.die()
 
-    def harmed_by(self, item):
+    def harmed_by(self, item, guid=None):
         """Harm the entity with an item."""
-        if not item:
+        if not item and guid:
+            for prefix, harm in HARM_PREFIXES.items():
+                if guid.startswith(prefix):
+                    self.harm(harm)
+                    return
             self.harm(2)
+            return
+        elif not item and not guid:
             return
 
         item_code = item[1:].split(".")

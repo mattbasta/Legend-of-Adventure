@@ -21,5 +21,5 @@ class PeacefulAnimat(SentientAnimat):
             self.flee(attacked_by)
 
         if attack_distance < HURT_DISTANCE:
-            self.harmed_by(attacked_with)
+            self.harmed_by(attacked_with, guid=attacked_by)
 
