@@ -249,6 +249,12 @@ class Location():
                     "sheep": "static/images/sheep.png",
                     "wolf": "static/images/wolf.png"}
 
+    def _get_loop(self):
+        return {"daylight": "static/music/daylight"}
+
+    def _get_sounds(self):
+        return {"bleat": "static/sounds/bleat"}
+
     def render(self, avx, avy):
         """Render the JSON representation of the level."""
 
@@ -272,7 +278,9 @@ class Location():
                 "level": level,
                 "hitmap": hitmap,
                 "portals": portals,
-                "port": constants.port}
+                "port": constants.port,
+                "loop": self._get_loop(),
+                "sounds": self._get_sounds()}
 
     def __str__(self):
         return self.location_code

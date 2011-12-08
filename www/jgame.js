@@ -409,6 +409,19 @@ var jgutils = {
                     layer.updated = true;
                 }
 
+                // Load appropriate music loops.
+                var first_loop = null;
+                for(var l in data.loop) {
+                    if(!first_loop)
+                        first_loop = l;
+                    soundutils.loadLoop(l, data.loop[l]);
+                }
+                soundutils.playLoop(first_loop);
+
+                // Load appropriate sound effects.
+                for(var s in data.sounds)
+                    soundutils.loadSound(s, data.sounds[s]);
+
                 var avatar = jgutils.avatars.get("local");
                 avatar.x = data.avatar.x * jgame.tilesize;
                 avatar.y = data.avatar.y * jgame.tilesize;
@@ -710,6 +723,15 @@ var jgutils = {
                     var success = jgutils.avatars.unregister(body);
                     if(!success)
                         jgutils.objects.remove(body);
+                    break;
+                case "snd": // Play sound
+                    var data = body.split(":"),
+                        s_x = parseFloat(data[1]),
+                        s_y = parseFloat(data[2]);
+                    var follow_av = jgutils.avatars.registry[jgame.follow_avatar],
+                        dist = Math.sqrt(Math.pow(s_x - follow_av.x, 2) + Math.pow(s_y - follow_av.y, 2));
+                    dist /= jgame.tilesize;
+                    soundutils.playSound(data[0], dist);
                     break;
                 case "loc": // Change avatar position and direction
                     var data = body.split(":");
@@ -1380,6 +1402,70 @@ var frameutils = {
                     return jgassets[data.callback](ticks, data);
                 else
                     return data.callback(ticks);
+        }
+    }
+};
+
+var soundutils = {
+    loops : {},
+    sounds : {},
+    playing_loop : null,
+    playing : {},
+    loadLoop : function(name, url) {
+        if(name in soundutils.loops)
+            return;
+        soundutils.loops[name] = new buzz.sound(
+            url,
+            {formats: ["ogg", "mp3"],
+             preload: true,
+             autoload: true,
+             loop: true}
+        );
+    },
+    playLoop : function(name) {
+        if(soundutils.playing_loop == name)
+            return;
+
+        if(!soundutils.playing_loop) {
+            soundutils.loops[name].play().setVolume(0).fadeTo(10, 1000);
+            soundutils.playing_loop = name;
+            return;
+        }
+
+        soundutils.loops[soundutils.playing_loop].fadeOut(2000, function() {
+            soundutils.playing_loop = name;
+            // FIXME: Bad things might happen if playLoop is called again
+            // within four seconds of it being called once.
+            soundutils.loops[name].play().setVolume(0).fadeTo(20, 2000);
+        });
+    },
+    loadSound : function(name, url) {
+        soundutils.sounds[name] = new buzz.sound(
+            url,
+            {formats: ["ogg", "mp3"],
+             preload: true,
+             autoload: true,
+             loop: false}
+        );
+    },
+    playSound : function(name, distance) {
+        if(!(name in soundutils.sounds))
+            return;
+        if(soundutils.playing[name])
+            return;
+        if(distance > 25)
+            return;
+        var sound = soundutils.sounds[name];
+        var sc = sound.getStateCode();
+        if(sc > 2) {
+            soundutils.playing[name] = true;
+            distance /= 2.5;
+            // TODO : Make this a constant somewhere.
+            sound.setVolume(100 - distance * distance);
+            sound.play();
+            sound.bindOnce("ended", function() {
+                soundutils.playing[name] = false;
+            });
         }
     }
 };

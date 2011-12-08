@@ -141,7 +141,6 @@ class Entity(object):
         changes by a unit of constants.PLAYER_RANGES. It should be overridden
         by child classes.
         """
-        #print "Player %s within %d of %s" % (guid, distance, self.id)
         pass
 
     def on_chat(self, guid, message, distance=0):
@@ -151,7 +150,6 @@ class Entity(object):
         the chat should appear to be coming from a position very near to the
         entity.
         """
-        print "Chat received %d %s" % (distance, message)
         pass
 
     def write_chat(self, message):
@@ -160,6 +158,12 @@ class Entity(object):
                 "cha",
                 "%s:%d:%d\n%s" % (self.id, self.position[0],
                                   self.position[1], message))
+
+    def make_sound(self, sound):
+        """Instruct clients to play sound `sound`."""
+        self.location.notify_location(
+                "snd",
+                ":".join((sound, self.position[0], self.position[1])))
 
     def _get_properties(self):
         return {"x": self.position[0] / constants.tilesize,
