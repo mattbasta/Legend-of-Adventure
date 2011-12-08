@@ -163,7 +163,7 @@ class Entity(object):
         """Instruct clients to play sound `sound`."""
         self.location.notify_location(
                 "snd",
-                ":".join((sound, self.position[0], self.position[1])))
+                "%s:%d:%d" % (sound, self.position[0], self.position[1]))
 
     def _get_properties(self):
         return {"x": self.position[0] / constants.tilesize,

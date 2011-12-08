@@ -1410,7 +1410,6 @@ var soundutils = {
     loops : {},
     sounds : {},
     playing_loop : null,
-    playing : {},
     loadLoop : function(name, url) {
         if(name in soundutils.loops)
             return;
@@ -1451,21 +1450,15 @@ var soundutils = {
     playSound : function(name, distance) {
         if(!(name in soundutils.sounds))
             return;
-        if(soundutils.playing[name])
-            return;
         if(distance > 25)
             return;
         var sound = soundutils.sounds[name];
         var sc = sound.getStateCode();
-        if(sc > 2) {
-            soundutils.playing[name] = true;
+        if(sc >= 2) {
             distance /= 2.5;
             // TODO : Make this a constant somewhere.
             sound.setVolume(100 - distance * distance);
             sound.play();
-            sound.bindOnce("ended", function() {
-                soundutils.playing[name] = false;
-            });
         }
     }
 };

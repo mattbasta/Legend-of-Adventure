@@ -1,3 +1,5 @@
+from random import randint
+
 from animat_sprite import AnimatSprite
 from hostile import HostileAnimat
 from peaceful import PeacefulAnimat
@@ -17,8 +19,14 @@ class Sheep(AnimatSprite, PeacefulAnimat):
 
         self.wander()
 
+        self.schedule(randint(4, 12))
+
     def get_drops(self):
         return ["f5"]
+
+    def _on_event(self):
+        self.make_sound("bleat")
+        self.schedule(randint(4, 12))
 
 
 class Wolf(AnimatSprite, HostileAnimat):
