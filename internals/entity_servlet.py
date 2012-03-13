@@ -1,5 +1,6 @@
 import json
 import random
+import multiprocessing
 import os
 import threading
 
@@ -17,48 +18,45 @@ MESSAGES_TO_IGNORE = ("spa", "epu", )
 MESSAGES_TO_INSPECT = ("del", "cha", )
 
 
-class LocationHandler(object):
+class EntityServlet(multiprocessing.Process):
     """
     A location handler manages all entities and entity interactions for a
     single location.
     """
 
     def __init__(self, location, message_data=None):
+        super(EntityServlet, self).__init__()
 
         self.location = Location(location)
-
-        # Fork the process.
-        self.pid = os.fork()
-        if self.pid:  # The server daemon should continue on.
-            print "Forked process (%d)" % self.pid
-            return
-
-        redis_host, port = constants.redis.split(":")
-        self.outbound_redis = redis.Redis(host=redis_host, port=int(port))
+        self._initial_message_data = message_data
 
         self.entities = []
         self.players = set()
         self.ttl = None
 
-        if message_data:
-            self.on_enter(message_data, initial=True)
+    def _setup(self):
+        redis_host, port = constants.redis.split(":")
+        self.outbound_redis = redis.Redis(host=redis_host, port=int(port))
 
-        try:
-            self.run()
-        except KeyboardInterrupt:
-            print "Forcing quit for %s" % self.location
+        if self._initial_message_data:
+            self.on_enter(self._initial_message_data, initial=True)
+            self._initial_message_data = None
 
-            # Cancel any TTL timer.
-            if self.ttl:
-                self.ttl.cancel()
+    def _end(self):
+        # Cancel any TTL timer.
+        if self.ttl:
+            self.ttl.cancel()
 
-            # Destroy entities that still exist.
-            for entity in self.entities:
-                entity.destroy()
+        # Destroy entities that still exist.
+        for entity in self.entities:
+            entity.destroy()
 
-            os._exit(0)
+        self.terminate()
 
     def run(self):
+
+        self._setup()
+
         inbound_redis = redis.Redis(host=redis_host, port=int(port))
         pubsub = inbound_redis.pubsub()
         pubsub.subscribe("global::enter")
@@ -140,11 +138,10 @@ class LocationHandler(object):
 
             def cleanup():
                 print "Cleaning up mobs at %s" % self.location
-                for entity in self.entities:
-                    entity.destroy()
+                return self._end()
 
-                os._exit(0)
-
+            # This timer is allowed because it shouldn't be able to be thread
+            # unsafe.
             t = threading.Timer(constants.entity_despawn_time, cleanup)
             self.ttl = t
             t.start()

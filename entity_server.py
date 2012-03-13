@@ -4,7 +4,7 @@ import signal
 import redis
 
 import internals.constants as constants
-from internals.entity_servlet import LocationHandler
+from internals.entity_servlet import EntityServlet
 from internals.locations import Location
 
 
@@ -55,7 +55,8 @@ def _on_enter(location, message_data):
         else:
             return
 
-    loc = LocationHandler(location, message_data)
+    loc = EntityServlet(location, message_data)
+    loc.start()
     locations[location] = loc
 
 
