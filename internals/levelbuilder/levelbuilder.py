@@ -1,5 +1,4 @@
 import noise
-import internals.caching as cache
 import internals.constants as constants
 import internals.levelbuilder.finishing as finishing
 import internals.levelbuilder.tilesets.field
