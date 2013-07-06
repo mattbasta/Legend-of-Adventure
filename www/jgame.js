@@ -1,7 +1,3 @@
-/*
-jGame utilities
-*/
-
 function S4() {return (((1+Math.random())*0x10000)|0).toString(16).substring(1);}
 // Simplified GUID function
 function guid() {return S4()+S4()+S4()+S4();}
@@ -16,8 +12,6 @@ String.prototype.explode = function(value, count) {
     return split;
 };
 
-if(typeof WebSocket == "undefined" && typeof MozWebSocket != "undefined")
-    WebSocket = MozWebSocket;
 var mozSmoothing = !(typeof $.browser.mozilla == "undefined");
 
 var lockImages = false;
@@ -107,10 +101,9 @@ var jgutils = {
                     }
             }
         }
-        $(document).keydown(function(e) {
+        $(window).keydown(function(e) {
             keypress(e, true);
-        });
-        $(document).keyup(function(e) {
+        }).keyup(function(e) {
             keypress(e, false);
         });
 
@@ -189,11 +182,12 @@ var jgutils = {
     hitmapping : {
         generate_x : function(map, x, y_orig) { // All hitmapes are assumed to be one tile space in size.
             var ts = jgame.tilesize,
-                x = ((x / ts) | 0),
-                y = ((y_orig / ts) | 0),
-                y2 = (((y_orig - 1) / ts)|0) + 1;
-            //console.log("RM X: " + x + ", " + y + ", " + y2);
-            var x_min = -1 * ts, x_max = (map[y].length + 1) * ts;
+                x = x / ts | 0,
+                y = y_orig / ts | 0,
+                y2 = (y_orig - 1) / ts | 0 + 1;
+
+            var x_min = -1 * ts,
+                x_max = (map[y].length + 1) * ts;
             for(var i = x - 1; i >= 0; i--) {
                 if(map[y][i] || map[y2][i]) {
                     x_min = (i + 1) * ts;
@@ -261,7 +255,6 @@ var jgutils = {
                 return false;
             delete jgutils.avatars.registry[id];
         },
-        get : function(id) {return jgutils.avatars.registry[id];},
         draw : function(id) {
             function _draw(avatar) {
                 var av = jgutils.avatars.registry[avatar];
@@ -422,7 +415,7 @@ var jgutils = {
                 for(var s in data.sounds)
                     soundutils.loadSound(s, data.sounds[s]);
 
-                var avatar = jgutils.avatars.get("local");
+                var avatar = jgutils.avatars.registry["local"];
                 avatar.x = data.avatar.x * jgame.tilesize;
                 avatar.y = data.avatar.y * jgame.tilesize;
                 if(data.hitmap) {
@@ -480,7 +473,7 @@ var jgutils = {
         },
         // Centers the screen around an avatar
         setCenterPosition : function(resize) {
-            var avatar = jgutils.avatars.get(jgame.follow_avatar);
+            var avatar = jgutils.avatars.registry[jgame.follow_avatar];
             var x = avatar.x,
                 y = avatar.y;
 
