@@ -30,8 +30,9 @@ def perlin_refined(x, y, height=0, width=0):
     x *= width
     y *= height
 
+    cache_width_range = range(x, x + width)
     return [[int(_perlin(x_grid, y_grid, 5) + 3) for
-             x_grid in range(x, x + width)] for
+             x_grid in cache_width_range] for
             y_grid in range(y, y + height)]
 
 

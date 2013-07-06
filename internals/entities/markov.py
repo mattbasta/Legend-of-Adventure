@@ -27,7 +27,7 @@ def tokenise(s):
 def detokenise(s):
     txt = " ".join(s)
     for p in string.punctuation:
-        txt = txt.replace(" "+p, p)
+        txt = txt.replace(" " + p, p)
     return txt
 
 def recursivedict_factory(depth):
@@ -35,6 +35,7 @@ def recursivedict_factory(depth):
         return lambda: collections.defaultdict(recursivedict_factory(depth-1))
     else:
         return int
+
 
 class MarkovBot(object):
     """
@@ -63,7 +64,7 @@ class MarkovBot(object):
         self.markov2[tokens[0]][tokens[1]] += 1
         self.markov3[tokens[0]] += 2
         self._word_count += 2
-        for (i, tok) in enumerate(tokens[2:]):
+        for i, tok in enumerate(tokens[2:]):
             i += 2
             self.markov[tokens[i-2]][tokens[i-1]][tokens[i]] += 1
             self.markov2[tokens[i-1]][tokens[i]] += 1
@@ -75,12 +76,11 @@ class MarkovBot(object):
         while len(sta) > 1 and len(sta[-1]) < 2:
             sta.pop(-1)
         res = tokenise(response)
-        tokens = [START +sta[-1]] + [GAP] + res + [GAP]
+        tokens = [START + sta[-1]] + [GAP] + res + [GAP]
         self._add_tokens(tokens)
 
     def addLine(self, line):
-        tokens = tokenise(line.strip())
-        self._add_tokens(tokens)
+        self._add_tokens(tokenise(line.strip()))
 
     def _get_word_list(self, start):
         if not any((self.markov, self.markov2, self.markov3)):
@@ -122,8 +122,4 @@ class MarkovBot(object):
         return detokenise(words[2:-1])
 
     def __str__(self):
-        return "%s\n%s\n%s" % map(str, (self.markov3,
-                                        self.markov2,
-                                        self.markov))
-
-
+        return "\n".join(self.markov3, self.markov2, self.markov)

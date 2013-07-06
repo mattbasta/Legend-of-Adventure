@@ -1,4 +1,4 @@
-import random
+from random import randint
 
 from npc import NPC
 
@@ -10,7 +10,7 @@ class Child(NPC):
         self.messages = ["Na na na na na!", "Hahaha!",
                          "Bet I can run faster than you!"]
         # Choose a random child graphic for the child.
-        self.image = "child%d" % random.randint(1, 2)
+        self.image = "child%d" % randint(1, 2)
 
         self.speed = 1
 
@@ -29,7 +29,7 @@ class Child(NPC):
                 if not self.fleeing:
                     self.speed = 1
             return
+
         if guid.startswith("%bly_"):
             self.speed = 1.1
             self.flee(guid)
-

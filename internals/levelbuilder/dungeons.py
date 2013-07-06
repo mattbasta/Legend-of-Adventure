@@ -3,7 +3,7 @@ import math
 import random
 from random import randint
 
-import internals.entities.all as entities
+import internals.entities as entities
 from internals.levelbuilder.tiles import get_building_tiles, overlay
 
 

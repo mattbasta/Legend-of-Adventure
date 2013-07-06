@@ -88,4 +88,3 @@ def setup_brukva(client):
 
     client.subscribe("global::enter")
     client.listen(on_message)
-

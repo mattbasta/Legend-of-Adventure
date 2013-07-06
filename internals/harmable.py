@@ -1,6 +1,6 @@
 from random import randint
 
-from entities.items import WEAPONS, WEAPON_PREFIXES
+from constants import WEAPON_PREFIXES
 
 
 HARM_PREFIXES = {"^": 15}
@@ -71,4 +71,3 @@ class Harmable(object):
         Return an iterable of item codes that the entity should drop on death.
         """
         return []
-

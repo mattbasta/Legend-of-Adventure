@@ -159,4 +159,3 @@ class FallenAngel(NPC):
     def _attacked(self, attack_distance, attacked_by, attacked_with):
         if attack_distance < HURT_DISTANCE:
             self.chase(attacked_by)
-

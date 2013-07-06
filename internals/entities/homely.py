@@ -17,4 +17,3 @@ class Homely(NPC):
         self.health = 30
 
         self.wander()
-

@@ -1,7 +1,4 @@
-from math import sqrt
-
 from internals.constants import FLEE_DISTANCE, HURT_DISTANCE
-from items import WEAPONS, WEAPON_PREFIXES
 from sentient import SentientAnimat
 
 
@@ -22,4 +19,3 @@ class PeacefulAnimat(SentientAnimat):
 
         if attack_distance < HURT_DISTANCE:
             self.harmed_by(attacked_with, guid=attacked_by)
-

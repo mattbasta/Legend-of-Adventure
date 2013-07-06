@@ -1,6 +1,4 @@
 import random
-from threading import Timer
-import uuid
 
 from internals.constants import HURT_DISTANCE
 from animat_sprite import AnimatSprite

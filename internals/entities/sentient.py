@@ -1,11 +1,9 @@
+import time
 from math import sqrt
 from random import randint
-import time
 
-from internals.constants import (CHASE_DISTANCE, FLEE_DISTANCE, HURT_DISTANCE,
-                                 tilesize)
+from internals.constants import FLEE_DISTANCE, HURT_DISTANCE, tilesize
 from entities import Animat
-from items import WEAPONS, WEAPON_PREFIXES
 from internals.harmable import Harmable
 
 

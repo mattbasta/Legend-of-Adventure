@@ -1,5 +1,3 @@
-import random
-
 from npc import NPC
 from internals.levelbuilder.towns import ROAD_MATERIAL
 
@@ -22,9 +20,8 @@ class Trader(NPC):
         entities in a location.
         """
         street_locations = []
-        for y in range(len(grid)):
-            for x in range(len(grid[y])):
+        for y in xrange(len(grid)):
+            for x in xrange(len(grid[y])):
                 if grid[y][x] == ROAD_MATERIAL:
                     street_locations.append((x, y))
         return street_locations
-

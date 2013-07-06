@@ -1,9 +1,9 @@
 import json
-from math import sqrt
 import random
 import threading
 import time
 import uuid
+from math import sqrt
 
 import internals.constants as constants
 from internals.hitmapping import get_hitmap
@@ -498,7 +498,7 @@ class Animat(Entity):
         """
         # Make our life easy: if everything's walkable, tell the server to just
         # pick a random location.
-        if all(all(not cell for cell in row) for row in hitmap):
+        if all(not any(row) for row in hitmap):
             return []
 
         locations = []
@@ -513,16 +513,12 @@ class Animat(Entity):
 
     def _get_properties(self):
         baseline = super(Animat, self)._get_properties()
-        baseline["x_vel"] = self.velocity[0]
-        baseline["y_vel"] = self.velocity[1]
-
-        baseline["image"] = self.image
-        baseline["layer"] = self.layer
-        baseline["view"] = self.view
+        baseline.update({
+            "x_vel": self.velocity[0],
+            "y_vel": self.velocity[1],
+            "image": self.image,
+            "layer": self.layer,
+            "view": self.view,
+        })
 
         return baseline
-
-        #"sprite": {"x": 0, "y": 0,
-        #           "swidth": 32, "sheight": 32,
-        #           "awidth": 65, "aheight": 65}
-

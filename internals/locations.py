@@ -3,7 +3,7 @@ import json
 import random
 
 import constants
-import entities.all as entities
+import entities
 import levelbuilder.buildings as buildings
 from levelbuilder.levelbuilder import build_region
 import levelbuilder.dungeons as dungeons

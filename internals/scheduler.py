@@ -50,4 +50,3 @@ class Scheduler(object):
         self.last_tick = now
         if value is None or value != False:
             self.schedule()
-

@@ -1,5 +1,3 @@
-from math import sqrt
-
 from internals.constants import CHASE_DISTANCE, HURT_DISTANCE
 from sentient import SentientAnimat
 
@@ -31,8 +29,6 @@ class HostileAnimat(SentientAnimat):
         if self.chasing:
             if self.chasing == guid and distance < HURT_DISTANCE:
                 self.attack(guid)
-            return
         elif distance < CHASE_DISTANCE:
             # If we're not chasing anyone, chase the entity
             self.chase(guid)
-

@@ -25,3 +25,7 @@ CHASE_DISTANCE = 25
 HURT_DISTANCE = 1
 
 TICK = 1.0 / framerate
+
+WEAPONS = ["sw", "bo", "ma", "ax", "ha", "st"]
+WEAPON_PREFIXES = ["plain", "forged", "sharp", "broad", "old", "leg", "fla",
+                   "agile", "bane", "ench", "evil", "spite", "ether", "ancie"]

@@ -1,11 +1,6 @@
 from entities import Entity
 
 
-WEAPONS = ["sw", "bo", "ma", "ax", "ha", "st"]
-WEAPON_PREFIXES = ["plain", "forged", "sharp", "broad", "old", "leg", "fla",
-                   "agile", "bane", "ench", "evil", "spite", "ether", "ancie"]
-
-
 class ItemEntity(Entity):
 
     def __init__(self, item_code, x, y, *args):
@@ -42,14 +37,21 @@ class ItemEntity(Entity):
             sprite_x = WEAPON_PREFIXES.index(prefix) * 24 + 120
 
         base = super(ItemEntity, self)._get_properties()
-        base["image"] = "items"
-        base["layer"] = 3
-        base["view"] = {"type": "static",
-                        "sprite": {"x": sprite_x,
-                                   "y": sprite_y,
-                                   "swidth": 24,
-                                   "sheight": 24}}
-        base["movement"] = {"type": "callback",
-                            "callback": "item_hover"}
+        base.update({
+            "image": "items",
+            "layer": 3,
+            "view": {
+                "type": "static",
+                "sprite": {
+                    "x": sprite_x,
+                    "y": sprite_y,
+                    "swidth": 24,
+                    "sheight": 24,
+                },
+            },
+            "movement": {
+                "type": "callback",
+                "callback": "item_hover",
+            }
+        })
         return base
-
