@@ -110,5 +110,3 @@ class InventoryManager(object):
         else:
             message = map(get_line, range(5))
             self.write_message("inv%s" % "\n".join(message))
-
-

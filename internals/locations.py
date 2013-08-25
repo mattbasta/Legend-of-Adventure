@@ -287,4 +287,3 @@ class Location():
 
     def __str__(self):
         return self.location_code
-

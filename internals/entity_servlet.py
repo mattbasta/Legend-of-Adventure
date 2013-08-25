@@ -207,4 +207,3 @@ class EntityServlet(multiprocessing.Process):
             full_message = "%s%s" % (command, message)
             for entity in self.entities:
                 entity.handle_message(full_message)
-

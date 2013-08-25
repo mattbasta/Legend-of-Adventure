@@ -360,7 +360,7 @@ var jgutils = {
             jgutils.keys.addBinding(27, chatutils.stopChat, true);
 
             jgutils.comm.register(
-                x + ":" + y + ":" + av_x + ":" + av_y,
+                x + ":" + y,  // + ":" + av_x + ":" + av_y,
                 jgutils.level.prepare()
             );
         },
@@ -695,8 +695,8 @@ var jgutils = {
             if(jgame.show_epu || message.data.substr(0, 3) != "epu")
                 if(!jgame.filter_console || message.data.indexOf(jgame.filter_console) > -1)
                     console.log("Server message: [" + message.data + "]");
-            body = message.data.substr(3);
-            switch(message.data.substr(0, 3)) {
+            body = message.data.substr(5);
+            switch(message.data.substr(0, 4)) {
                 case "add": // Add avatar
                     var data = body.split(":");
                     jgutils.avatars.register(
@@ -713,9 +713,7 @@ var jgutils = {
                     jgutils.avatars.draw(data[0]);
                     break;
                 case "del": // Remove avatar
-                    var success = jgutils.avatars.unregister(body);
-                    if(!success)
-                        jgutils.objects.remove(body);
+                    jgutils.avatars.unregister(body) || jgutils.objects.remove(body);
                     break;
                 case "snd": // Play sound
                     var data = body.split(":"),
@@ -819,10 +817,8 @@ var jgutils = {
                     callback(data);
                     jgutils.comm._level_callback = null;
                 };
-                if(jgutils.comm.local_id)
-                    jgutils.comm.send("lev", position);
-                else
-                    jgutils.comm.send("reg", jgutils.comm.local_id = guid());
+                jgutils.comm.local_id = guid()
+                jgutils.comm.send("lev", position);
                 loadutils.complete_task("comm");
             };
             if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
@@ -835,7 +831,7 @@ var jgutils = {
         send : function(header, body) {
             if(!jgutils.comm.socket)
                 return;
-            jgutils.comm.socket.send(header + body);
+            jgutils.comm.socket.send(header + "\n" + body);
         }
     },
     objects : {
