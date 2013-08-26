@@ -4,6 +4,8 @@ import (
 	"log"
 	"strconv"
 	"time"
+
+	"./terrain"
 )
 
 const (
@@ -14,7 +16,7 @@ const (
 
 var regionCache = make(map[string]*Region)
 
-func getRegionID(world string, x int, y int) {
+func getRegionID(world string, x int, y int) string {
 	return world + ":" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
 }
 
@@ -35,7 +37,7 @@ func GetRegion(world string, x int, y int) *Region {
 	reg.killer = make(chan bool)
 	reg.doTTL()
 
-	reg.terrain = new(Terrain)
+	reg.terrain = terrain.NewTerrain(world, REGION_WIDTH, REGION_HEIGHT, x, y)
 	// TODO: Do level building here
 
 	reg.entities = make([]*Entity, 0, 32)
@@ -51,7 +53,7 @@ type Region struct {
 	KeepAlive chan bool
 	killer    chan bool
 
-	terrain  *Terrain
+	terrain  *terrain.Terrain
 	entities []*Entity
 }
 
@@ -69,7 +71,7 @@ func (self *Region) doTTL() {
 	go func(self *Region) {
 		for {
 			select {
-			case <-self.keepAlive:
+			case <-self.KeepAlive:
 				log.Println("Keeping region " + self.ID() + " alive.")
 			case <-time.After(2 * time.Minute):
 				// Remove references to the region from the region cache.
@@ -97,7 +99,7 @@ func (self *Region) GetEvent(evt_type EventType, body string, origin Entity) *Ev
 	return &Event{self.ID(), evt_type, str_origin, GetOriginServerID(), body}
 }
 
-func (self *Region) AddEntity(entity *Entity) {
-	append(self.entities, entity)
+func (self *Region) AddEntity(entity Entity) {
+	self.entities = append(self.entities, &entity)
 	entity.Killer(self.killer)
 }

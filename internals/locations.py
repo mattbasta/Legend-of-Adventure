@@ -224,40 +224,6 @@ class Location():
         else:
             return len(self.generate()[0][0])
 
-    def _get_images(self):
-        if self.is_dungeon():
-            return dungeons.get_images()
-        elif self.is_town() and self.sublocations:
-            return {"old_woman1": "static/images/old_woman1.png",
-                    "old_woman2": "static/images/old_woman2.png",
-                    "homely1": "static/images/homely1.png",
-                    "homely2": "static/images/homely2.png",
-                    "homely3": "static/images/homely3.png",
-                    "child1": "static/images/child1.png",
-                    "child2": "static/images/child2.png",
-                    "soldier1": "static/images/soldier1.png",
-                    "soldier2": "static/images/soldier2.png",
-                    "soldier3": "static/images/soldier3.png"}
-        else:
-            return {"npc": "static/images/npc.png",
-                    "child1": "static/images/child1.png",
-                    "child2": "static/images/child2.png",
-                    "bully": "static/images/bully.png",
-                    "soldier1": "static/images/soldier1.png",
-                    "soldier2": "static/images/soldier2.png",
-                    "soldier3": "static/images/soldier3.png",
-                    "sheep": "static/images/sheep.png",
-                    "wolf": "static/images/wolf.png"}
-
-    def _get_loop(self):
-        return {"daylight": "static/music/daylight"}
-
-    def _get_sounds(self):
-        # Buzz automatically adds the appropriate file type.
-        return {"bleat": "static/sounds/bleat",
-                "zombie_groan": "static/sounds/zombie_groan",
-                "zombie_attack": "static/sounds/zombie_attack"}
-
     def render(self, avx, avy):
         """Render the JSON representation of the level."""
 
@@ -268,22 +234,18 @@ class Location():
         else:
             x, y = self.sublocations[-1][1]
 
-        return {"x": x,
-                "y": y,
-                "w": self.width(),
-                "h": self.height(),
-                "def_tile": 0,
-                "avatar": {"x": avx, "y": avy,
-                           "image": "static/images/avatar.png"},
-                "images": self._get_images(),
-                "tileset": self.tileset(),
-                "can_slide": self.can_slide(),
-                "level": level,
-                "hitmap": hitmap,
-                "portals": portals,
-                "port": constants.port,
-                "loop": self._get_loop(),
-                "sounds": self._get_sounds()}
+        return {
+            "x": x,
+            "y": y,
+            "w": self.width(),
+            "h": self.height(),
+            "level": level,
+            "hitmap": hitmap,
+            "portals": portals,
+            "avatar": {"x": avx, "y": avy},
+            "tileset": self.tileset(),
+            "can_slide": self.can_slide(),
+        }
 
     def __str__(self):
         return self.location_code

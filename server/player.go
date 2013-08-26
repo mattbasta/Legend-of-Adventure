@@ -45,7 +45,7 @@ func NewPlayer(conn *websocket.Conn, reg *Region) *Player {
 
 	player.location = GetRegion(WORLD_OVERWORLD, 0, 0) // Get the region and make it active.
 	player.location.KeepAlive <- true                  // Let the region know to stay alive.
-	player.location.AddEntity(player)
+	player.location.AddEntity(&player)
 	player.startPinging()
 
 	return &player

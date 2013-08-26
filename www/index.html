@@ -47,11 +47,54 @@ window.jgame = {
         }
     },
     tilesize : 50,
-    canvases: {}
+    canvases: {},
+    sounds: {
+        "bleat": "static/sounds/bleat",
+        "zombie_groan": "static/sounds/zombie_groan",
+        "zombie_attack": "static/sounds/zombie_attack"},
+    images: {
+        "old_woman1": "static/images/old_woman1.png",
+        "old_woman2": "static/images/old_woman2.png",
+        "homely1": "static/images/homely1.png",
+        "homely2": "static/images/homely2.png",
+        "homely3": "static/images/homely3.png",
+        "child1": "static/images/child1.png",
+        "child2": "static/images/child2.png",
+        "soldier1": "static/images/soldier1.png",
+        "soldier2": "static/images/soldier2.png",
+        "soldier3": "static/images/soldier3.png",
+        "npc": "static/images/npc.png",
+        "child1": "static/images/child1.png",
+        "child2": "static/images/child2.png",
+        "bully": "static/images/bully.png",
+        "soldier1": "static/images/soldier1.png",
+        "soldier2": "static/images/soldier2.png",
+        "soldier3": "static/images/soldier3.png",
+        "sheep": "static/images/sheep.png",
+        "wolf": "static/images/wolf.png",
+        "zombie": "static/images/zombie.png",
+        "death_waker": "static/images/death_waker.png",
+        "fallen_angel": "static/images/fallen_angel.png"}
 };
 $(document).ready(function(){
     jgutils.setup();
     jgutils.level.load(0, 0);
+
+    soundutils.loadLoop("daylight", "static/music/daylight");
+    //soundutils.playLoop("daylight")
+
+    for (var s in jgame.sounds) {
+        soundutils.loadSound(s, jgame.sounds[s])
+    }
+
+    toggleImageLock();
+    for (var i in jgame.images) {
+        createImage(i, jgame.images[i])
+    }
+
+    createImage("inventory", "/static/images/inventory.png");
+    createImage('avatar', "static/images/avatar.png");
+    createImage("items", "/static/images/items.png");
 });
 -->
 </script>

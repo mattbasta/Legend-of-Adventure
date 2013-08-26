@@ -1,5 +1,6 @@
 
 clean:
+	go clean
 	rm -f server.exe
 	go fmt
 

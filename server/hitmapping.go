@@ -2,13 +2,15 @@ package main
 
 import (
 	"math"
+
+	"./terrain"
 )
 
 type Hitmap struct {
 	Top, Right, Bottom, Left int
 }
 
-func GetHitmap(entity *Entity, terrain *Terrain) *Hitmap {
+func GetHitmap(entity *Entity, terrain *terrain.Terrain) *Hitmap {
 	fleft, ftop := (*entity).Position()
 	fleft = math.Max(math.Min(fleft, REGION_WIDTH), 0)
 	ftop = math.Max(math.Min(ftop, REGION_HEIGHT), 0)

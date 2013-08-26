@@ -129,12 +129,6 @@ def get_entities(location):
     return spawn
 
 
-def get_images():
-    return {"zombie": "static/images/zombie.png",
-            "death_waker": "static/images/death_waker.png",
-            "fallen_angel": "static/images/fallen_angel.png"}
-
-
 def _build_dungeon_layout(location):
     """
     Build the layout for a dungeon based on the location of its portal in a

@@ -382,17 +382,17 @@ var jgutils = {
             // Remove everything level-specific
             jgutils.timing.stop();
             chatutils.stopChat();
-            toggleImageLock(); // Set the image lock.
-            createImage("items", "/static/images/items.png");
-            for(var av in jgutils.avatars.registry)
+
+            for (var av in jgutils.avatars.registry)
                 if(av != "local")
                     jgutils.avatars.unregister(av);
-            if(jgame.follow_avatar != "local")
+            if (jgame.follow_avatar != "local")
                 jgame.follow_avatar = "local";
+            if (!lockImages)
+                toggleImageLock();
         },
         prepare : function() {
             return function(data) {
-                jgame['port'] = data.port;
                 jgame['level'] = data;
 
                 jgutils.objects.registry = {};
@@ -401,19 +401,6 @@ var jgutils = {
                     layer.child_objects = {};
                     layer.updated = true;
                 }
-
-                // Load appropriate music loops.
-                var first_loop = null;
-                for(var l in data.loop) {
-                    if(!first_loop)
-                        first_loop = l;
-                    soundutils.loadLoop(l, data.loop[l]);
-                }
-                soundutils.playLoop(first_loop);
-
-                // Load appropriate sound effects.
-                for(var s in data.sounds)
-                    soundutils.loadSound(s, data.sounds[s]);
 
                 var avatar = jgutils.avatars.registry["local"];
                 avatar.x = data.avatar.x * jgame.tilesize;
@@ -424,21 +411,12 @@ var jgutils = {
                     avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
                 }
 
-                if(avatar.image != data.avatar.image) {
-                    jgame.images['avatar'] = null;
-                    createImage('avatar', data.avatar.image);
-                }
-                for(var pref_img in data.images)
-                    createImage(pref_img, data.images[pref_img]);
-
                 var tileset_url = "/static/images/tilesets/" + data.tileset;// :
 //                                'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
                 createImage("tileset", tileset_url);
-                createImage("inventory", "/static/images/inventory.png");
                 toggleImageLock(); // Release the image lock.
                 jgutils.inventory.set_health(data.health);
                 loadutils.complete_task("load");
-
             };
         },
         update : function() {
