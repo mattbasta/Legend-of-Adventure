@@ -4,3 +4,5 @@
 config.conf
 src/
 *.exe
+vendor
+server/server

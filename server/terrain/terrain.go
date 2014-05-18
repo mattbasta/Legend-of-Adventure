@@ -18,8 +18,8 @@ type Portal struct {
     Width int
     Height int
     Destination string
-    DestinationX float
-    DestinationY float
+    DestinationX float32
+    DestinationY float32
 }
 
 func NewTerrain(world string, height, width, x, y int) *Terrain {

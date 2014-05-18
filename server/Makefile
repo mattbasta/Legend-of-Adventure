@@ -1,11 +1,12 @@
+run: build
+	./server
+
+build: clean
+	go env
+	go get .
+	go build
 
 clean:
 	go clean
-	rm -f server.exe
+	rm -f server.exe server
 	go fmt
-
-build: clean
-	go build
-
-run: build
-	./server
