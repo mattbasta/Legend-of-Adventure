@@ -1,5 +1,7 @@
 package main
 
+const MAX_CONNECTED_PLAYERS = 256
+
 const SOCKET_BUFFER_SIZE = 150
 
 const REGION_WIDTH = 250

@@ -6,3 +6,4 @@ src/
 *.exe
 vendor
 server/server
+node_modules/

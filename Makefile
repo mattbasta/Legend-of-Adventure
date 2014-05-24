@@ -1,2 +1,2 @@
 all:
-	export GOPATH=`pwd`/vendor && cd server && make
+	export GOPATH=`pwd`/vendor && cd server && make build

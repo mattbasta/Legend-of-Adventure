@@ -37,7 +37,7 @@ func GetRegion(world string, x int, y int) *Region {
 	reg.killer = make(chan bool)
 	reg.doTTL()
 
-	reg.terrain = terrain.NewTerrain(world, REGION_WIDTH, REGION_HEIGHT, x, y)
+	reg.terrain = *terrain.New(world, REGION_WIDTH, REGION_HEIGHT, x, y)
 	// TODO: Do level building here
 
 	reg.entities = make([]*Entity, 0, 32)
@@ -53,7 +53,7 @@ type Region struct {
 	KeepAlive chan bool
 	killer    chan bool
 
-	terrain  *terrain.Terrain
+	terrain  terrain.Terrain
 	entities []*Entity
 }
 
@@ -102,4 +102,8 @@ func (self *Region) GetEvent(evt_type EventType, body string, origin Entity) *Ev
 func (self *Region) AddEntity(entity Entity) {
 	self.entities = append(self.entities, &entity)
 	entity.Killer(self.killer)
+}
+
+func (self Region) String() string {
+	return self.terrain.String() + ", \"tileset\": \"default\""
 }

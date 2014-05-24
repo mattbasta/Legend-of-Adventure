@@ -3,6 +3,7 @@ package terrain
 import "bytes"
 import "strconv"
 
+
 type Terrain struct {
     Height int
     Width int
@@ -22,7 +23,7 @@ type Portal struct {
     DestinationY float32
 }
 
-func NewTerrain(world string, height, width, x, y int) *Terrain {
+func New(world string, height, width, x, y int) *Terrain {
     tiles := make([][]uint, width)
     hitmap := make([][]bool, width)
     for i := range tiles {
@@ -43,9 +44,14 @@ func NewTerrain(world string, height, width, x, y int) *Terrain {
 func (self *Terrain) String() string {
     var buf bytes.Buffer
     buf.WriteString("\"level\": [")
+    firstOuter := true
     for colno := range self.Tiles {
         col := self.Tiles[colno]
+        if !firstOuter {
+            buf.WriteString(",\n");
+        }
         buf.WriteString("[")
+        firstOuter = false
         first := true
         for cellno := range col {
             cell := col[cellno]
@@ -59,9 +65,14 @@ func (self *Terrain) String() string {
     }
 
     buf.WriteString("],\"hitmap\": [")
+    firstOuter = true
     for colno := range self.Hitmap {
         col := self.Hitmap[colno]
+        if !firstOuter {
+            buf.WriteString(",");
+        }
         buf.WriteString("[")
+        firstOuter = false
         first := true
         for cellno := range col {
             cell := col[cellno]

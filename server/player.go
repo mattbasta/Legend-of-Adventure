@@ -128,7 +128,7 @@ func (self *Player) handle(msg string) {
 	}
 
 	switch split[0] {
-	case "reg":
+	case "reg": // reg == register
 		name := strings.TrimSpace(split[1])
 		// You cannot choose the name "local".
 		if name == "" || name == "local" {
@@ -136,19 +136,31 @@ func (self *Player) handle(msg string) {
 			return
 		}
 		self.name = name
+		return
+
+	case "lev": // lev == level
+		self.outbound_raw <- "lev{" + self.location.String() + "}"
+		return
 	}
 }
 
 func (self *Player) update_inventory() {
+	out := "inv"
+	first := true
 	for i := 0; i < self.inventory.Capacity(); i++ {
+
+		if !first {
+			out += "\n"
+		}
+
+		out += strconv.Itoa(i) + ":"
 		item := self.inventory.Get(i)
-		// TODO: Update this to use the new event protocol
-		out := "inv" + strconv.Itoa(i) + ":"
 		if item != "" {
 			out += item
 		}
-		self.outbound_raw <- out
+		first = false
 	}
+	self.outbound_raw <- out
 }
 
 // Entity Implementation

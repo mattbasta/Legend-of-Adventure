@@ -1,19 +1,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta http-equiv="X-UA-Compatible" content="chrome=1" />
 <title>Legend of Adventure</title>
-<link rel="SHORTCUT ICON" href="http://cdn1.legendofadventure.com/favicon.ico" />
-<link rel="icon" href="http://cdn1.legendofadventure.com/favicon.ico" />
-<link rel="stylesheet" href="/static/frame.css" type="text/css" />
-<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=VT323:regular&v1" type="text/css" >
+<style type="text/css">
+@font-face {
+    font-family: 'VT323';
+    font-style: normal;
+    font-weight: 400;
+    src: local('VT323'), local('VT323-Regular'), url(http://themes.googleusercontent.com/static/fonts/vt323/v5/SSPdB6sO_7a9ZMMiCroIGqCWcynf_cDxXwCLxiixG1c.woff) format('woff');
+}
+html,body {height:100%;}
+body {
+    background:#222 url(/static/images/ajax-loader.gif) no-repeat center center;
+    overflow: hidden;
+}
+#bg_tile_wrap,
+#bg_tile_wrap {z-index:5;}
+#bg_tile_full {
+    position:absolute;
+    top:0;
+    left:0;
+    height:100%;
+    width:100%;
+}
+#chatbox {
+    position:absolute;
+    bottom:130px;
+    left:0;
+    padding:0.5em;
+    z-index:100006;
+    font-size:2em;
+    letter-spacing:2px;
+}
+#chatbox, #talkbar {font-family:'VT323', Courier, Courier New, monospace;}
+#chatbox p {
+    opacity:0;
+    text-shadow: 1px 1px #fff;
+}
+#chatbox p+p {opacity:0.4;}
+#chatbox p+p+p {opacity:0.8;}
+#chatbox p+p+p+p {opacity:1;}
+#chatbox p span {color:#a00;}
+#chatbox p small {color:#888;}
+#talkbar {
+    display:none;
+    position:absolute;
+    bottom:100px;
+    left:0.5em;
+    z-index:100007;
+    font-size:20px;
+    background:#000;
+    color:#fff;
+    border-radius:5px;
+    padding:0.1em 0.25em;
+    letter-spacing:0.2ex;
+}
+#talkbar.empty {
+    color:#aaa;
+}
+#inventory {
+    z-index: 100008; /* Don't judge. */
+    position:fixed;
+    left:0;
+    bottom:0;
+}
+</style>
+</head>
+<body>
+<div>
+    <input type="text" id="talkbar" />
+    <div id="chatbox">
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+    </div>
+    <div id="inventory">
+        <canvas id="canvas_inventory" width="374" height="85"></canvas>
+    </div>
+    <div id="bg_tile_wrap">
+        <canvas id="output_full"></canvas>
+    </div>
+</div>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
 <script type="text/javascript" src="/static/jgame.assets.js"></script>
 <script type="text/javascript" src="/static/buzz.js"></script>
 <script type="text/javascript" src="/static/jgame.js"></script>
 <script type="text/javascript">
-<!--
 window.jgame = {
     port : %(port)s,
     fps : 30,
@@ -76,111 +150,24 @@ window.jgame = {
         "death_waker": "static/images/death_waker.png",
         "fallen_angel": "static/images/fallen_angel.png"}
 };
-$(document).ready(function(){
-    jgutils.setup();
-    jgutils.level.load(0, 0);
+jgutils.setup();
+jgutils.level.load(0, 0);
 
-    soundutils.loadLoop("daylight", "static/music/daylight");
-    //soundutils.playLoop("daylight")
+// soundutils.loadLoop("daylight", "static/music/daylight");
+// soundutils.playLoop("daylight")
 
-    for (var s in jgame.sounds) {
-        soundutils.loadSound(s, jgame.sounds[s])
-    }
+for (var s in jgame.sounds) {
+    soundutils.loadSound(s, jgame.sounds[s])
+}
 
-    toggleImageLock();
-    for (var i in jgame.images) {
-        createImage(i, jgame.images[i])
-    }
+toggleImageLock();
+for (var i in jgame.images) {
+    createImage(i, jgame.images[i])
+}
 
-    createImage("inventory", "/static/images/inventory.png");
-    createImage('avatar', "static/images/avatar.png");
-    createImage("items", "/static/images/items.png");
-});
--->
+createImage("inventory", "/static/images/inventory.png");
+createImage('avatar', "static/images/avatar.png");
+createImage("items", "/static/images/items.png");
 </script>
-<style type="text/css">
-html,body {height:100%;}
-body {
-    background:#222 url(/static/images/ajax-loader.gif) no-repeat center center;
-    overflow: hidden;
-}
-#bg_tile_wrap,
-#bg_tile_wrap {z-index:5;}
-#bg_tile_full {
-    position:absolute;
-    top:0;
-    left:0;
-    height:100%;
-    width:100%;
-}
-#chatbox {
-    position:absolute;
-    bottom:130px;
-    left:0;
-    padding:0.5em;
-    z-index:100006;
-    font-size:2em;
-    letter-spacing:2px;
-}
-#chatbox, #talkbar {font-family:'VT323', Courier, Courier New, monospace;}
-#chatbox p {
-    opacity:0;
-    text-shadow: 1px 1px #fff;
-}
-#chatbox p+p {opacity:0.4;}
-#chatbox p+p+p {opacity:0.8;}
-#chatbox p+p+p+p {opacity:1;}
-#chatbox p span {color:#a00;}
-#chatbox p small {color:#888;}
-#talkbar {
-    display:none;
-    position:absolute;
-    bottom:100px;
-    left:0.5em;
-    z-index:100007;
-    font-size:20px;
-    background:#000;
-    color:#fff;
-    border-radius:5px;
-    padding:0.1em 0.25em;
-    letter-spacing:0.2ex;
-}
-#talkbar.empty {
-    color:#aaa;
-}
-#inventory {
-    z-index: 100008; /* Don't judge. */
-    position:fixed;
-    left:0;
-    bottom:0;
-}
-</style>
-</head>
-<body>
-<!--[if lte IE 8]>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
-<script>
-CFInstall.check({
-    mode: "inline",
-    destination: "http://legendofadventure.com"
-});
-</script>
-<![endif]-->
-<div>
-    <input type="text" id="talkbar" />
-    <div id="chatbox">
-        <p></p>
-        <p></p>
-        <p></p>
-        <p></p>
-        <p></p>
-    </div>
-    <div id="inventory">
-        <canvas id="canvas_inventory" width="374" height="85"></canvas>
-    </div>
-    <div id="bg_tile_wrap">
-        <canvas id="output_full"></canvas>
-    </div>
-</div>
 </body>
 </html>

@@ -393,7 +393,7 @@ var jgutils = {
         },
         prepare : function() {
             return function(data) {
-                jgame['level'] = data;
+                jgame.level = data;
 
                 jgutils.objects.registry = {};
                 for(var i in jgutils.objects.layers) {
@@ -402,21 +402,22 @@ var jgutils = {
                     layer.updated = true;
                 }
 
-                var avatar = jgutils.avatars.registry["local"];
-                avatar.x = data.avatar.x * jgame.tilesize;
-                avatar.y = data.avatar.y * jgame.tilesize;
+                var avatar = jgutils.avatars.registry.local;
+                // avatar.x = data.avatar.x * jgame.tilesize;
+                // avatar.y = data.avatar.y * jgame.tilesize;
+                avatar.x = jgame.level.w / 2 * jgame.tilesize;
+                avatar.y = jgame.level.h / 2 * jgame.tilesize;
                 if(data.hitmap) {
-                    var x_map = jgutils.hitmapping.generate_x(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize),
-                        y_map = jgutils.hitmapping.generate_y(data.hitmap, data.avatar.x * jgame.tilesize, data.avatar.y * jgame.tilesize);
+                    var x_map = jgutils.hitmapping.generate_x(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize),
+                        y_map = jgutils.hitmapping.generate_y(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize);
                     avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
                 }
 
-                var tileset_url = "/static/images/tilesets/" + data.tileset;// :
-//                                'http://cdn' + (jgame.cdn++ % 4 + 1) + '.legendofadventure.com/tilesets/' + data.tileset;
-                createImage("tileset", tileset_url);
+                var tileset_url = '/static/images/tilesets/' + data.tileset + '.png';
+                createImage('tileset', tileset_url);
                 toggleImageLock(); // Release the image lock.
                 jgutils.inventory.set_health(data.health);
-                loadutils.complete_task("load");
+                loadutils.complete_task('load');
             };
         },
         update : function() {
@@ -673,8 +674,8 @@ var jgutils = {
             if(jgame.show_epu || message.data.substr(0, 3) != "epu")
                 if(!jgame.filter_console || message.data.indexOf(jgame.filter_console) > -1)
                     console.log("Server message: [" + message.data + "]");
-            body = message.data.substr(5);
-            switch(message.data.substr(0, 4)) {
+            body = message.data.substr(3);
+            switch(message.data.substr(0, 3)) {
                 case "add": // Add avatar
                     var data = body.split(":");
                     jgutils.avatars.register(

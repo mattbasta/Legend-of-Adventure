@@ -5,8 +5,6 @@ import (
 	"log"
 )
 
-var connectedPlayers = make([]*Player, 0)
-
 func handler(ws *websocket.Conn) {
 	addr := ws.Request().RemoteAddr
 	log.Println("Client connected: " + addr)
