@@ -84,12 +84,32 @@ body {
     </div>
 </div>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+<script type="text/javascript" src="/static/amd.js"></script>
 <script type="text/javascript" src="/static/jgame.assets.js"></script>
 <script type="text/javascript" src="/static/buzz.js"></script>
 <script type="text/javascript" src="/static/jgame.js"></script>
+<script type="text/javascript" src="/static/defer.js"></script>
+<script type="text/javascript" src="/static/modules/chat.js"></script>
+<script type="text/javascript" src="/static/modules/comm.js"></script>
+<script type="text/javascript" src="/static/modules/events.js"></script>
+<script type="text/javascript" src="/static/modules/game.js"></script>
+<script type="text/javascript" src="/static/modules/guid.js"></script>
+<script type="text/javascript" src="/static/modules/hitmapping.js"></script>
+<script type="text/javascript" src="/static/modules/images.js"></script>
+<script type="text/javascript" src="/static/modules/inventory.js"></script>
+<script type="text/javascript" src="/static/modules/keys.js"></script>
+<script type="text/javascript" src="/static/modules/load.js"></script>
+<script type="text/javascript" src="/static/modules/player.js"></script>
+<script type="text/javascript" src="/static/modules/playerStatsOverlay.js"></script>
+<script type="text/javascript" src="/static/modules/promise.js"></script>
+<script type="text/javascript" src="/static/modules/settings.js"></script>
+<script type="text/javascript" src="/static/modules/sound.js"></script>
 <script type="text/javascript">
+
+require('settings').set({
+    port: %(port)s
+});
 window.jgame = {
-    port : %(port)s,
     fps : 30,
     cdn : 0,
     speed : 0.2,
@@ -151,23 +171,22 @@ window.jgame = {
         "fallen_angel": "static/images/fallen_angel.png"}
 };
 jgutils.setup();
+
+require(require('settings').init_module);
+
 jgutils.level.load(0, 0);
 
-// soundutils.loadLoop("daylight", "static/music/daylight");
-// soundutils.playLoop("daylight")
+// require('sound').loadLoop("daylight", "static/music/daylight");
+// require('sound').playLoop("daylight")
 
 for (var s in jgame.sounds) {
-    soundutils.loadSound(s, jgame.sounds[s])
+    require('sound').loadSound(s, jgame.sounds[s])
 }
 
 toggleImageLock();
 for (var i in jgame.images) {
     createImage(i, jgame.images[i])
 }
-
-createImage("inventory", "/static/images/inventory.png");
-createImage('avatar', "static/images/avatar.png");
-createImage("items", "/static/images/items.png");
 </script>
 </body>
 </html>

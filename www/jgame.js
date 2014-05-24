@@ -1,7 +1,3 @@
-function S4() {return (((1+Math.random())*0x10000)|0).toString(16).substring(1);}
-// Simplified GUID function
-function guid() {return S4()+S4()+S4()+S4();}
-
 String.prototype.explode = function(value, count) {
     var split = this.split(value);
     if(!count || count >= split.length)
@@ -12,13 +8,11 @@ String.prototype.explode = function(value, count) {
     return split;
 };
 
-var mozSmoothing = 'mozilla' in $.browser.mozilla;
-
 var lockImages = false;
 function toggleImageLock() {
     lockImages = !lockImages;
     if(!lockImages && jgame.images_loaded == jgame.images_added)
-        loadutils.complete_task('images');
+        require('load').completeTask('images');
 }
 function createImage(id, url) {
     if(jgame.images[id]) {
@@ -27,7 +21,7 @@ function createImage(id, url) {
             delete jgame.images[id];
         else {
             if(jgame.images_loaded === jgame.images_added)
-                loadutils.complete_task('images');
+                require('load').completeTask('images');
             return;
         }
     }
@@ -36,7 +30,7 @@ function createImage(id, url) {
     i.onload = function() {
         jgame.images_loaded++;
         if(!lockImages && jgame.images_loaded == jgame.images_added)
-            loadutils.complete_task('images');
+            require('load').completeTask('images');
     };
     i.src = url;
     jgame.images[id] = i;
@@ -50,85 +44,12 @@ function adjust_diagonal(direction) {
 var jgutils = {
     setup : function() {
 
-        chatutils._tb = document.getElementById('talkbar');
-        chatutils._cb = document.getElementById('chatbox');
-
-        // Setup key handlers
-        function keypress(e, set) {
-            switch(e.keyCode) {
-                case 37: // Left
-                case 65: // A
-                    jgame.keys.left = set;
-                    break;
-                case 38: // Up
-                case 87: // W
-                    jgame.keys.up = set;
-                    break;
-                case 39: // Right
-                case 68: // D
-                    jgame.keys.right = set;
-                    break;
-                case 40: // Down
-                case 83: // S
-                    jgame.keys.down = set;
-                    break;
-                case 74: // J
-                    if(set)
-                        jgutils.inventory.cycle_back();
-                    break;
-                case 75: // K
-                    if(set)
-                        jgutils.inventory.cycle_forward();
-                    break;
-                case 76: // L
-                case 32: // Space
-                    if(set)
-                        jgutils.comm.send("use", 0);
-                    break;
-                case 81: // Q
-                case 85: // U
-                    if(set)
-                        jgutils.comm.send("dro", 0);
-                    break;
-                default:
-                    var kb = jgame.keys.bindings[e.keyCode];
-                    if(kb) {
-                        if(typeof kb == 'function')
-                            kb();
-                        else
-                            for(var i = 0, keys = jgame.keys.bindings[e.keyCode].length; i < keys; i++)
-                                return jgame.keys.bindings[e.keyCode][i](set);
-                    }
-            }
-        }
-        $(window).keydown(function(e) {
-            keypress(e, true);
-        }).keyup(function(e) {
-            keypress(e, false);
-        });
-
-        var ci = $("#canvas_inventory");
-        ci.mouseleave(jgutils.inventory._unhover).mousemove(jgutils.inventory._hover);
-        // TODO: Move these into jgutils.inventory.
-        ci.mousedown(function() {jgutils.inventory.selected = true;
-                                 jgutils.inventory._redraw();});
-        ci.mouseup(function() {jgutils.inventory.activate_selected();
-                               jgutils.inventory.selected = false;
-                               jgutils.inventory._redraw();});
-
         // Setup the jgame instance
         jgame.images = {};
         jgame.images_added = 0;
         jgame.images_loaded = 0;
         jgame.level = {};
         jgame.follow_avatar = "local";
-        jgame.keys = {
-            up : false,
-            down : false,
-            left : false,
-            right : false,
-            bindings : {}
-        };
         jgame.offset = {
             x : 0,
             y : 0,
@@ -177,58 +98,6 @@ var jgutils = {
             // TODO: Implement FB Connect stuff here
             jgutils.user.user_data = {"gender": "male"};
             callback(true);
-        }
-    },
-    hitmapping : {
-        generate_x : function(map, x, y_orig) { // All hitmapes are assumed to be one tile space in size.
-
-            var ts = jgame.tilesize,
-                y = y_orig / ts | 0,
-                y2 = ((y_orig - 1) / ts | 0) + 1;
-
-            x = x / ts | 0;
-
-            var x_min = -1 * ts,
-                x_max = (map[y].length + 1) * ts;
-            var i;
-            for(i = x - 1; i >= 0; i--) {
-                if(map[y][i] || map[y2][i]) {
-                    x_min = (i + 1) * ts;
-                    break;
-                }
-            }
-            for(i = x + 1, rowlen = map[y].length; i < rowlen; i++) {
-                if(map[y][i] || map[y2][i]) {
-                    x_max = i * ts;
-                    break;
-                }
-            }
-            //console.log("(result_translated): " + (x_min / jgame.tilesize) + ", " + (x_max / jgame.tilesize));
-            return [x_min, x_max];
-        },
-        generate_y : function(map, x_orig, y) {
-            var ts = jgame.tilesize,
-                x = (x_orig / ts) | 0,
-                x2 = (((x_orig - 1) / ts) | 0) + 1;
-
-            y = ((y / ts) - 1) | 0;
-
-            var y_min = 0, y_max = map.length * jgame.tilesize;
-            var i;
-            for(i = y; i >= 0; i--) {
-                if(map[i][x] || map[i][x2]) {
-                    y_min = (i + 2) * ts;
-                    break;
-                }
-            }
-            for(i = y + 1, maplen = map.length; i < maplen; i++) {
-                if(map[i][x] || map[i][x2]) {
-                    y_max = (i + 1) * ts;
-                    break;
-                }
-            }
-            //console.log("(result_translated): " + (y_min / jgame.tilesize) + ", " + (y_max / jgame.tilesize));
-            return [y_min, y_max];
         }
     },
     avatars : {
@@ -318,21 +187,6 @@ var jgutils = {
         },
         setAvatarOffset : function(x, y) {jgutils.avatars.avatar_offsets = {x: x, y: y};}
     },
-    keys : {
-        addBinding : function(keyCode, callback, multiple) {
-            if(multiple) {
-                var bindings = jgame.keys.bindings;
-                if(!bindings[keyCode])
-                    jgame.keys.bindings[keyCode] = [callback];
-                else
-                    jgame.keys.bindings[keyCode].push(callback);
-            } else
-                jgame.keys.bindings[keyCode] = callback;
-        },
-        clearBindings : function(keyCode) {
-            jgame.keys.bindings[keyCode] = null;
-        }
-    },
     level : {
         init : function() {
 
@@ -342,7 +196,7 @@ var jgutils = {
 
             // Get everything looking decent and positioned correctly
             jgutils.level.update();
-            jgutils.inventory._redraw();
+            require('playerStatsOverlay').redraw();
             jgutils.objects.redrawLayers();
             jgutils.avatars.redrawAvatars();
 
@@ -354,40 +208,20 @@ var jgutils = {
         },
         load : function(x, y, av_x, av_y) {
             jgutils.level.preprepare();
-            loadutils.start_task(
-                "level_init",
+            require('load').startTask(
                 ["images", "load", "comm", "comm_reg"],
                 jgutils.level.init
             );
 
-            // "T" for chat
-            jgutils.keys.addBinding(84, chatutils.startChat, false);
-            // ESC for chat
-            jgutils.keys.addBinding(27, chatutils.stopChat, true);
-
-            jgutils.comm.register(
+            require('comm').register(
                 x + ":" + y,  // + ":" + av_x + ":" + av_y,
-                jgutils.level.prepare()
+                jgutils.level.prepare
             );
-        },
-        expect : function(level) {
-            jgutils.level.preprepare();
-            loadutils.start_task(
-                "level_init",
-                ["images", "load", "comm_reg"],
-                jgutils.level.init
-            );
-            var callback = jgutils.level.prepare(level);
-            jgutils.comm._level_callback = function(data) {
-                loadutils.complete_task("comm_reg");
-                callback(data);
-                jgutils.comm._level_callback = null;
-            };
         },
         preprepare : function() {
             // Remove everything level-specific
             jgutils.timing.stop();
-            chatutils.stopChat();
+            require('chat').stopChat();
 
             for (var av in jgutils.avatars.registry)
                 if(av != "local")
@@ -397,34 +231,31 @@ var jgutils = {
             if (!lockImages)
                 toggleImageLock();
         },
-        prepare : function() {
-            return function(data) {
-                jgame.level = data;
+        prepare : function(data) {
+            jgame.level = data;
 
-                jgutils.objects.registry = {};
-                for(var i in jgutils.objects.layers) {
-                    var layer = jgutils.objects.layers[i];
-                    layer.child_objects = {};
-                    layer.updated = true;
-                }
+            jgutils.objects.registry = {};
+            for(var i in jgutils.objects.layers) {
+                var layer = jgutils.objects.layers[i];
+                layer.child_objects = {};
+                layer.updated = true;
+            }
 
-                var avatar = jgutils.avatars.registry.local;
-                // avatar.x = data.avatar.x * jgame.tilesize;
-                // avatar.y = data.avatar.y * jgame.tilesize;
-                avatar.x = jgame.level.w / 2 * jgame.tilesize;
-                avatar.y = jgame.level.h / 2 * jgame.tilesize;
-                if(data.hitmap) {
-                    var x_map = jgutils.hitmapping.generate_x(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize),
-                        y_map = jgutils.hitmapping.generate_y(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize);
-                    avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
-                }
+            var avatar = jgutils.avatars.registry.local;
+            // avatar.x = data.avatar.x * jgame.tilesize;
+            // avatar.y = data.avatar.y * jgame.tilesize;
+            avatar.x = jgame.level.w / 2 * jgame.tilesize;
+            avatar.y = jgame.level.h / 2 * jgame.tilesize;
+            if(data.hitmap) {
+                var x_map = require('hitmapping').generate_x(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize),
+                    y_map = require('hitmapping').generate_y(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize);
+                avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
+            }
 
-                var tileset_url = '/static/images/tilesets/' + data.tileset + '.png';
-                createImage('tileset', tileset_url);
-                toggleImageLock(); // Release the image lock.
-                jgutils.inventory.set_health(data.health);
-                loadutils.complete_task('load');
-            };
+            var tileset_url = '/static/images/tilesets/' + data.tileset + '.png';
+            createImage('tileset', tileset_url);
+            toggleImageLock(); // Release the image lock.
+            require('load').completeTask('load');
         },
         update : function() {
             var output_buffer = jgame.canvases.output,
@@ -530,297 +361,6 @@ var jgutils = {
             ];
 
             jgutils.avatars.setAvatarOffset(n_x, n_y);
-        }
-    },
-    inventory : {
-        slots : [null, null, null, null, null],
-        health : 100,
-        hovering : -1,
-        selected : false,
-        special : -1,
-        health_dwindle : null,
-        activate_selected : function() {
-            if(jgutils.inventory.hovering == -1)
-                return;
-            jgutils.comm.send("use", jgutils.inventory.hovering);
-        },
-        set : function(slot, item) {
-            jgutils.inventory.slots[slot] = item;
-            jgutils.inventory._redraw();
-        },
-        clear : function(slot) {
-            jgutils.inventory.slots[slot] = null;
-            jgutils.inventory._redraw();
-        },
-        cycle_forward : function() {jgutils.comm.send("cyc", "f");},
-        cycle_back : function() {jgutils.comm.send("cyc", "b");},
-        set_health : function(health) {
-            jgutils.inventory.health = health;
-            jgutils.inventory._redraw();
-            if(health < 30)
-                if(!jgutils.inventory.health_dwindle)
-                    jgutils.inventory.health_dwindle = setInterval(jgutils.inventory._redraw, 100);
-            else if(jgutils.inventory.health_dwindle) {
-                clearInterval(jgutils.inventory.health_dwindle);
-                jgutils.inventory.health_dwindle = null;
-            }
-        },
-        _redraw : function() {
-            var inventory = document.getElementById("canvas_inventory"),
-                ctx = inventory.getContext("2d"),
-                ii = jgame.images.inventory,
-                it = jgame.images.items,
-                sl = jgutils.inventory.slots,
-                h = jgutils.inventory.hovering,
-                s = jgutils.inventory.special,
-                sel = jgutils.inventory.selected;
-            if(!ii)
-                return;
-            if(mozSmoothing)
-                ctx.mozImageSmoothingEnabled = false;
-            ctx.clearRect(0, 0, 374, 85);
-            function draw_item(x, y, h, w, code) {
-                var sy = 0, sx = 0;
-                if(code[0] == "w") {
-                    attributes = code.substr(1).split(".");
-                    sx = jgassets.weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
-                    sy = jgassets.weapon_order.indexOf(attributes[0]) * 24;
-                } else {
-                    var c = parseInt(code.substr(1), 10);
-                    sx = c % 5 * 24;
-                    sy = Math.floor(c / 5) * 24;
-                }
-                ctx.drawImage(it, sx, sy, 24, 24,
-                              x, y, w, h);
-            }
-            var sx;
-            for(var i = 0; i < 5; i++) {
-                if(!i) {
-                    sx = 0;
-                    if(h == i)
-                        sx = sel ? 240 : 160;
-                    else if(s == i)
-                        sx = 80;
-                    ctx.drawImage(ii, sx, 0, 80, 80,
-                                  0, 0, 80, 80);
-                    if(sl[i])
-                        draw_item(10, 10, 60, 60, sl[i]);
-                } else {
-                    sx = 0;
-                    if(h == i)
-                        sx = sel ? 192 : 128;
-                    else if(s == i)
-                        sx = 64;
-                    ctx.drawImage(ii, sx + (i > 1 ? 32 : 0), 80, 16, 64,
-                                  26 + i * 64, 14, 16, 64);
-                    ctx.drawImage(ii, sx + (i < 4 ? 16 : 48), 80, 16, 64,
-                                  74 + i * 64, 14, 16, 64);
-                    if(sl[i])
-                        draw_item(34 + i * 64, 22, 48, 48, sl[i]);
-                }
-            }
-
-            // Redraw the health bar.
-            var health = jgutils.inventory.health / 10 * 14,
-                health_x = 0,
-                health_low = health < 3 * 14;
-            function get_y() {
-                if(!health_low)
-                    return 2;
-                return Math.random() * 10 < 3 ? Math.random() * 4 - 2 : 2;
-            }
-            while(health - 14 > 0) {
-                ctx.drawImage(ii, 65, 144, 13, 13,
-                              84 + health_x, get_y(), 13, 13);
-                health_x += 14;
-                health -= 14;
-            }
-            ctx.drawImage(ii, 65, 144, health, 13,
-                          84 + health_x, get_y(), health, 13);
-        },
-        _hover : function(e) {
-            var oh = jgutils.inventory.hovering;
-            var x = e.clientX,
-                y = window.innerHeight - e.pageY;
-            if(x < 80) {
-                jgutils.inventory.hovering = 0;
-            } else if(y > 14) {
-                jgutils.inventory.hovering = ((x - 26) / 64) | 0;
-            } else {
-                jgutils.inventory.hovering = -1;
-            }
-            if(oh == jgutils.inventory.hovering)
-                return;
-            jgutils.inventory._redraw();
-        },
-        _unhover : function() {
-            jgutils.inventory.hovering = -1;
-            jgutils.inventory._redraw();
-        }
-    },
-    comm : {
-        socket : null,
-        local_id : "",
-        registrar : null,
-        _level_callback : null,
-        init : function() {
-            if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
-                loadutils.complete_task("comm");
-                return;
-            }
-            jgutils.comm.socket = new WebSocket("ws://" + document.domain + ":" + jgame.port + "/socket");
-            jgutils.comm.socket.onopen = function(message) {
-                jgutils.comm.socket.onmessage = jgutils.comm.handle_message;
-                if(jgutils.comm.registrar) {
-                    jgutils.comm.registrar();
-                    jgutils.comm.registrar = null;
-                }
-            };
-        },
-        handle_message : function(message) {
-            if(jgame.show_epu || message.data.substr(0, 3) != "epu")
-                if(!jgame.filter_console || message.data.indexOf(jgame.filter_console) > -1)
-                    console.log("Server message: [" + message.data + "]");
-            body = message.data.substr(3);
-            var data;
-            var i;
-            switch(message.data.substr(0, 3)) {
-                case "add": // Add avatar
-                    data = body.split(":");
-                    jgutils.avatars.register(
-                        data[0],
-                        {image: "avatar",
-                         facing: "down",
-                         direction: [0, 0],
-                         sprite: jgutils.avatars.registry.local.sprite,
-                         dirty: true,
-                         x: data[1] * 1,
-                         y: data[2] * 1},
-                        true
-                    );
-                    jgutils.avatars.draw(data[0]);
-                    break;
-                case "del": // Remove avatar
-                    if (!jgutils.avatars.unregister(body))
-                        jgutils.objects.remove(body);
-                    break;
-                case "snd": // Play sound
-                    data = body.split(":"),
-                        s_x = parseFloat(data[1]),
-                        s_y = parseFloat(data[2]);
-                    var follow_av = jgutils.avatars.registry[jgame.follow_avatar],
-                        dist = Math.sqrt(Math.pow(s_x - follow_av.x, 2) + Math.pow(s_y - follow_av.y, 2));
-                    dist /= jgame.tilesize;
-                    soundutils.playSound(data[0], dist);
-                    break;
-                case "loc": // Change avatar position and direction
-                    data = body.split(":");
-                    var av = jgutils.avatars.registry[data[0]];
-                    av.x = parseInt(data[1], 10);
-                    av.y = parseInt(data[2], 10);
-                    var new_direction = [data[3] * 1, data[4] * 1];
-                    if(jgame.follow_avatar == data[0])
-                        jgutils.level.setCenterPosition(true);
-
-                    var sp_dir;
-                    if(!new_direction[0] && !new_direction[1] && (av.direction[0] || av.direction[1])) {
-                        sp_dir = jgutils.avatars.get_avatar_sprite_direction(av.direction);
-                        av.dirty = true;
-                        av.position = sp_dir[0].position;
-                        av.cycle_position = 0;
-                        av.sprite_cycle = 0;
-                    } else if(new_direction != av.direction) {
-                        av.dirty = true;
-                        sp_dir = jgutils.avatars.get_avatar_sprite_direction(new_direction);
-                        av.position = sp_dir[1].position;
-                        av.cycle_position = 0;
-                        av.sprite_cycle = 0;
-                    }
-                    av.direction = new_direction;
-                    jgutils.avatars.draw(data[0]);
-                    jgutils.avatars.redrawAvatars();
-                    break;
-                case "cha": // Chat message
-                    data = body.split("\n"),
-                        metadata = data[0].split(":");
-                    chatutils.handleMessage(data[1]);
-                    break;
-                case "spa": // Spawn object
-                    data = body.split("\n");
-                    if(data[0] in jgutils.objects.registry)
-                        break;
-                    var jdata = JSON.parse(data[1]);
-                    jgutils.objects.create(
-                        data[0],
-                        jdata,
-                        jdata.layer
-                    );
-                    break;
-                case "flv":
-                    jgutils.level.expect(body);
-                    break;
-                case "lev":
-                    jgutils.comm._level_callback(JSON.parse(body));
-                    break;
-                case "epu":
-                    data = body[1].split("\n");
-                    var body = body.explode(":", 1),
-                        entity = jgutils.objects.registry[body[0]];
-                    if(!entity)
-                        break;
-                    for(i = 0; i < data.length; i++) {
-                        var line = data[i].explode("=", 2),
-                            key = line[0],
-                            value = JSON.parse(line[1]);
-                        if(key == "x" || key == "y")
-                            entity[key] = value * jgame.tilesize;
-                        else
-                            entity[key] = value;
-                    }
-                    break;
-                case "hea":
-                    jgutils.inventory.set_health(parseInt(body, 10));
-                    break;
-                case "inv":
-                    data = body.split("\n");
-                    for(i = 0; i < data.length; i++) {
-                        // position:item_code
-                        var lined = data[i].split(":");
-                        lined[0] = parseInt(lined[0], 10);
-                        if(!lined[1])
-                            jgutils.inventory.clear(lined[0]);
-                        else
-                            jgutils.inventory.set(lined[0], lined[1]);
-                    }
-                    break;
-                case "err":
-                    if(!!window.console) {
-                        console.log("Error: " + body);
-                    }
-            }
-        },
-        register : function(position, callback) {
-            var r = function() {
-                jgutils.comm._level_callback = function(data) {
-                    loadutils.complete_task("comm_reg");
-                    callback(data);
-                    jgutils.comm._level_callback = null;
-                };
-                jgutils.comm.local_id = guid();
-                jgutils.comm.send("lev", position);
-                loadutils.complete_task("comm");
-            };
-            if(jgutils.comm.socket && jgutils.comm.socket.readyState == 1) {
-                r();
-            } else {
-                jgutils.comm.registrar = r;
-                jgutils.comm.init();
-            }
-        },
-        send : function(header, body) {
-            if(!jgutils.comm.socket)
-                return;
-            jgutils.comm.socket.send(header + "\n" + body);
         }
     },
     objects : {
@@ -1034,8 +574,7 @@ var jgutils = {
                 c_tiles_w = 5,
                 c_tile_w = c_tileset.width / c_tiles_w;
 
-            if(mozSmoothing)
-                c.mozImageSmoothingEnabled = false;
+            c.mozImageSmoothingEnabled = false;
 
             var yy = 0;
             for(var y = 0; y < jgame.level.h; y++) {
@@ -1065,7 +604,7 @@ var jgutils = {
         start : function() {
             jgutils.timing.tick();
             jgutils.drawing.start();
-            jgutils.timing.timer = setInterval(jgutils.timing.tick, jgame.fps);
+            jgutils.timing.timer = setInterval(jgutils.timing.tick, require('settings').fps);
         },
         stop : function() {
             if(typeof jgutils.timing.timer == 'undefined')
@@ -1098,7 +637,7 @@ var jgutils = {
             var _x = 0,
                 _y = 0,
                 _val = jgame.speed * ms,
-                keys = jgame.keys;
+                keys = require('keys');
             if(keys.left)
                 _x = -1;
             else if(keys.right)
@@ -1114,7 +653,7 @@ var jgutils = {
             var avatar = jgutils.avatars.registry.local,
                 do_setcenter = false;
             function update_location() {
-                jgutils.comm.send("loc", (avatar.x|0) + ":" + (avatar.y|0) + ":" + direction[0] + ":" + direction[1]);
+                require('comm').send("loc", (avatar.x|0) + ":" + (avatar.y|0) + ":" + direction[0] + ":" + direction[1]);
             }
 
             var player_moving = _x || _y,
@@ -1165,12 +704,12 @@ var jgutils = {
                     adjusted_y = avatar.y + adjusted_increment_y;
 
                 var update_y_hitmap = function() {
-                    var y_hitmap = jgutils.hitmapping.generate_y(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
+                    var y_hitmap = require('hitmapping').generate_y(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
                     avatar.hitmap[0] = y_hitmap[0];
                     avatar.hitmap[2] = y_hitmap[1] + 15;
                 };
                 var update_x_hitmap = function() {
-                    var x_hitmap = jgutils.hitmapping.generate_x(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
+                    var x_hitmap = require('hitmapping').generate_x(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
                     avatar.hitmap[1] = x_hitmap[1] + 7.5;
                     avatar.hitmap[3] = x_hitmap[0] - 7.5;
                 };
@@ -1279,76 +818,6 @@ var jgutils = {
     }
 };
 
-var loadutils = {
-    active_dependencies : {},
-    start_task : function(task, dependencies, callback) {
-        loadutils.active_dependencies[task] = {dependencies: dependencies,
-                                               callback: callback};
-    },
-    finish_task : function(task) {
-        loadutils.active_dependencies[task].callback();
-        delete loadutils.active_dependencies[task];
-    },
-    complete_task : function(task) {
-        console.log("Completed task: " + task);
-        if(task in loadutils.active_dependencies) {
-            loadutils.finish_task(task);
-        } else {
-            var filterFunc = function(x) {return x !== task;};
-            for(var t in loadutils.active_dependencies) {
-                var tt = loadutils.active_dependencies[t];
-                if(tt.dependencies.indexOf(task) > -1)
-                    tt.dependencies = tt.dependencies.filter(filterFunc);
-                if(!tt.dependencies.length)
-                    loadutils.finish_task(t);
-            }
-        }
-    }
-};
-
-var chatutils = {
-    _tb : null,
-    _cb : null,
-    started : false,
-    handleMessage : function(message) {
-        if(chatutils._cb.childNodes.length > 10) {
-            chatutils._cb.removeChild(chatutils._cb.childNodes[0]);
-        }
-        var p = document.createElement("p");
-        if(message[0] == "/")
-            p.style.color = "#5d6";
-        p.innerHTML = message;
-        chatutils._cb.appendChild(p);
-    },
-    startChat : function() {
-        chatutils._tb.style.display = "block";
-        setTimeout(function() {chatutils._tb.focus();}, 15);
-        chatutils._tb.onkeydown = function(e) {
-            e.stopPropagation();
-            switch(e.keyCode) {
-                case 13:
-                    var m = chatutils._tb.value;
-                    if(m) {
-                        jgutils.comm.send("cha", m);
-                        chatutils.handleMessage(m);
-                    }
-                case 27:
-                    chatutils.stopChat();
-            }
-            return true;
-        };
-        chatutils.started = true;
-        document.getElementById("chatbox").style.bottom = "130px";
-        return false;
-    },
-    stopChat : function() {
-        chatutils.started = false;
-        chatutils._tb.value = "";
-        chatutils._tb.style.display = "none";
-        document.getElementById("chatbox").style.bottom = "100px";
-    }
-};
-
 var frameutils = {
     changed : function(type, data, ticks, start_tick) {
         if(type == "static")
@@ -1382,63 +851,6 @@ var frameutils = {
                     return jgassets[data.callback](ticks, data);
                 else
                     return data.callback(ticks);
-        }
-    }
-};
-
-var soundutils = {
-    loops : {},
-    sounds : {},
-    playing_loop : null,
-    loadLoop : function(name, url) {
-        if(name in soundutils.loops)
-            return;
-        soundutils.loops[name] = new buzz.sound(
-            url,
-            {formats: ["ogg", "mp3"],
-             preload: true,
-             autoload: true,
-             loop: true}
-        );
-    },
-    playLoop : function(name) {
-        if(soundutils.playing_loop == name)
-            return;
-
-        if(!soundutils.playing_loop) {
-            soundutils.loops[name].play().setVolume(0).fadeTo(10, 1000);
-            soundutils.playing_loop = name;
-            return;
-        }
-
-        soundutils.loops[soundutils.playing_loop].fadeOut(2000, function() {
-            soundutils.playing_loop = name;
-            // FIXME: Bad things might happen if playLoop is called again
-            // within four seconds of it being called once.
-            soundutils.loops[name].play().setVolume(0).fadeTo(20, 2000);
-        });
-    },
-    loadSound : function(name, url) {
-        soundutils.sounds[name] = new buzz.sound(
-            url,
-            {formats: ["ogg", "mp3"],
-             preload: true,
-             autoload: true,
-             loop: false}
-        );
-    },
-    playSound : function(name, distance) {
-        if(!(name in soundutils.sounds))
-            return;
-        if(distance > 25)
-            return;
-        var sound = soundutils.sounds[name];
-        var sc = sound.getStateCode();
-        if(sc >= 2) {
-            distance /= 2.5;
-            // TODO : Make this a constant somewhere.
-            sound.setVolume(100 - distance * distance);
-            sound.play();
         }
     }
 };
