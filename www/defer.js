@@ -1,5 +1,5 @@
 (function() {
-    
+
 this.Deferred = (function() {
 
     var slice = Array.prototype.slice.call;
@@ -83,7 +83,7 @@ this.Deferred = (function() {
         }
     }
 
-    return function(func) {return new defer(func)};
+    return function(func) {return new defer(func);};
 })();
 
 if (typeof define !== 'undefined' && define.amd) {

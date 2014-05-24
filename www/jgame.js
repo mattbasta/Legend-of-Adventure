@@ -12,22 +12,22 @@ String.prototype.explode = function(value, count) {
     return split;
 };
 
-var mozSmoothing = !(typeof $.browser.mozilla == "undefined");
+var mozSmoothing = 'mozilla' in $.browser.mozilla;
 
 var lockImages = false;
 function toggleImageLock() {
     lockImages = !lockImages;
     if(!lockImages && jgame.images_loaded == jgame.images_added)
-        loadutils.complete_task("images");
+        loadutils.complete_task('images');
 }
 function createImage(id, url) {
     if(jgame.images[id]) {
         // Refresh the tileset when requested, but not anything else.
-        if(id == "tileset" && url != jgame.images["tileset"].attributes[0].value)
+        if(id === 'tileset' && url != jgame.images.tileset.attributes[0].value)
             delete jgame.images[id];
         else {
-            if(jgame.images_loaded == jgame.images_added)
-                loadutils.complete_task("images");
+            if(jgame.images_loaded === jgame.images_added)
+                loadutils.complete_task('images');
             return;
         }
     }
@@ -36,7 +36,7 @@ function createImage(id, url) {
     i.onload = function() {
         jgame.images_loaded++;
         if(!lockImages && jgame.images_loaded == jgame.images_added)
-            loadutils.complete_task("images");
+            loadutils.complete_task('images');
     };
     i.src = url;
     jgame.images[id] = i;
@@ -50,8 +50,8 @@ function adjust_diagonal(direction) {
 var jgutils = {
     setup : function() {
 
-        chatutils._tb = document.getElementById("talkbar");
-        chatutils._cb = document.getElementById("chatbox");
+        chatutils._tb = document.getElementById('talkbar');
+        chatutils._cb = document.getElementById('chatbox');
 
         // Setup key handlers
         function keypress(e, set) {
@@ -91,13 +91,13 @@ var jgutils = {
                         jgutils.comm.send("dro", 0);
                     break;
                 default:
-                    var kb;
-                    if(kb = jgame.keys.bindings[e.keyCode]) {
+                    var kb = jgame.keys.bindings[e.keyCode];
+                    if(kb) {
                         if(typeof kb == 'function')
                             kb();
                         else
-                            for(var i=0, keys = jgame.keys.bindings[e.keyCode].length; i < keys; i++)
-                                return (jgame.keys.bindings[e.keyCode][i])(set);
+                            for(var i = 0, keys = jgame.keys.bindings[e.keyCode].length; i < keys; i++)
+                                return jgame.keys.bindings[e.keyCode][i](set);
                     }
             }
         }
@@ -117,35 +117,35 @@ var jgutils = {
                                jgutils.inventory._redraw();});
 
         // Setup the jgame instance
-        jgame["images"] = {};
-        jgame["images_added"] = 0;
-        jgame["images_loaded"] = 0;
-        jgame["level"] = {};
-        jgame["follow_avatar"] = "local";
-        jgame["keys"] = {
+        jgame.images = {};
+        jgame.images_added = 0;
+        jgame.images_loaded = 0;
+        jgame.level = {};
+        jgame.follow_avatar = "local";
+        jgame.keys = {
             up : false,
             down : false,
             left : false,
             right : false,
             bindings : {}
         };
-        jgame["offset"] = {
+        jgame.offset = {
             x : 0,
             y : 0,
             w : document.body.offsetWidth,
             h : document.body.offsetHeight
         };
-        jgame["location_id"] = "";
-        jgame["canvases"] = {
+        jgame.location_id = "";
+        jgame.canvases = {
             output: document.getElementById("output_full"),
             terrain: document.createElement("canvas"),
             objects: document.createElement("canvas"),
             avatars: document.createElement("canvas")
         };
 
-        jgame["show_fps"] = false;
-        jgame["show_epu"] = false;
-        jgame["filter_console"] = false;
+        jgame.show_fps = false;
+        jgame.show_epu = false;
+        jgame.filter_console = false;
 
         jgutils.avatars.register(
             "local",
@@ -181,20 +181,23 @@ var jgutils = {
     },
     hitmapping : {
         generate_x : function(map, x, y_orig) { // All hitmapes are assumed to be one tile space in size.
+
             var ts = jgame.tilesize,
-                x = x / ts | 0,
                 y = y_orig / ts | 0,
-                y2 = (y_orig - 1) / ts | 0 + 1;
+                y2 = ((y_orig - 1) / ts | 0) + 1;
+
+            x = x / ts | 0;
 
             var x_min = -1 * ts,
                 x_max = (map[y].length + 1) * ts;
-            for(var i = x - 1; i >= 0; i--) {
+            var i;
+            for(i = x - 1; i >= 0; i--) {
                 if(map[y][i] || map[y2][i]) {
                     x_min = (i + 1) * ts;
                     break;
                 }
             }
-            for(var i = x + 1, rowlen = map[y].length; i < rowlen; i++) {
+            for(i = x + 1, rowlen = map[y].length; i < rowlen; i++) {
                 if(map[y][i] || map[y2][i]) {
                     x_max = i * ts;
                     break;
@@ -206,17 +209,19 @@ var jgutils = {
         generate_y : function(map, x_orig, y) {
             var ts = jgame.tilesize,
                 x = (x_orig / ts) | 0,
-                x2 = (((x_orig - 1) / ts) | 0) + 1,
-                y = ((y / ts) - 1) | 0;
-            //console.log("RM Y: " + x + ", " + y);
+                x2 = (((x_orig - 1) / ts) | 0) + 1;
+
+            y = ((y / ts) - 1) | 0;
+
             var y_min = 0, y_max = map.length * jgame.tilesize;
-            for(var i = y; i >= 0; i--) {
+            var i;
+            for(i = y; i >= 0; i--) {
                 if(map[i][x] || map[i][x2]) {
                     y_min = (i + 2) * ts;
                     break;
                 }
             }
-            for(var i = y + 1, maplen = map.length; i < maplen; i++) {
+            for(i = y + 1, maplen = map.length; i < maplen; i++) {
                 if(map[i][x] || map[i][x2]) {
                     y_max = (i + 1) * ts;
                     break;
@@ -276,7 +281,8 @@ var jgutils = {
         redrawAvatars : function() {
             var dirty = false,
                 avatars = [];
-            for(var avatar in jgutils.avatars.registry) {
+            var avatar;
+            for(avatar in jgutils.avatars.registry) {
                 var a = jgutils.avatars.registry[avatar];
                 dirty = dirty || a.dirty;
                 avatars[avatars.length] = jgutils.avatars.registry[avatar];
@@ -290,7 +296,7 @@ var jgutils = {
             ctx.clearRect(jgame.offset.x, jgame.offset.y, jgame.offset.w, jgame.offset.h);
             jgutils.drawing.changed.avatars = true;
             for(var i = 0; i < avatars.length; i++) {
-                var avatar = avatars[i];
+                avatar = avatars[i];
                 ctx.drawImage(avatar.canvas, avatar.x - 7, avatar.y - jgame.avatar.h);
             }
         },
@@ -337,7 +343,7 @@ var jgutils = {
             // Get everything looking decent and positioned correctly
             jgutils.level.update();
             jgutils.inventory._redraw();
-            jgutils.objects.redrawLayers()
+            jgutils.objects.redrawLayers();
             jgutils.avatars.redrawAvatars();
 
             // Start everything back up
@@ -469,10 +475,11 @@ var jgutils = {
             var moveavatar_x = true,
                 moveavatar_y = true;
 
+            var temp;
+
             if(c_levelw * c_tilesize > c_offsetw) { // The scene isn't narrower than the canvas
 
                 var half_w = c_offsetw / 2;
-                var temp;
 
                 if(x < half_w)
                     jgame.offset.x = 0;
@@ -493,7 +500,6 @@ var jgutils = {
 
                 var half_h = c_offseth / 2,
                     level_h = c_levelh * c_tilesize;
-                var temp;
 
                 if(y < half_h)
                     jgame.offset.y = 0;
@@ -523,7 +529,7 @@ var jgutils = {
                 Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height)
             ];
 
-            jgutils.avatars.setAvatarOffset(n_x, n_y)
+            jgutils.avatars.setAvatarOffset(n_x, n_y);
         }
     },
     inventory : {
@@ -546,8 +552,8 @@ var jgutils = {
             jgutils.inventory.slots[slot] = null;
             jgutils.inventory._redraw();
         },
-        cycle_forward : function() {jgutils.comm.send("cyc", "f")},
-        cycle_back : function() {jgutils.comm.send("cyc", "b")},
+        cycle_forward : function() {jgutils.comm.send("cyc", "f");},
+        cycle_back : function() {jgutils.comm.send("cyc", "b");},
         set_health : function(health) {
             jgutils.inventory.health = health;
             jgutils.inventory._redraw();
@@ -562,14 +568,14 @@ var jgutils = {
         _redraw : function() {
             var inventory = document.getElementById("canvas_inventory"),
                 ctx = inventory.getContext("2d"),
-                ii = jgame.images["inventory"],
-                it = jgame.images["items"],
+                ii = jgame.images.inventory,
+                it = jgame.images.items,
                 sl = jgutils.inventory.slots,
                 h = jgutils.inventory.hovering,
                 s = jgutils.inventory.special,
                 sel = jgutils.inventory.selected;
             if(!ii)
-                return
+                return;
             if(mozSmoothing)
                 ctx.mozImageSmoothingEnabled = false;
             ctx.clearRect(0, 0, 374, 85);
@@ -580,16 +586,17 @@ var jgutils = {
                     sx = jgassets.weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
                     sy = jgassets.weapon_order.indexOf(attributes[0]) * 24;
                 } else {
-                    var c = parseInt(code.substr(1));
+                    var c = parseInt(code.substr(1), 10);
                     sx = c % 5 * 24;
                     sy = Math.floor(c / 5) * 24;
                 }
                 ctx.drawImage(it, sx, sy, 24, 24,
                               x, y, w, h);
             }
+            var sx;
             for(var i = 0; i < 5; i++) {
-                if(i == 0) {
-                    var sx = 0;
+                if(!i) {
+                    sx = 0;
                     if(h == i)
                         sx = sel ? 240 : 160;
                     else if(s == i)
@@ -599,7 +606,7 @@ var jgutils = {
                     if(sl[i])
                         draw_item(10, 10, 60, 60, sl[i]);
                 } else {
-                    var sx = 0;
+                    sx = 0;
                     if(h == i)
                         sx = sel ? 192 : 128;
                     else if(s == i)
@@ -675,15 +682,17 @@ var jgutils = {
                 if(!jgame.filter_console || message.data.indexOf(jgame.filter_console) > -1)
                     console.log("Server message: [" + message.data + "]");
             body = message.data.substr(3);
+            var data;
+            var i;
             switch(message.data.substr(0, 3)) {
                 case "add": // Add avatar
-                    var data = body.split(":");
+                    data = body.split(":");
                     jgutils.avatars.register(
                         data[0],
                         {image: "avatar",
                          facing: "down",
                          direction: [0, 0],
-                         sprite: jgutils.avatars.registry["local"].sprite,
+                         sprite: jgutils.avatars.registry.local.sprite,
                          dirty: true,
                          x: data[1] * 1,
                          y: data[2] * 1},
@@ -692,10 +701,11 @@ var jgutils = {
                     jgutils.avatars.draw(data[0]);
                     break;
                 case "del": // Remove avatar
-                    jgutils.avatars.unregister(body) || jgutils.objects.remove(body);
+                    if (!jgutils.avatars.unregister(body))
+                        jgutils.objects.remove(body);
                     break;
                 case "snd": // Play sound
-                    var data = body.split(":"),
+                    data = body.split(":"),
                         s_x = parseFloat(data[1]),
                         s_y = parseFloat(data[2]);
                     var follow_av = jgutils.avatars.registry[jgame.follow_avatar],
@@ -704,23 +714,24 @@ var jgutils = {
                     soundutils.playSound(data[0], dist);
                     break;
                 case "loc": // Change avatar position and direction
-                    var data = body.split(":");
+                    data = body.split(":");
                     var av = jgutils.avatars.registry[data[0]];
-                    av.x = parseInt(data[1]);
-                    av.y = parseInt(data[2]);
+                    av.x = parseInt(data[1], 10);
+                    av.y = parseInt(data[2], 10);
                     var new_direction = [data[3] * 1, data[4] * 1];
                     if(jgame.follow_avatar == data[0])
                         jgutils.level.setCenterPosition(true);
 
-                    if((new_direction[0] == 0 && new_direction[1] == 0) && (av.direction[0] || av.direction[1])) {
-                        var sp_dir = jgutils.avatars.get_avatar_sprite_direction(av.direction);
+                    var sp_dir;
+                    if(!new_direction[0] && !new_direction[1] && (av.direction[0] || av.direction[1])) {
+                        sp_dir = jgutils.avatars.get_avatar_sprite_direction(av.direction);
                         av.dirty = true;
                         av.position = sp_dir[0].position;
                         av.cycle_position = 0;
                         av.sprite_cycle = 0;
                     } else if(new_direction != av.direction) {
                         av.dirty = true;
-                        var sp_dir = jgutils.avatars.get_avatar_sprite_direction(new_direction);
+                        sp_dir = jgutils.avatars.get_avatar_sprite_direction(new_direction);
                         av.position = sp_dir[1].position;
                         av.cycle_position = 0;
                         av.sprite_cycle = 0;
@@ -730,34 +741,34 @@ var jgutils = {
                     jgutils.avatars.redrawAvatars();
                     break;
                 case "cha": // Chat message
-                    var data = body.split("\n"),
+                    data = body.split("\n"),
                         metadata = data[0].split(":");
                     chatutils.handleMessage(data[1]);
                     break;
                 case "spa": // Spawn object
-                    var data = body.split("\n");
+                    data = body.split("\n");
                     if(data[0] in jgutils.objects.registry)
                         break;
                     var jdata = JSON.parse(data[1]);
                     jgutils.objects.create(
                         data[0],
                         jdata,
-                        jdata["layer"]
+                        jdata.layer
                     );
                     break;
                 case "flv":
                     jgutils.level.expect(body);
                     break;
                 case "lev":
-                    jgutils.comm._level_callback(JSON.parse(body))
+                    jgutils.comm._level_callback(JSON.parse(body));
                     break;
                 case "epu":
+                    data = body[1].split("\n");
                     var body = body.explode(":", 1),
-                        data = body[1].split("\n"),
                         entity = jgutils.objects.registry[body[0]];
                     if(!entity)
                         break;
-                    for(var i = 0; i < data.length; i++) {
+                    for(i = 0; i < data.length; i++) {
                         var line = data[i].explode("=", 2),
                             key = line[0],
                             value = JSON.parse(line[1]);
@@ -768,16 +779,15 @@ var jgutils = {
                     }
                     break;
                 case "hea":
-                    var h = parseInt(body);
-                    jgutils.inventory.set_health(h);
+                    jgutils.inventory.set_health(parseInt(body, 10));
                     break;
                 case "inv":
-                    var data = body.split("\n");
-                    for(var i = 0; i < data.length; i++) {
+                    data = body.split("\n");
+                    for(i = 0; i < data.length; i++) {
                         // position:item_code
                         var lined = data[i].split(":");
-                        lined[0] = parseInt(lined[0]);
-                        if(lined[1] == "")
+                        lined[0] = parseInt(lined[0], 10);
+                        if(!lined[1])
                             jgutils.inventory.clear(lined[0]);
                         else
                             jgutils.inventory.set(lined[0], lined[1]);
@@ -796,7 +806,7 @@ var jgutils = {
                     callback(data);
                     jgutils.comm._level_callback = null;
                 };
-                jgutils.comm.local_id = guid()
+                jgutils.comm.local_id = guid();
                 jgutils.comm.send("lev", position);
                 loadutils.complete_task("comm");
             };
@@ -831,16 +841,18 @@ var jgutils = {
         redrawLayers : function() {
             var layers = jgutils.objects.layers,
                 updated = false;
+            var sortFunc = function(a, b) {
+                return jgutils.objects.registry[a].y - jgutils.objects.registry[b].y;
+            };
+            var layer;
             for(var l in layers) {
-                var layer = layers[l];
+                layer = layers[l];
                 if(l > 2 || layer.updated) {
                     updated = true;
                     var context = layer.obj.getContext('2d');
                     context.clearRect(0, 0, layer.obj.width, layer.obj.height);
 
-                    var sorted_cos = Object.keys(layer.child_objects).sort(function(a, b) {
-                        return jgutils.objects.registry[a].y - jgutils.objects.registry[b].y;
-                    });
+                    var sorted_cos = Object.keys(layer.child_objects).sort(sortFunc);
                     for(var co = 0; co < sorted_cos.length; co++) {
                         var child = layer.child_objects[sorted_cos[co]],
                             li = child.last_view;
@@ -850,7 +862,7 @@ var jgutils = {
                             base_x = child.x + child.offset.x,
                             base_y = child.y + child.offset.y;
                         if(!(ii in jgame.images))
-                            continue
+                            continue;
 
                         if("movement" in child && child.movement) {
                             var movement_offset = frameutils.get(child.movement.type, child.movement,
@@ -880,7 +892,7 @@ var jgutils = {
             c.clearRect(0, 0, layer_canvas.width, layer_canvas.height);
             jgutils.drawing.changed.objects = true;
             for(var layer_id in layers) {
-                var layer = layers[layer_id].obj;
+                layer = layers[layer_id].obj;
                 c.drawImage(layer, 0, 0);
             }
         },
@@ -890,13 +902,13 @@ var jgutils = {
                 lay = jgutils.objects.createLayer(layer);
             else
                 lay = jgutils.objects.layers[layer];
-            proto["updated"] = true;
-            proto["movement_prerender"] = [];
-            proto["registry_layer"] = layer;
+            proto.updated = true;
+            proto.movement_prerender = [];
+            proto.registry_layer = layer;
             proto.x *= jgame.tilesize;
             proto.y *= jgame.tilesize;
-            proto["start_x"] = proto.x;
-            proto["start_y"] = proto.y;
+            proto.start_x = proto.x;
+            proto.start_y = proto.y;
             lay.child_objects[id] = proto;
             lay.updated = true;
 
@@ -1013,7 +1025,7 @@ var jgutils = {
         redrawBackground : function() {
             var output = jgame.canvases.terrain,
                 c_tilesize = jgame.tilesize,
-                c_tileset = jgame.images["tileset"];
+                c_tileset = jgame.images.tileset;
 
             if(!c_tileset)
                 return;
@@ -1037,7 +1049,7 @@ var jgutils = {
                                 sprite_x, sprite_y,
                                 c_tile_w, c_tile_w,
                                 xx, yy,
-                                c_tilesize, c_tilesize)
+                                c_tilesize, c_tilesize);
                     //c.fillText(x + "," + y, xx, yy);
                     xx += c_tilesize;
                 }
@@ -1075,7 +1087,7 @@ var jgutils = {
             var ticks = (new Date()).getTime(),
                 timing = jgutils.timing,
                 objects = jgutils.objects;
-            if(timing.last == 0) {
+            if(!timing.last) {
                 timing.last = ticks;
                 return;
             }
@@ -1087,19 +1099,19 @@ var jgutils = {
                 _y = 0,
                 _val = jgame.speed * ms,
                 keys = jgame.keys;
-            if(keys.left == true)
+            if(keys.left)
                 _x = -1;
-            else if(keys.right == true)
+            else if(keys.right)
                 _x = 1;
-            if(keys.up == true)
+            if(keys.up)
                 _y = -1;
-            else if(keys.down == true)
+            else if(keys.down)
                 _y = 1;
 
             // This needs to be crafted before the diagonal magic happens.
             var direction = [_x, _y];
 
-            var avatar = jgutils.avatars.registry["local"],
+            var avatar = jgutils.avatars.registry.local,
                 do_setcenter = false;
             function update_location() {
                 jgutils.comm.send("loc", (avatar.x|0) + ":" + (avatar.y|0) + ":" + direction[0] + ":" + direction[1]);
@@ -1152,16 +1164,16 @@ var jgutils = {
                 var adjusted_x = avatar.x + adjusted_increment_x,
                     adjusted_y = avatar.y + adjusted_increment_y;
 
-                function update_y_hitmap() {
+                var update_y_hitmap = function() {
                     var y_hitmap = jgutils.hitmapping.generate_y(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
                     avatar.hitmap[0] = y_hitmap[0];
                     avatar.hitmap[2] = y_hitmap[1] + 15;
-                }
-                function update_x_hitmap() {
+                };
+                var update_x_hitmap = function() {
                     var x_hitmap = jgutils.hitmapping.generate_x(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
                     avatar.hitmap[1] = x_hitmap[1] + 7.5;
                     avatar.hitmap[3] = x_hitmap[0] - 7.5;
-                }
+                };
 
                 // Update the location of the avatar.
                 avatar.x = adjusted_x;
@@ -1172,7 +1184,7 @@ var jgutils = {
                 if(_y)
                     update_x_hitmap();
 
-                var sprite_direction = jgutils.avatars.get_avatar_sprite_direction(direction)
+                var sprite_direction = jgutils.avatars.get_avatar_sprite_direction(direction);
                 if(direction[0] != avatar.direction[0] || direction[1] != avatar.direction[1]) {
                     avatar.dirty = true;
                     avatar.direction = direction;
@@ -1181,16 +1193,16 @@ var jgutils = {
                     avatar.sprite_cycle = 0;
                     jgutils.avatars.draw("local");
                     do_redraw_avs = true;
-                    update_location()
+                    update_location();
                 }
                 do_setcenter = true;
 
                 // Handle what happens when the user moves to a new region
-                function begin_swap_region(x, y, avx, avy) {
+                var begin_swap_region = function(x, y, avx, avy) {
                     avx = Math.floor(avx);
                     avy = Math.floor(avy);
                     jgutils.level.load(x, y, avx, avy);
-                }
+                };
                 if(jgame.level.can_slide) {
                     if(_y < 0 && avatar.y < jgame.tilesize / 2)
                         begin_swap_region(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y);
@@ -1240,8 +1252,7 @@ var jgutils = {
                 jgutils.avatars.redrawAvatars();
 
             // Update Objects
-            var objects = jgutils.objects,
-                object_registry = jgutils.objects.registry;
+            var object_registry = objects.registry;
             for(var objid in jgutils.objects.registry) {
                 var obj = object_registry[objid];
 
@@ -1279,14 +1290,15 @@ var loadutils = {
         delete loadutils.active_dependencies[task];
     },
     complete_task : function(task) {
-        console.log("Completed task: " + task)
+        console.log("Completed task: " + task);
         if(task in loadutils.active_dependencies) {
             loadutils.finish_task(task);
         } else {
-            for(t in loadutils.active_dependencies) {
+            var filterFunc = function(x) {return x !== task;};
+            for(var t in loadutils.active_dependencies) {
                 var tt = loadutils.active_dependencies[t];
                 if(tt.dependencies.indexOf(task) > -1)
-                    tt.dependencies = tt.dependencies.filter(function(x) {return x != task;});
+                    tt.dependencies = tt.dependencies.filter(filterFunc);
                 if(!tt.dependencies.length)
                     loadutils.finish_task(t);
             }
@@ -1344,8 +1356,8 @@ var frameutils = {
         ticks -= start_ticks;
         switch(type) {
             case "sequence":
-                var seconds = "positions" in data ? data["positions"] : 10,
-                    duration = "duration" in data ? data["duration"] : 1,
+                var seconds = "positions" in data ? data.positions : 10,
+                    duration = "duration" in data ? data.duration : 1,
                     otick = Math.floor(ticks / duration) % seconds;
                 var old = Math.floor((ticks - 1) / duration) % seconds,
                     new_ = Math.floor(ticks / duration) % seconds;
@@ -1362,11 +1374,11 @@ var frameutils = {
             case "static":
                 return data;
             case "sequence":
-                var duration = "duration" in data ? data["duration"] : 1,
+                var duration = "duration" in data ? data.duration : 1,
                     otick = Math.floor(ticks / duration) % data.sequence.length;
                 return data.sequence[otick];
             case "callback":
-                if((typeof data.callback) == "string")
+                if (typeof data.callback == "string")
                     return jgassets[data.callback](ticks, data);
                 else
                     return data.callback(ticks);
