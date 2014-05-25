@@ -5,7 +5,7 @@ import (
     "math/rand"
 )
 
-var PERIOD = 512
+var PERIOD = 2014
 
 var _F2 = 0.5 * (math.Sqrt(3.0) - 1.0)
 var _G2 = (3.0 - math.Sqrt(3.0)) / 6.0

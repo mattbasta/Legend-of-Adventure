@@ -1,6 +1,6 @@
 define('timing',
-    ['comm', 'drawing', 'game', 'hitmapping', 'keys', 'settings'],
-    function(comm, drawing, game, hitmapping, keys, settings) {
+    ['avatars', 'comm', 'drawing', 'game', 'hitmapping', 'keys', 'settings'],
+    function(avatars, comm, drawing, game, hitmapping, keys, settings) {
 
     var registers = {};
     var timer;
@@ -25,7 +25,7 @@ define('timing',
         if(keys.upArrow) _y = -1;
         else if(keys.downArrow) _y = 1;
 
-        var avatar = jgutils.avatars.registry.local;
+        var avatar = avatars.getLocal();
         var doSetCenter = false;
 
         function updateLocation() {
@@ -93,7 +93,7 @@ define('timing',
             if (_x) update_y_hitmap();
             if (_y) update_x_hitmap();
 
-            var spriteDirection = jgutils.avatars.get_avatar_sprite_direction(_x, _y);
+            var spriteDirection = avatars.getSpriteDirection(_x, _y);
             if(_x != avatar.direction[0] || _y != avatar.direction[1]) {
                 avatar.dirty = true;
                 avatar.direction[0] = _x;
@@ -101,7 +101,7 @@ define('timing',
                 avatar.position = spriteDirection[1].position;
                 avatar.cycle_position = 0;
                 avatar.sprite_cycle = 0;
-                jgutils.avatars.draw("local");
+                avatars.draw('local');
                 doRedrawAVS = true;
                 updateLocation();
             }
@@ -123,13 +123,14 @@ define('timing',
                     begin_swap_region(jgame.level.x - 1, jgame.level.y, avatar.x, avatar.y);
                 else if(_x > 0 && avatar.x >= (jgame.level.w - 1) * settings.tilesize)
                     begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
+
             } else if (_x || _y) {
-                avatar.position = jgutils.avatars.get_avatar_sprite_direction(_x, _y)[0].position;
+                avatar.position = avatars.getSpriteDirection(_x, _y)[0].position;
                 avatar.direction[0] = 0;
                 avatar.direction[1] = 0;
                 avatar.cycle_position = 0;
                 avatar.dirty = true;
-                jgutils.avatars.draw('local');
+                avatars.draw('local');
                 doRedrawAVS = true;
                 updateLocation();
             }
@@ -138,8 +139,9 @@ define('timing',
             var a;
             var a_x;
             var a_y;
-            for (var av in jgutils.avatars.registry) {
-                var a = jgutils.avatars.registry[av];
+            var avatarRegistry = avatars.getRegistry()
+            for (var av in avatarRegistry) {
+                var a = avatarRegistry[av];
                 var a_x = a.direction[0];
                 var a_y = a.direction[1];
                 if (!a_x && !a_y) continue;
@@ -153,20 +155,20 @@ define('timing',
                     a.y += a_y * speed;
                 }
 
-                spriteDirection = jgutils.avatars.get_avatar_sprite_direction(a.direction);
+                spriteDirection = avatars.getSpriteDirection(a.direction);
                 // TODO: Should this reference `a` instead of `avatar`?
                 if (a.sprite_cycle++ === spriteDirection[avatar.cycle_position].duration) {
                     a.dirty = true;
                     a.sprite_cycle = 0;
                     a.cycle_position = a.cycle_position + 1 === 3 ? 1 : 2;
                     a.position = spriteDirection[a.cycle_position].position;
-                    jgutils.avatars.draw(av);
+                    avatars.draw(av);
                 }
                 doRedrawAVS = true;
             }
 
             if (doSetCenter) jgutils.level.setCenterPosition();
-            if (doRedrawAVS) jgutils.avatars.redrawAvatars();
+            if (doRedrawAVS) avatars.redrawAvatars();
 
             var modSec;
             var modDur;

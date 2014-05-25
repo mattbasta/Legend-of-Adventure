@@ -38,7 +38,7 @@ var jgutils = {
         jgame.show_epu = false;
         jgame.filter_console = false;
 
-        jgutils.avatars.register(
+        require('avatars').register(
             "local",
             {
                 image: "avatar",
@@ -68,91 +68,6 @@ var jgutils = {
             callback(true);
         }
     },
-    avatars : {
-        avatar_offsets : {x: 0, y: 0},
-        registry : {},
-        draw_order : [],
-        register : function(id, properties, nodraw) {
-            if(!properties.dirty)
-                properties.dirty = true;
-            if(!properties.position)
-                properties.position = jgame.avatar.sprite.down[0].position;
-            if(!properties.hitmap)
-                properties.hitmap = [0, Infinity, Infinity, 0];
-            jgutils.avatars.registry[id] = properties;
-
-            properties.hidden = false;
-            properties.canvas = document.createElement("canvas");
-            if(!("direction" in properties))
-                properties.direction = [0, 1];
-            properties.cycle_position = 0;
-            properties.sprite_cycle = 0;
-
-            if(!nodraw)
-                jgutils.avatars.redrawAvatars();
-
-        },
-        unregister : function(id) {
-            if(!(id in jgutils.avatars.registry))
-                return false;
-            delete jgutils.avatars.registry[id];
-        },
-        draw : function(id) {
-            function _draw(avatar) {
-                var av = jgutils.avatars.registry[avatar];
-                if(!av.dirty) return;
-                var context = av.canvas.getContext('2d');
-                require('images').waitFor(av.image).done(function(sprite) {
-                    context.clearRect(0, 0, jgame.avatar.w, jgame.avatar.h);
-                    context.drawImage(sprite,
-                                      (av.position % 3) * 32, ((av.position / 3) | 0) * 32,
-                                      32, 32, 0, 0,
-                                      jgame.avatar.w, jgame.avatar.h);
-                });
-            }
-            if(typeof id != "undefined")
-                return _draw(id);
-        },
-        redrawAvatars : function() {
-            var dirty = false,
-                avatars = [];
-            var avatar;
-            for(avatar in jgutils.avatars.registry) {
-                var a = jgutils.avatars.registry[avatar];
-                dirty = dirty || a.dirty;
-                avatars[avatars.length] = jgutils.avatars.registry[avatar];
-            }
-            if(!dirty)
-                return;
-
-            var avatar_canvas = jgame.canvases.avatars,
-                ctx = avatar_canvas.getContext("2d");
-            avatars = avatars.sort(function(a, b) {return a.y - b.y;});
-            ctx.clearRect(jgame.offset.x, jgame.offset.y, jgame.offset.w, jgame.offset.h);
-            require('drawing').setChanged('avatars');
-            for(var i = 0; i < avatars.length; i++) {
-                avatar = avatars[i];
-                ctx.drawImage(avatar.canvas, avatar.x - 7, avatar.y - jgame.avatar.h);
-            }
-        },
-        get_avatar_sprite_direction : function(x, y) {
-            if(x < 0)
-                return jgame.avatar.sprite.left;
-            else if(x > 0)
-                return jgame.avatar.sprite.right;
-            else if(y < 0)
-                return jgame.avatar.sprite.up;
-            else
-                return jgame.avatar.sprite.down;
-        },
-        setTilePosition : function(id, x, y, resize) {
-            var avatar = jgutils.avatars.registry[id];
-            avatar.x = x * jgame.tilesize;
-            avatar.y = y * jgame.tilesize;
-            jgutils.level.setCenterPosition(resize);
-        },
-        setAvatarOffset : function(x, y) {jgutils.avatars.avatar_offsets = {x: x, y: y};}
-    },
     level : {
         init : function() {
             jgutils.level.update(); // Update game constants and canvas sizes
@@ -160,7 +75,7 @@ var jgutils = {
             require('defer').when(
                 require('playerStatsOverlay').redraw(), // Redraw the player stats menu
                 jgutils.objects.redrawLayers(), // Redraw objects on the screen
-                jgutils.avatars.redrawAvatars(), // Redraw avatars on the screen
+                require('avatars').redrawAvatars(), // Redraw avatars on the screen
                 require('drawing').redrawBackground() // Redraw terrain
             ).done(function() {
                 // Start everything back up
@@ -186,9 +101,7 @@ var jgutils = {
             require('timing').stop();
             require('chat').stopChat();
 
-            for (var av in jgutils.avatars.registry)
-                if(av != "local")
-                    jgutils.avatars.unregister(av);
+            require('avatars').unregisterAll();
             if (jgame.follow_avatar != "local")
                 jgame.follow_avatar = "local";
         },
@@ -202,7 +115,7 @@ var jgutils = {
                 layer.updated = true;
             }
 
-            var avatar = jgutils.avatars.registry.local;
+            var avatar = require('avatars').getLocal();
             avatar.x = jgame.level.w / 2 * jgame.tilesize;
             avatar.y = jgame.level.h / 2 * jgame.tilesize;
             console.log(avatar);
@@ -246,7 +159,7 @@ var jgutils = {
         },
         // Centers the screen around an avatar
         setCenterPosition : function(resize) {
-            var avatar = jgutils.avatars.registry[jgame.follow_avatar];
+            var avatar = require('avatars').getFollowing();
             var x = avatar.x,
                 y = avatar.y;
 
@@ -316,8 +229,6 @@ var jgutils = {
                 Math.max(n_x, 0), Math.max(n_y, 0),
                 Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height)
             );
-
-            jgutils.avatars.setAvatarOffset(n_x, n_y);
         }
     },
     objects : {
