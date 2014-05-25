@@ -49,9 +49,9 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
         changed.terrain = true;
     }
 
-    function draw() {
+    function draw(forced) {
         var output = game.canvases.output.getContext("2d");
-        if(state && (changed.terrain || changed.objects || changed.avatars)) {
+        if(state && (changed.terrain || changed.objects || changed.avatars) || forced === true) {
             for(var i = 0; i < order.length; i++) {
                 output.drawImage(
                     game.canvases[order[i]],
@@ -87,6 +87,8 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
         redrawBackground: function() {  // TODO: Rename to something more apt
             var output = game.canvases.terrain;
             var c = output.getContext("2d");
+            c.imageSmoothingEnabled = false;
+            c.webkitImageSmoothingEnabled = false;
             c.mozImageSmoothingEnabled = false;
 
             images.waitFor(game.level.tileset).done(function(tileset) {
@@ -113,7 +115,9 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
                 changed.terrain = true;
             });
         },
-        forceRedraw: draw,
+        forceRedraw: function() {
+            draw(true);
+        },
         setChanged: function(element) {
             if (!(element in changed)) return;
             changed[element] = true;
