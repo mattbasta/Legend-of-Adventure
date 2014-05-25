@@ -271,8 +271,12 @@ var jgutils = {
                             base_y = child.y + child.offset.y;
 
                         if("movement" in child && child.movement) {
-                            var movement_offset = frameutils.get(child.movement.type, child.movement,
-                                                                 require('timing').getLastTick() % 3000, 0);
+                            var movement_offset = require('frames').get(
+                                child.movement.type,
+                                child.movement,
+                                require('timing').getLastTick() % 3000,
+                                0
+                            );
                             base_x += movement_offset[0];
                             base_y += movement_offset[1];
                         }
@@ -338,10 +342,12 @@ var jgutils = {
             if(typeof proto.view == "string")
                 proto.view = jgassets[proto.view];
 
-            var new_view = frameutils.get(proto.view.type,
-                                           proto.view,
-                                           otick,
-                                           0); // TODO : Set this to something useful.
+            var new_view = require('frames').get(
+                proto.view.type,
+                proto.view,
+                otick,
+                0 // TODO : Set this to something useful.
+            );
             if(new_view != proto.last_view) {
                 updated = true;
                 proto.last_view = new_view;
@@ -365,43 +371,6 @@ var jgutils = {
             delete jgutils.objects.layers[proto.registry_layer].child_objects[id];
             jgutils.objects.layers[proto.registry_layer].updated = true;
             jgutils.objects.redrawLayers();
-        }
-    }
-};
-
-var frameutils = {
-    changed : function(type, data, ticks, start_tick) {
-        if(type == "static")
-            return false;
-        ticks -= start_ticks;
-        switch(type) {
-            case "sequence":
-                var seconds = "positions" in data ? data.positions : 10,
-                    duration = "duration" in data ? data.duration : 1,
-                    otick = Math.floor(ticks / duration) % seconds;
-                var old = Math.floor((ticks - 1) / duration) % seconds,
-                    new_ = Math.floor(ticks / duration) % seconds;
-                return old != new_;
-            case "callback":
-                // TODO: Once this starts getting used, a smarter means of providing
-                // updates should be devised.
-                return true;
-        }
-    },
-    get : function(type, data, ticks, start_ticks) {
-        ticks -= start_ticks;
-        switch(type) {
-            case "static":
-                return data;
-            case "sequence":
-                var duration = "duration" in data ? data.duration : 1,
-                    otick = Math.floor(ticks / duration) % data.sequence.length;
-                return data.sequence[otick];
-            case "callback":
-                if (typeof data.callback == "string")
-                    return jgassets[data.callback](ticks, data);
-                else
-                    return data.callback(ticks);
         }
     }
 };
