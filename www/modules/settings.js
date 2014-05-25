@@ -7,6 +7,7 @@ define('settings', [], function() {
         tilesize: 50,
 
         show_epu: false,
+        show_fps: false,
 
         set: function(settings) {
             for (var setting in settings) {

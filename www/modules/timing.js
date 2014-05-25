@@ -1,6 +1,6 @@
 define('timing',
-    ['comm', 'game', 'hitmapping', 'keys', 'settings'],
-    function(comm, game, hitmapping, keys, settings) {
+    ['comm', 'drawing', 'game', 'hitmapping', 'keys', 'settings'],
+    function(comm, drawing, game, hitmapping, keys, settings) {
 
     var registers = {};
     var timer;
@@ -194,7 +194,7 @@ define('timing',
         start: function() {
             if (timer) return;
             tick();
-            jgutils.drawing.start();
+            drawing.start();
             timer = setInterval(tick, settings.fps);
         },
         stop: function() {
@@ -202,7 +202,7 @@ define('timing',
             clearInterval(timer);
             timer = null;
             last = 0;
-            jgutils.drawing.stop();
+            drawing.stop();
         },
         getLastTick: function() {
             return last || Date.now();

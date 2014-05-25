@@ -87,9 +87,7 @@ var jgutils = {
             // Update the scene to make sure everything is onscreen.
             jgutils.level.update();
             jgutils.level.setCenterPosition(true);
-            if(jgutils.drawing._drawing) {
-                jgutils.drawing.callback(true); // Force a re-render
-            }
+            require('drawing').forceRedraw();
         });
     },
     user : {
@@ -163,7 +161,7 @@ var jgutils = {
                 ctx = avatar_canvas.getContext("2d");
             avatars = avatars.sort(function(a, b) {return a.y - b.y;});
             ctx.clearRect(jgame.offset.x, jgame.offset.y, jgame.offset.w, jgame.offset.h);
-            jgutils.drawing.changed.avatars = true;
+            require('drawing').setChanged('avatars');
             for(var i = 0; i < avatars.length; i++) {
                 avatar = avatars[i];
                 ctx.drawImage(avatar.canvas, avatar.x - 7, avatar.y - jgame.avatar.h);
@@ -201,7 +199,6 @@ var jgutils = {
             jgutils.avatars.redrawAvatars();
 
             // Start everything back up
-            jgutils.drawing.init();
             jgutils.level.setCenterPosition(true);
 
             require('timing').start();
@@ -243,10 +240,8 @@ var jgutils = {
             }
 
             var avatar = jgutils.avatars.registry.local;
-            // avatar.x = data.avatar.x * jgame.tilesize;
-            // avatar.y = data.avatar.y * jgame.tilesize;
-            avatar.x = jgame.level.w / 2;
-            avatar.y = jgame.level.h / 2;
+            avatar.x = jgame.level.w / 2 * jgame.tilesize;
+            avatar.y = jgame.level.h / 2 * jgame.tilesize;
             console.log(avatar);
             if(data.hitmap) {
                 var x_map = require('hitmapping').generate_x(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize),
@@ -277,7 +272,7 @@ var jgutils = {
                     layer.obj.height = level_h;
                     layer.obj.width = level_w;
                 }
-                //jgutils.drawing.redrawBackground();
+                //require('drawing').redrawBackground();
             }
             output_buffer.height = jgame.offset.h;
             output_buffer.width = jgame.offset.w;
@@ -355,12 +350,12 @@ var jgutils = {
             var output = jgame.canvases.output,
                 terrain = jgame.canvases.terrain;
 
-            jgutils.drawing.state = [
+            require('drawing').setState(
                 Math.max(jgame.offset.x, 0), Math.max(jgame.offset.y, 0),
                 Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height),
                 Math.max(n_x, 0), Math.max(n_y, 0),
                 Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height)
-            ];
+            );
 
             jgutils.avatars.setAvatarOffset(n_x, n_y);
         }
@@ -432,7 +427,7 @@ var jgutils = {
             var layer_canvas = jgame.canvases.objects,
                 c = layer_canvas.getContext("2d");
             c.clearRect(0, 0, layer_canvas.width, layer_canvas.height);
-            jgutils.drawing.changed.objects = true;
+            require('drawing').setChanged('objects');
             for(var layer_id in layers) {
                 layer = layers[layer_id].obj;
                 c.drawImage(layer, 0, 0);
@@ -506,97 +501,6 @@ var jgutils = {
             delete jgutils.objects.layers[proto.registry_layer].child_objects[id];
             jgutils.objects.layers[proto.registry_layer].updated = true;
             jgutils.objects.redrawLayers();
-        }
-    },
-    drawing : {
-        _drawing : false,
-        init : function() {jgutils.drawing.redrawBackground();},
-        forceRecenter : function() {jgutils.level.setCenterPosition(true);},
-        order : ["terrain", "objects", "avatars"],
-        state : null,
-        last_draw : 0,
-        changed : {
-            terrain: false,
-            objects: false,
-            avatars: false
-        },
-        callback : null,
-        start : function() {
-            jgutils.drawing._drawing = true;
-            var reqAnimFrame;
-            if("requestAnimationFrame" in window)
-                reqAnimFrame = window.requestAnimationFrame;
-            else if("mozRequestAnimationFrame" in window)
-                reqAnimFrame = window.mozRequestAnimationFrame;
-            else if("webkitRequestAnimationFrame" in window)
-                reqAnimFrame = window.webkitRequestAnimationFrame;
-            else if("oRequestAnimationFrame" in window)
-                reqAnimFrame = window.oRequestAnimationFrame;
-            else
-                reqAnimFrame = function(callback) {setTimeout(1000 / 30, callback);};
-
-            var draw_callback = function(forced, foo) {
-                var now = (new Date()).getTime(),
-                    draw_order = jgutils.drawing.order,
-                    output = jgame.canvases.output.getContext("2d"),
-                    state = jgutils.drawing.state,
-                    changed = jgutils.drawing.changed;
-                if(state && (changed.terrain || changed.objects || changed.avatars)) {
-                    for(var i = 0; i < draw_order.length; i++) {
-                        output.drawImage(
-                            jgame.canvases[draw_order[i]],
-                            state[0], state[1], state[2], state[3],
-                            state[4], state[5], state[6], state[7]
-                        );
-                        changed[draw_order[i]] = false;
-                    }
-                }
-                if(jgame.show_fps)
-                    output.fillText((1000 / (now - jgutils.drawing.last_draw)) | 0 + "", 0, 20);
-                jgutils.drawing.last_draw = now;
-                if(jgutils.drawing._drawing && typeof forced == "number")
-                    reqAnimFrame(draw_callback);
-            };
-            jgutils.drawing.callback = draw_callback;
-            reqAnimFrame(draw_callback);
-        },
-        stop : function() {
-            jgutils.drawing._drawing = false;
-            jgutils.drawing.callback = null;
-        },
-        redrawBackground : function() {
-            var output = jgame.canvases.terrain,
-                c_tilesize = jgame.tilesize,
-                c_tileset = jgame.images.tileset;
-
-            if(!c_tileset)
-                return;
-            var c = output.getContext("2d"),
-                c_levlev = jgame.level.level,
-                c_tiles_w = 5,
-                c_tile_w = c_tileset.width / c_tiles_w;
-
-            c.mozImageSmoothingEnabled = false;
-
-            var yy = 0;
-            for(var y = 0; y < jgame.level.h; y++) {
-                var xx = 0;
-                for(var x = 0; x < jgame.level.w; x++) {
-
-                    var sprite_y = Math.floor(c_levlev[y][x] / c_tiles_w) * c_tile_w,
-                        sprite_x = (c_levlev[y][x] % c_tiles_w) * c_tile_w;
-
-                    c.drawImage(c_tileset,
-                                sprite_x, sprite_y,
-                                c_tile_w, c_tile_w,
-                                xx, yy,
-                                c_tilesize, c_tilesize);
-                    //c.fillText(x + "," + y, xx, yy);
-                    xx += c_tilesize;
-                }
-                yy += c_tilesize;
-            }
-            jgutils.drawing.changed.terrain = true;
         }
     }
 };
