@@ -9,9 +9,16 @@
     font-weight: 400;
     src: local('VT323'), local('VT323-Regular'), url(http://themes.googleusercontent.com/static/fonts/vt323/v5/SSPdB6sO_7a9ZMMiCroIGqCWcynf_cDxXwCLxiixG1c.woff) format('woff');
 }
-html,body {height:100%;}
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+html, body {
+    height:100%;
+}
 body {
-    background:#222 url(/static/images/ajax-loader.gif) no-repeat center center;
+    background: #222 url(/static/images/ajax-loader.gif) no-repeat center center;
     overflow: hidden;
 }
 #bg_tile_wrap,
@@ -147,30 +154,7 @@ window.jgame = {
     sounds: {
         "bleat": "static/sounds/bleat",
         "zombie_groan": "static/sounds/zombie_groan",
-        "zombie_attack": "static/sounds/zombie_attack"},
-    images: {
-        "old_woman1": "static/images/old_woman1.png",
-        "old_woman2": "static/images/old_woman2.png",
-        "homely1": "static/images/homely1.png",
-        "homely2": "static/images/homely2.png",
-        "homely3": "static/images/homely3.png",
-        "child1": "static/images/child1.png",
-        "child2": "static/images/child2.png",
-        "soldier1": "static/images/soldier1.png",
-        "soldier2": "static/images/soldier2.png",
-        "soldier3": "static/images/soldier3.png",
-        "npc": "static/images/npc.png",
-        "child1": "static/images/child1.png",
-        "child2": "static/images/child2.png",
-        "bully": "static/images/bully.png",
-        "soldier1": "static/images/soldier1.png",
-        "soldier2": "static/images/soldier2.png",
-        "soldier3": "static/images/soldier3.png",
-        "sheep": "static/images/sheep.png",
-        "wolf": "static/images/wolf.png",
-        "zombie": "static/images/zombie.png",
-        "death_waker": "static/images/death_waker.png",
-        "fallen_angel": "static/images/fallen_angel.png"}
+        "zombie_attack": "static/sounds/zombie_attack"}
 };
 jgutils.setup();
 
@@ -185,10 +169,6 @@ for (var s in jgame.sounds) {
     require('sound').loadSound(s, jgame.sounds[s])
 }
 
-toggleImageLock();
-for (var i in jgame.images) {
-    createImage(i, jgame.images[i])
-}
 </script>
 </body>
 </html>

@@ -107,7 +107,7 @@ define('playerStatsOverlay',
     var redraw = function() {
         if (waiting) return;
         waiting = true;
-        images.waitFor('inventory', 'items').done(function(inventoryImg, itemsImg) {
+        return images.waitFor('inventory', 'items').done(function(inventoryImg, itemsImg) {
             var inventory = inventoryImg[0];
             var items = itemsImg[0];
             redraw = function() {

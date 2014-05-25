@@ -1,4 +1,4 @@
-define('drawing', ['game', 'settings'], function(game, settings) {
+define('drawing', ['game', 'images', 'settings'], function(game, images, settings) {
 
     var tilesize = settings.tilesize;
     var tilesetTileSize = 5;
@@ -47,8 +47,6 @@ define('drawing', ['game', 'settings'], function(game, settings) {
         changed.terrain = true;
     }
 
-    redrawBackground();
-
     function draw() {
         var output = game.canvases.output.getContext("2d");
         if(state && (changed.terrain || changed.objects || changed.avatars)) {
@@ -76,12 +74,40 @@ define('drawing', ['game', 'settings'], function(game, settings) {
         },
         start: function() {
             drawing = true;
-            reqAnimFrame(draw);
+            requestAnimationFrame(draw);
         },
         stop: function() {
             drawing = false;
         },
-        redrawBackground: redrawBackground,
+        redrawBackground: function() {  // TODO: Rename to something more apt
+            var output = game.canvases.terrain;
+            var c = output.getContext("2d");
+            c.mozImageSmoothingEnabled = false;
+
+            images.waitFor(game.level.tileset).done(function(tileset) {
+                var terrain = game.level.level;
+                var tilesetSize = tileset.width / tilesetTileSize;
+
+                var spriteY;
+                var spriteX;
+
+                var xx;
+                var yy = 0;
+                for(var y = 0; y < game.level.h; y++) {
+                    xx = 0;
+                    for(var x = 0; x < game.level.w; x++) {
+
+                        spriteY = Math.floor(terrain[y][x] / tilesetTileSize) * tilesetSize;
+                        spriteX = (terrain[y][x] % tilesetTileSize) * tilesetSize;
+
+                        c.drawImage(tileset, spriteX, spriteY, tilesetSize, tilesetSize, xx, yy, tilesize, tilesize);
+                        xx += tilesize;
+                    }
+                    yy += tilesize;
+                }
+                changed.terrain = true;
+            });
+        },
         forceRedraw: draw,
         setChanged: function(element) {
             if (!(element in changed)) return;

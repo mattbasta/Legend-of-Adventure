@@ -8,33 +8,6 @@ String.prototype.explode = function(value, count) {
     return split;
 };
 
-var lockImages = false;
-function toggleImageLock() {
-    lockImages = !lockImages;
-    if(!lockImages && jgame.images_loaded == jgame.images_added)
-        require('load').completeTask('images');
-}
-function createImage(id, url) {
-    if(jgame.images[id]) {
-        // Refresh the tileset when requested, but not anything else.
-        if(id === 'tileset' && url != jgame.images.tileset.attributes[0].value)
-            delete jgame.images[id];
-        else {
-            if(jgame.images_loaded === jgame.images_added)
-                require('load').completeTask('images');
-            return;
-        }
-    }
-    var i = new Image();
-    jgame.images_added++;
-    i.onload = function() {
-        jgame.images_loaded++;
-        if(!lockImages && jgame.images_loaded == jgame.images_added)
-            require('load').completeTask('images');
-    };
-    i.src = url;
-    jgame.images[id] = i;
-}
 function adjust_diagonal(direction) {
     if(direction[0] && direction[1])
         return direction.map(function(x) {return x * Math.SQRT1_2;});
@@ -45,9 +18,6 @@ var jgutils = {
     setup : function() {
 
         // Setup the jgame instance
-        jgame.images = {};
-        jgame.images_added = 0;
-        jgame.images_loaded = 0;
         jgame.level = {};
         jgame.follow_avatar = "local";
         jgame.offset = {
@@ -130,17 +100,15 @@ var jgutils = {
         draw : function(id) {
             function _draw(avatar) {
                 var av = jgutils.avatars.registry[avatar];
-                if(!av.dirty)
-                    return;
-                if(!(av.image in jgame.images))
-                    return;
+                if(!av.dirty) return;
                 var context = av.canvas.getContext('2d');
-                context.clearRect(0, 0, jgame.avatar.w, jgame.avatar.h);
-                context.drawImage(jgame.images[av.image],
-                                  (av.position % 3) * 32, ((av.position / 3) | 0) * 32,
-                                  32, 32,
-                                  0, 0,
-                                  jgame.avatar.w, jgame.avatar.h);
+                require('images').waitFor(av.image).done(function(sprite) {
+                    context.clearRect(0, 0, jgame.avatar.w, jgame.avatar.h);
+                    context.drawImage(sprite,
+                                      (av.position % 3) * 32, ((av.position / 3) | 0) * 32,
+                                      32, 32, 0, 0,
+                                      jgame.avatar.w, jgame.avatar.h);
+                });
             }
             if(typeof id != "undefined")
                 return _draw(id);
@@ -187,27 +155,25 @@ var jgutils = {
     },
     level : {
         init : function() {
+            jgutils.level.update(); // Update game constants and canvas sizes
 
-            // Clear out whatever timer might exist
-            if(jgame.drawinterval)
-                clearInterval(jgame.drawinterval);
+            require('defer').when(
+                require('playerStatsOverlay').redraw(), // Redraw the player stats menu
+                jgutils.objects.redrawLayers(), // Redraw objects on the screen
+                jgutils.avatars.redrawAvatars(), // Redraw avatars on the screen
+                require('drawing').redrawBackground() // Redraw terrain
+            ).done(function() {
+                // Start everything back up
+                jgutils.level.setCenterPosition(true);
+                require('timing').start();
+            });
 
-            // Get everything looking decent and positioned correctly
-            jgutils.level.update();
-            require('playerStatsOverlay').redraw();
-            jgutils.objects.redrawLayers();
-            jgutils.avatars.redrawAvatars();
-
-            // Start everything back up
-            jgutils.level.setCenterPosition(true);
-
-            require('timing').start();
 
         },
         load : function(x, y, av_x, av_y) {
             jgutils.level.preprepare();
             require('load').startTask(
-                ["images", "load", "comm", "comm_reg"],
+                ["load", "comm", "comm_reg"],
                 jgutils.level.init
             );
 
@@ -226,8 +192,6 @@ var jgutils = {
                     jgutils.avatars.unregister(av);
             if (jgame.follow_avatar != "local")
                 jgame.follow_avatar = "local";
-            if (!lockImages)
-                toggleImageLock();
         },
         prepare : function(data) {
             jgame.level = data;
@@ -244,14 +208,11 @@ var jgutils = {
             avatar.y = jgame.level.h / 2 * jgame.tilesize;
             console.log(avatar);
             if(data.hitmap) {
-                var x_map = require('hitmapping').generate_x(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize),
-                    y_map = require('hitmapping').generate_y(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize);
+                var x_map = require('hitmapping').generate_x(data.hitmap, avatar.x, avatar.y),
+                    y_map = require('hitmapping').generate_y(data.hitmap, avatar.x, avatar.y);
                 avatar.hitmap = [y_map[0], x_map[1], y_map[1], x_map[0]];
             }
 
-            var tileset_url = '/static/images/tilesets/' + data.tileset + '.png';
-            createImage('tileset', tileset_url);
-            toggleImageLock(); // Release the image lock.
             require('load').completeTask('load');
         },
         update : function() {
@@ -398,8 +359,6 @@ var jgutils = {
                         var ii = child.image,
                             base_x = child.x + child.offset.x,
                             base_y = child.y + child.offset.y;
-                        if(!(ii in jgame.images))
-                            continue;
 
                         if("movement" in child && child.movement) {
                             var movement_offset = frameutils.get(child.movement.type, child.movement,
@@ -407,17 +366,18 @@ var jgutils = {
                             base_x += movement_offset[0];
                             base_y += movement_offset[1];
                         }
+
                         if("sprite" in li)
-                            context.drawImage(jgame.images[ii], li.sprite.x, li.sprite.y,
-                                              li.sprite.swidth, li.sprite.sheight,
-                                              base_x, base_y,
-                                              child.height, child.width);
+                            require('images').waitFor(child.image).done(function(sprite) {
+                                context.drawImage(sprite, li.sprite.x, li.sprite.y,
+                                                  li.sprite.swidth, li.sprite.sheight,
+                                                  base_x, base_y,
+                                                  child.height, child.width);
+                            });
                         else
-                            context.drawImage(jgame.images[li.image], child.x + child.offset.x, child.y.offset.y);
-                        //context.fillStyle = "red";
-                        //context.fillRect(child.x - 2, child.y - 2, 4, 4);
-                        //context.fillStyle = "green";
-                        //context.fillRect(child.x + child.offset.x - 2, child.y + child.offset.y - 2, 4, 4);
+                            require('images').waitFor(li.image).done(function(sprite) {
+                                context.drawImage(sprite, child.x + child.offset.x, child.y.offset.y);
+                            });
                     }
                     layer.updated = false;
                 }

@@ -100,7 +100,7 @@ define('comm',
     commMessages.on('flv', function(body) {
         jgutils.level.preprepare();
         load.startTask(
-            ["images", "load", "comm_reg"],
+            ["load", "comm_reg"],
             jgutils.level.init
         );
         register().done(jgutils.level.prepare);
