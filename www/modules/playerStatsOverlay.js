@@ -1,6 +1,6 @@
 define('playerStatsOverlay',
-    ['comm', 'images', 'inventory', 'player'],
-    function(comm, images, inventory, player) {
+    ['comm', 'images', 'inventory', 'keys', 'player'],
+    function(comm, images, inventory, keys, player) {
 
     var canvas = document.getElementById('canvas_inventory');
     var ctx = canvas.getContext("2d");
@@ -33,26 +33,36 @@ define('playerStatsOverlay',
         redraw();
     });
 
-    canvas.addEventListener('mousedown', function() {
-        selected = true;
-        redraw();
-    });
-    canvas.addEventListener('mouseup', function() {
-        inventory.activateSelected();
-        selected = false;
-        redraw();
-    });
-
     comm.messages.on('inv', function() {
         redraw();
     });
+
+    function useDown() {
+        selected = true;
+        redraw();
+    }
+    function useUp() {
+        selected = false;
+        redraw();
+    }
+    canvas.addEventListener('mousedown', useDown);
+    canvas.addEventListener('mouseup', function() {
+        inventory.activateSelected();
+        useUp();
+    });
+
+    keys.down.on(76, useDown);  // L
+    keys.up.on(76, useUp);
+
+    keys.down.on(32, useDown);  // Space
+    keys.up.on(32, useUp);
 
     function doRedraw(inventoryImg, itemsImg) {
         ctx.clearRect(0, 0, 374, 85);
 
         function draw_item(x, y, h, w, code) {
             var sy = 0, sx = 0;
-            if(code[0] == "w") {  // Weapons have special codes to allow modifiers
+            if (code[0] == "w") {  // Weapons have special codes to allow modifiers
                 attributes = code.substr(1).split(".");
                 sx = jgassets.weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
                 sy = jgassets.weapon_order.indexOf(attributes[0]) * 24;
@@ -68,22 +78,24 @@ define('playerStatsOverlay',
 
         var i;
         var sx;
-        for(i = 0; i < 5; i++) {
+        for (i = 0; i < 5; i++) {
             sx = 0;
-            if(!i) {
-                if(hovering === i)
+            if (i === 0) {
+                if (hovering === 0)
                     sx = selected ? 240 : 160;
-                else if(s == i)
+                else if (s == i)
                     sx = 80;
+                else if (hovering === -1 && selected)
+                    sx = 240;
                 ctx.drawImage(inventoryImg, sx, 0, 80, 80,
                               0, 0, 80, 80);
-                if(slots[i])
+                if (slots[i])
                     draw_item(10, 10, 60, 60, slots[i]);
             } else {
-                if(hovering === i)
+                if (hovering === i)
                     sx = selected ? 192 : 128;
-                else if(s == i)
-                    sx = 64;
+                // else if(s == i)
+                //     sx = 64;
                 ctx.drawImage(inventoryImg, sx + (i > 1 ? 32 : 0), 80, 16, 64,
                               26 + i * 64, 14, 16, 64);
                 ctx.drawImage(inventoryImg, sx + (i < 4 ? 16 : 48), 80, 16, 64,

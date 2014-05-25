@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
-	//"code.google.com/p/go.net/websocket"
 )
 
 var HTTP_PORT int

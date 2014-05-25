@@ -38,6 +38,10 @@ func New(world string, height, width, x, y int) *Terrain {
     terrain.Width = width
     terrain.X = x
     terrain.Y = y
+
+    perlin := NewNoiseGenerator(DEFAULT_SEED)
+    perlin.FillGrid(&tiles, 10)
+
     return terrain
 }
 
