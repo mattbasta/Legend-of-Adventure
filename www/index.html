@@ -54,7 +54,7 @@ body {
     position:absolute;
     bottom:100px;
     left:0.5em;
-    z-index:100007;
+    z-index:1000;
     font-size:20px;
     background:#000;
     color:#fff;
@@ -70,6 +70,14 @@ body {
     position:fixed;
     left:0;
     bottom:0;
+}
+canvas {
+    image-rendering: optimizeSpeed;             // Older versions of FF
+    image-rendering: -moz-crisp-edges;          // FF 6.0+
+    image-rendering: -webkit-optimize-contrast; // Webkit
+    image-rendering: -o-crisp-edges;            // OS X & Windows Opera (12.02+)
+    image-rendering: optimize-contrast;         // Possible future browsers.
+    -ms-interpolation-mode: nearest-neighbor;   // IE
 }
 </style>
 </head>

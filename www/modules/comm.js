@@ -98,7 +98,7 @@ define('comm',
 
     // Location change notification
     commMessages.on('flv', function(body) {
-        jgutils.level.preprepare();
+        jgutils.level.unload();
         load.startTask(
             ["load", "comm_reg"],
             jgutils.level.init

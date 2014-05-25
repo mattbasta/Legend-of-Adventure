@@ -22,7 +22,9 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
         if(!tileset) return;
 
         var c = output.getContext("2d");
+        c.imageSmoothingEnabled = false;
         c.mozImageSmoothingEnabled = false;
+        c.webkitImageSmoothingEnabled = false;
 
         var terrain = game.level.level;
         var tilesetSize = tileset.width / tilesetTileSize;
@@ -61,7 +63,10 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
         }
         var now = Date.now();
         if(settings.show_fps) {
-            output.fillText((1000 / (now - lastDraw)) | 0 + '', 0, 20);
+            output.fillStyle = 'white';
+            output.fillRect(0, 0, 20, 20);
+            output.fillStyle = 'red';
+            output.fillText((1000 / (now - lastDraw)) | 0 + '', 0, 10);
         }
         lastDraw = now;
         if(drawing)

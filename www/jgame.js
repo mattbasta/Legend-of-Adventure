@@ -168,10 +168,9 @@ var jgutils = {
                 require('timing').start();
             });
 
-
         },
         load : function(x, y, av_x, av_y) {
-            jgutils.level.preprepare();
+            jgutils.level.unload();
             require('load').startTask(
                 ["load", "comm", "comm_reg"],
                 jgutils.level.init
@@ -182,7 +181,7 @@ var jgutils = {
                 jgutils.level.prepare
             );
         },
-        preprepare : function() {
+        unload : function() {
             // Remove everything level-specific
             require('timing').stop();
             require('chat').stopChat();
@@ -412,12 +411,6 @@ var jgutils = {
             // jgutils.objects.update(proto, 0, 0);
 
             jgutils.objects.registry[id] = proto;
-        },
-        simple_collision : function(x, y, x2, y2, radius) {
-            x -= x2;
-            y -= y2;
-            var dist = Math.sqrt(x * x + y * y);
-            return dist < radius;
         },
         update : function(proto, otick, speed) {
             // Speed is denoted in pixels per tick.

@@ -1,10 +1,12 @@
 define('playerStatsOverlay',
-    ['images', 'inventory', 'player'],
-    function(images, inventory, player) {
+    ['comm', 'images', 'inventory', 'player'],
+    function(comm, images, inventory, player) {
 
     var canvas = document.getElementById('canvas_inventory');
     var ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
 
     var selected = false;
     var hovering = -1;
@@ -38,6 +40,10 @@ define('playerStatsOverlay',
     canvas.addEventListener('mouseup', function() {
         inventory.activateSelected();
         selected = false;
+        redraw();
+    });
+
+    comm.messages.on('inv', function() {
         redraw();
     });
 

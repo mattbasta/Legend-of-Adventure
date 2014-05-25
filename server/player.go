@@ -141,6 +141,11 @@ func (self *Player) handle(msg string) {
 	case "lev": // lev == level
 		self.outbound_raw <- "lev{" + self.location.String() + "}"
 		return
+
+	case "cyc": // cyc == cycle inventory
+		self.inventory.Cycle(split[1])
+		self.update_inventory()
+		return
 	}
 }
 
