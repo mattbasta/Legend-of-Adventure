@@ -60,21 +60,13 @@ var jgutils = {
             require('drawing').forceRedraw();
         });
     },
-    user : {
-        user_data : {},
-        isLoggedIn : function(callback) {
-            // TODO: Implement FB Connect stuff here
-            jgutils.user.user_data = {"gender": "male"};
-            callback(true);
-        }
-    },
     level : {
         init : function() {
             jgutils.level.update(); // Update game constants and canvas sizes
 
             require('defer').when(
                 require('playerStatsOverlay').redraw(), // Redraw the player stats menu
-                jgutils.objects.redrawLayers(), // Redraw objects on the screen
+                require('objects').redrawLayers(), // Redraw objects on the screen
                 require('avatars').redrawAvatars(), // Redraw avatars on the screen
                 require('drawing').redrawBackground() // Redraw terrain
             ).done(function() {
@@ -108,12 +100,7 @@ var jgutils = {
         prepare : function(data) {
             jgame.level = data;
 
-            jgutils.objects.registry = {};
-            for(var i in jgutils.objects.layers) {
-                var layer = jgutils.objects.layers[i];
-                layer.child_objects = {};
-                layer.updated = true;
-            }
+            require('objects').clear();
 
             var avatar = require('avatars').getLocal();
             avatar.x = jgame.level.w / 2 * jgame.tilesize;
@@ -140,11 +127,8 @@ var jgutils = {
                     jgame.canvases[canvas].height = level_h;
                     jgame.canvases[canvas].width = level_w;
                 }
-                for(var layer_id in jgutils.objects.layers) {
-                    var layer = jgutils.objects.layers[layer_id];
-                    layer.obj.height = level_h;
-                    layer.obj.width = level_w;
-                }
+                require('objects').setLayerSizes(level_w, level_h);
+
                 //require('drawing').redrawBackground();
             }
             output_buffer.height = jgame.offset.h;
@@ -229,148 +213,6 @@ var jgutils = {
                 Math.max(n_x, 0), Math.max(n_y, 0),
                 Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height)
             );
-        }
-    },
-    objects : {
-        layers : {},
-        registry : {},
-        createLayer : function(name) {
-            var layer = document.createElement('canvas');
-            layer.height = jgame.canvases.objects.height;
-            layer.width = jgame.canvases.objects.width;
-            var x = (jgutils.objects.layers[name] = {
-                obj : layer,
-                child_objects : {},
-                updated : false
-            });
-
-            return x;
-        },
-        redrawLayers : function() {
-            var layers = jgutils.objects.layers,
-                updated = false;
-            var sortFunc = function(a, b) {
-                return jgutils.objects.registry[a].y - jgutils.objects.registry[b].y;
-            };
-            var layer;
-            for(var l in layers) {
-                layer = layers[l];
-                if(l > 2 || layer.updated) {
-                    updated = true;
-                    var context = layer.obj.getContext('2d');
-                    context.clearRect(0, 0, layer.obj.width, layer.obj.height);
-
-                    var sorted_cos = Object.keys(layer.child_objects).sort(sortFunc);
-                    for(var co = 0; co < sorted_cos.length; co++) {
-                        var child = layer.child_objects[sorted_cos[co]],
-                            li = child.last_view;
-                        if(!li)
-                            continue;
-                        var ii = child.image,
-                            base_x = child.x + child.offset.x,
-                            base_y = child.y + child.offset.y;
-
-                        if("movement" in child && child.movement) {
-                            var movement_offset = require('frames').get(
-                                child.movement.type,
-                                child.movement,
-                                require('timing').getLastTick() % 3000,
-                                0
-                            );
-                            base_x += movement_offset[0];
-                            base_y += movement_offset[1];
-                        }
-
-                        if("sprite" in li)
-                            require('images').waitFor(child.image).done(function(sprite) {
-                                context.drawImage(sprite, li.sprite.x, li.sprite.y,
-                                                  li.sprite.swidth, li.sprite.sheight,
-                                                  base_x, base_y,
-                                                  child.height, child.width);
-                            });
-                        else
-                            require('images').waitFor(li.image).done(function(sprite) {
-                                context.drawImage(sprite, child.x + child.offset.x, child.y.offset.y);
-                            });
-                    }
-                    layer.updated = false;
-                }
-            }
-            if(!updated)
-                return;
-            var layer_canvas = jgame.canvases.objects,
-                c = layer_canvas.getContext("2d");
-            c.clearRect(0, 0, layer_canvas.width, layer_canvas.height);
-            require('drawing').setChanged('objects');
-            for(var layer_id in layers) {
-                layer = layers[layer_id].obj;
-                c.drawImage(layer, 0, 0);
-            }
-        },
-        create : function(id, proto, layer) {
-            var lay;
-            if(!(layer in jgutils.objects.layers))
-                lay = jgutils.objects.createLayer(layer);
-            else
-                lay = jgutils.objects.layers[layer];
-            proto.updated = true;
-            proto.movement_prerender = [];
-            proto.registry_layer = layer;
-            proto.x *= jgame.tilesize;
-            proto.y *= jgame.tilesize;
-            proto.start_x = proto.x;
-            proto.start_y = proto.y;
-            lay.child_objects[id] = proto;
-            lay.updated = true;
-
-            // jgutils.objects.update(proto, 0, 0);
-
-            jgutils.objects.registry[id] = proto;
-        },
-        update : function(proto, otick, speed) {
-            // Speed is denoted in pixels per tick.
-
-            if(!otick)
-                otick = 0;
-
-            var updated = proto.updated;
-            proto.updated = false;
-
-            if(!proto.view)
-                return;
-
-            if(typeof proto.view == "string")
-                proto.view = jgassets[proto.view];
-
-            var new_view = require('frames').get(
-                proto.view.type,
-                proto.view,
-                otick,
-                0 // TODO : Set this to something useful.
-            );
-            if(new_view != proto.last_view) {
-                updated = true;
-                proto.last_view = new_view;
-            }
-
-            if(proto.x_vel || proto.y_vel) {
-                updated = true;
-                var adjusted_velocity = adjust_diagonal([proto.x_vel, proto.y_vel]);
-                proto.x += adjusted_velocity[0] * speed * proto.speed;
-                proto.y += adjusted_velocity[1] * speed * proto.speed;
-            }
-
-            return updated;
-
-        },
-        remove : function(id) {
-            if(!(id in jgutils.objects.registry))
-                return false;
-            var proto = jgutils.objects.registry[id];
-            delete jgutils.objects.registry[id];
-            delete jgutils.objects.layers[proto.registry_layer].child_objects[id];
-            jgutils.objects.layers[proto.registry_layer].updated = true;
-            jgutils.objects.redrawLayers();
         }
     }
 };

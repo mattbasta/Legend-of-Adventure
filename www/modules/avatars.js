@@ -1,4 +1,4 @@
-define('avatars', ['comm', 'drawing', 'game', 'images', 'settings', 'sound'], function(comm, drawing, game, images, settings, sound) {
+define('avatars', ['comm', 'drawing', 'game', 'images', 'settings'], function(comm, drawing, game, images, settings) {
 
     var registry = {};
 
@@ -18,13 +18,9 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings', 'sound'], fu
 
     // Remove avatar
     comm.messages.on('del', function(body) {
-        var data = body.split(':');
-        var sX = parseFloat(data[1]);
-        var sY = parseFloat(data[2]);
-        var follow_av = getFollowing();
-        var dist = Math.sqrt(Math.pow(s_x - follow_av.x, 2) + Math.pow(s_y - follow_av.y, 2));
-        dist /= settings.tilesize;
-        sound.playSound(data[0], dist);
+        if (!(body in registry)) return;
+        delete registry[body];
+        redrawAvatars();
     });
 
     // Change avatar position and direction
@@ -88,7 +84,7 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings', 'sound'], fu
                               32, 32, 0, 0,
                               jgame.avatar.w, jgame.avatar.h);
         });
-    },
+    }
 
     function redrawAvatars() {
         var dirty = false;
@@ -144,9 +140,43 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings', 'sound'], fu
             return registry.local;
         },
         getFollowing: getFollowing,
-        getRegistry: function() {return registry;},
         getSpriteDirection: getSpriteDirection,
         register: register,
-        draw: draw
+        draw: draw,
+        tick: function() {
+            var doRedrawAVS = false;
+
+            var spriteDirection;
+            var a;
+            var a_x;
+            var a_y;
+            for (var av in registry) {
+                var a = registry[av];
+                var a_x = a.direction[0];
+                var a_y = a.direction[1];
+                if (!a_x && !a_y) continue;
+
+                if (av !== 'local') {
+                    if (a_x && a_y) {
+                        a_x *= Math.SQRT1_2;
+                        a_y *= Math.SQRT1_2;
+                    }
+                    a.x += a_x * speed;
+                    a.y += a_y * speed;
+                }
+
+                spriteDirection = getSpriteDirection(a.direction);
+                if (a.sprite_cycle++ === spriteDirection[a.cycle_position].duration) {
+                    a.dirty = true;
+                    a.sprite_cycle = 0;
+                    a.cycle_position = a.cycle_position + 1 === 3 ? 1 : 2;
+                    a.position = spriteDirection[a.cycle_position].position;
+                    draw(av);
+                }
+                doRedrawAVS = true;
+            }
+
+            return doRedrawAVS;
+        }
     };
 });

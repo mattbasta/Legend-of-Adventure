@@ -1,6 +1,6 @@
 define('timing',
-    ['avatars', 'comm', 'drawing', 'game', 'hitmapping', 'keys', 'settings'],
-    function(avatars, comm, drawing, game, hitmapping, keys, settings) {
+    ['avatars', 'comm', 'drawing', 'game', 'hitmapping', 'keys', 'objects', 'settings'],
+    function(avatars, comm, drawing, game, hitmapping, keys, objects, settings) {
 
     var registers = {};
     var timer;
@@ -8,7 +8,6 @@ define('timing',
 
     function tick() {
         var ticks = Date.now();
-        var objects = jgutils.objects;
 
         if (last) {
             last = ticks;
@@ -124,71 +123,25 @@ define('timing',
                 else if(_x > 0 && avatar.x >= (jgame.level.w - 1) * settings.tilesize)
                     begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
 
-            } else if (_x || _y) {
-                avatar.position = avatars.getSpriteDirection(_x, _y)[0].position;
-                avatar.direction[0] = 0;
-                avatar.direction[1] = 0;
-                avatar.cycle_position = 0;
-                avatar.dirty = true;
-                avatars.draw('local');
-                doRedrawAVS = true;
-                updateLocation();
             }
 
-            var av;
-            var a;
-            var a_x;
-            var a_y;
-            var avatarRegistry = avatars.getRegistry()
-            for (var av in avatarRegistry) {
-                var a = avatarRegistry[av];
-                var a_x = a.direction[0];
-                var a_y = a.direction[1];
-                if (!a_x && !a_y) continue;
-
-                if (av !== 'local') {
-                    if (a_x && a_y) {
-                        a_x *= Math.SQRT1_2;
-                        a_y *= Math.SQRT1_2;
-                    }
-                    a.x += a_x * speed;
-                    a.y += a_y * speed;
-                }
-
-                spriteDirection = avatars.getSpriteDirection(a.direction);
-                // TODO: Should this reference `a` instead of `avatar`?
-                if (a.sprite_cycle++ === spriteDirection[avatar.cycle_position].duration) {
-                    a.dirty = true;
-                    a.sprite_cycle = 0;
-                    a.cycle_position = a.cycle_position + 1 === 3 ? 1 : 2;
-                    a.position = spriteDirection[a.cycle_position].position;
-                    avatars.draw(av);
-                }
-                doRedrawAVS = true;
-            }
-
-            if (doSetCenter) jgutils.level.setCenterPosition();
-            if (doRedrawAVS) avatars.redrawAvatars();
-
-            var modSec;
-            var modDur;
-            var objTick;
-
-            var obj;
-            var objectRegistry = objects.registry;
-            for (var objID in objectRegistry) {
-                obj = objectRegistry[objID];
-                modSec = obj.mod_seconds || 1000;
-                modDur = obj.mod_duration || 1;
-                objTick = ticks / modDur % modSec;
-
-                if (jgutils.objects.update(obj, objTick, speed)) {
-                    jgutils.objects.layers[obj.registry_layer].updated = true;
-                }
-            }
-
-            jgutils.objects.redrawLayers();
+        } else if (_x || _y) {
+            avatar.position = avatars.getSpriteDirection(_x, _y)[0].position;
+            avatar.direction[0] = 0;
+            avatar.direction[1] = 0;
+            avatar.cycle_position = 0;
+            avatar.dirty = true;
+            avatars.draw('local');
+            doRedrawAVS = true;
+            updateLocation();
         }
+
+        doRedrawAVS = avatars.tick() || doRedrawAVS;
+
+        if (doSetCenter) jgutils.level.setCenterPosition();
+        if (doRedrawAVS) avatars.redrawAvatars();
+
+        objects.tick(ticks, speed);
 
     }
 
