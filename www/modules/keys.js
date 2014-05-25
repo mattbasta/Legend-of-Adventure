@@ -3,29 +3,29 @@ define('keys', ['events'], function(events) {
     var keyDownHandler = new events.EventTarget();
 
     var keys = {
-        left: false,
-        up: false,
-        right: false,
-        down: false
+        leftArrow: false,
+        upArrow: false,
+        rightArrow: false,
+        downArrow: false
     };
 
     function keypress(e, set) {
         switch(e.keyCode) {
             case 37: // Left
             case 65: // A
-                keys.left = set;
+                keys.leftArrow = set;
                 break;
             case 38: // Up
             case 87: // W
-                keys.up = set;
+                keys.upArrow = set;
                 break;
             case 39: // Right
             case 68: // D
-                keys.right = set;
+                keys.rightArrow = set;
                 break;
             case 40: // Down
             case 83: // S
-                keys.down = set;
+                keys.downArrow = set;
                 break;
 
             default:
@@ -39,8 +39,8 @@ define('keys', ['events'], function(events) {
         keypress(e, false);
     });
 
-    return {
-        up: keyUpHandler,
-        down: keyDownHandler
-    };
+    keys.up = keyUpHandler;
+    keys.down = keyDownHandler;
+
+    return keys;
 });

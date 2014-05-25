@@ -21,7 +21,7 @@ define('images', ['promise'], function(promise) {
             var deps = Array.prototype.slice.call(arguments, 0);
             return promise.when.apply(null, deps.map(function(dep) {
                 return images[dep];
-            }));
+            })).done(console.log.bind(console));
         }
     };
 

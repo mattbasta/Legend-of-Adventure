@@ -169,12 +169,12 @@ var jgutils = {
                 ctx.drawImage(avatar.canvas, avatar.x - 7, avatar.y - jgame.avatar.h);
             }
         },
-        get_avatar_sprite_direction : function(direction) {
-            if(direction[0] < 0)
+        get_avatar_sprite_direction : function(x, y) {
+            if(x < 0)
                 return jgame.avatar.sprite.left;
-            else if(direction[0] > 0)
+            else if(x > 0)
                 return jgame.avatar.sprite.right;
-            else if(direction[1] < 0)
+            else if(y < 0)
                 return jgame.avatar.sprite.up;
             else
                 return jgame.avatar.sprite.down;
@@ -203,7 +203,8 @@ var jgutils = {
             // Start everything back up
             jgutils.drawing.init();
             jgutils.level.setCenterPosition(true);
-            jgutils.timing.start();
+
+            require('timing').start();
 
         },
         load : function(x, y, av_x, av_y) {
@@ -220,7 +221,7 @@ var jgutils = {
         },
         preprepare : function() {
             // Remove everything level-specific
-            jgutils.timing.stop();
+            require('timing').stop();
             require('chat').stopChat();
 
             for (var av in jgutils.avatars.registry)
@@ -244,8 +245,9 @@ var jgutils = {
             var avatar = jgutils.avatars.registry.local;
             // avatar.x = data.avatar.x * jgame.tilesize;
             // avatar.y = data.avatar.y * jgame.tilesize;
-            avatar.x = jgame.level.w / 2 * jgame.tilesize;
-            avatar.y = jgame.level.h / 2 * jgame.tilesize;
+            avatar.x = jgame.level.w / 2;
+            avatar.y = jgame.level.h / 2;
+            console.log(avatar);
             if(data.hitmap) {
                 var x_map = require('hitmapping').generate_x(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize),
                     y_map = require('hitmapping').generate_y(data.hitmap, avatar.x * jgame.tilesize, avatar.y * jgame.tilesize);
@@ -406,7 +408,7 @@ var jgutils = {
 
                         if("movement" in child && child.movement) {
                             var movement_offset = frameutils.get(child.movement.type, child.movement,
-                                                                 jgutils.timing.last % 3000, 0);
+                                                                 require('timing').getLastTick() % 3000, 0);
                             base_x += movement_offset[0];
                             base_y += movement_offset[1];
                         }
@@ -595,225 +597,6 @@ var jgutils = {
                 yy += c_tilesize;
             }
             jgutils.drawing.changed.terrain = true;
-        }
-    },
-    timing : {
-        registers : {},
-        timer : null,
-        last : 0,
-        start : function() {
-            jgutils.timing.tick();
-            jgutils.drawing.start();
-            jgutils.timing.timer = setInterval(jgutils.timing.tick, require('settings').fps);
-        },
-        stop : function() {
-            if(typeof jgutils.timing.timer == 'undefined')
-                return;
-            clearTimeout(jgutils.timing.timer);
-            jgutils.timing.last = 0;
-            jgutils.drawing.stop();
-        },
-        unregister : function(id) {delete jgutils.timing.registers[id];},
-        every : function(id, callback, seconds) {
-            jgutils.timing.registers[id] = {
-                id : id,
-                interval : seconds,
-                last_called : (new Date()).getTime(),
-                callback : callback
-            };
-        },
-        tick : function() {
-            var ticks = (new Date()).getTime(),
-                timing = jgutils.timing,
-                objects = jgutils.objects;
-            if(!timing.last) {
-                timing.last = ticks;
-                return;
-            }
-            var ms = ticks - timing.last;
-            timing.last = ticks;
-
-            // Move Avatar
-            var _x = 0,
-                _y = 0,
-                _val = jgame.speed * ms,
-                keys = require('keys');
-            if(keys.left)
-                _x = -1;
-            else if(keys.right)
-                _x = 1;
-            if(keys.up)
-                _y = -1;
-            else if(keys.down)
-                _y = 1;
-
-            // This needs to be crafted before the diagonal magic happens.
-            var direction = [_x, _y];
-
-            var avatar = jgutils.avatars.registry.local,
-                do_setcenter = false;
-            function update_location() {
-                require('comm').send("loc", (avatar.x|0) + ":" + (avatar.y|0) + ":" + direction[0] + ":" + direction[1]);
-            }
-
-            var player_moving = _x || _y,
-                // Prevent the avatar from moving at speeds > _val
-                adjusted_direction = adjust_diagonal(direction),
-                // Calculate the distance that the player has tried to move.
-                adjusted_increment_x = adjusted_direction[0] * _val,
-                adjusted_increment_y = adjusted_direction[1] * _val,
-                do_redraw_avs = false;
-
-            if(player_moving) {
-                // Perform hit mapping against the terrain.
-                var hitmap = avatar.hitmap;
-                if(_x) {
-                    // Are we hitting the right hitmap?
-                    if(_x > 0 && avatar.x + adjusted_increment_x + jgame.avatar.w > hitmap[1])
-                        adjusted_increment_x = hitmap[1] - avatar.x - jgame.avatar.w;
-                    // What about the left hitmap?
-                    else if(_x < 0 && avatar.x + adjusted_increment_x < hitmap[3])
-                        adjusted_increment_x = hitmap[3] - avatar.x;
-
-                    // Mark that we aren't moving if we've adjusted the hitmap not to move.
-                    if(!adjusted_increment_x)  // Perhaps faster to have it out here? IDK.
-                        _x = 0;
-                }
-
-                if(_y) {
-                    // Are we hitting the bottom hitmap?
-                    if(_y > 0 && avatar.y + adjusted_increment_y + jgame.avatar.h > hitmap[2])
-                        adjusted_increment_y = hitmap[2] - avatar.y - jgame.avatar.h;
-                    // What about the top hitmap?
-                    else if(_y < 0 && avatar.y + adjusted_increment_y < hitmap[0])
-                        adjusted_increment_y = hitmap[0] - avatar.y;
-
-                    if(!adjusted_increment_y)
-                        _y = 0;
-                }
-
-                // Recompute whether the player is actually moving. Useful for when we're backed
-                // into a corner or something; this will make the player stop walking. :)
-                player_moving = _x || _y;
-                direction = [_x, _y];
-            }
-
-            if(player_moving) {
-                // Perform all the fun calculations.
-                var adjusted_x = avatar.x + adjusted_increment_x,
-                    adjusted_y = avatar.y + adjusted_increment_y;
-
-                var update_y_hitmap = function() {
-                    var y_hitmap = require('hitmapping').generate_y(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
-                    avatar.hitmap[0] = y_hitmap[0];
-                    avatar.hitmap[2] = y_hitmap[1] + 15;
-                };
-                var update_x_hitmap = function() {
-                    var x_hitmap = require('hitmapping').generate_x(jgame.level.hitmap, avatar.x + 7.5, avatar.y - jgame.tilesize);
-                    avatar.hitmap[1] = x_hitmap[1] + 7.5;
-                    avatar.hitmap[3] = x_hitmap[0] - 7.5;
-                };
-
-                // Update the location of the avatar.
-                avatar.x = adjusted_x;
-                avatar.y = adjusted_y;
-
-                if(_x)
-                    update_y_hitmap();
-                if(_y)
-                    update_x_hitmap();
-
-                var sprite_direction = jgutils.avatars.get_avatar_sprite_direction(direction);
-                if(direction[0] != avatar.direction[0] || direction[1] != avatar.direction[1]) {
-                    avatar.dirty = true;
-                    avatar.direction = direction;
-                    avatar.position = sprite_direction[1].position;
-                    avatar.cycle_position = 0;
-                    avatar.sprite_cycle = 0;
-                    jgutils.avatars.draw("local");
-                    do_redraw_avs = true;
-                    update_location();
-                }
-                do_setcenter = true;
-
-                // Handle what happens when the user moves to a new region
-                var begin_swap_region = function(x, y, avx, avy) {
-                    avx = Math.floor(avx);
-                    avy = Math.floor(avy);
-                    jgutils.level.load(x, y, avx, avy);
-                };
-                if(jgame.level.can_slide) {
-                    if(_y < 0 && avatar.y < jgame.tilesize / 2)
-                        begin_swap_region(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y);
-                    else if(_y > 0 && avatar.y >= (jgame.level.h - 1) * jgame.tilesize)
-                        begin_swap_region(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y);
-                    else if(_x < 0 && avatar.x < jgame.tilesize / 2)
-                        begin_swap_region(jgame.level.x - 1, jgame.level.y, avatar.x, avatar.y);
-                    else if(_x > 0 && avatar.x >= (jgame.level.w - 1) * jgame.tilesize)
-                        begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
-                }
-            } else if(avatar.direction[0] || avatar.direction[1]) {
-                avatar.position = jgutils.avatars.get_avatar_sprite_direction(avatar.direction)[0].position;
-                // So it doesn't make sense to reset the avatar's direction,
-                // but it's more of a 'last known velocity' than anything.
-                avatar.direction = [0, 0];
-                avatar.sprite_cycle = 0;
-                avatar.cycle_position = 0;
-                avatar.dirty = true;
-                jgutils.avatars.draw("local");
-                do_redraw_avs = true;
-                update_location();
-            }
-
-            for(var av in jgutils.avatars.registry) {
-                var a = jgutils.avatars.registry[av];
-                if(a.direction[0] || a.direction[1]) {
-                    if(av != "local") {
-                        var adjusted_dir = adjust_diagonal(a.direction);
-                        a.x += adjusted_dir[0] * _val;
-                        a.y += adjusted_dir[1] * _val;
-                    }
-                    var sp_dir = jgutils.avatars.get_avatar_sprite_direction(a.direction);
-                    if(a.sprite_cycle++ == sp_dir[avatar.cycle_position].duration) {
-                        a.dirty = true;
-                        a.sprite_cycle = 0;
-                        a.cycle_position = a.cycle_position + 1 == 3 ? 1 : 2;
-                        a.position = sp_dir[a.cycle_position].position;
-
-                        jgutils.avatars.draw(av);
-                    }
-                    do_redraw_avs = true;
-                }
-            }
-            if(do_setcenter)
-                jgutils.level.setCenterPosition();
-            if(do_redraw_avs)
-                jgutils.avatars.redrawAvatars();
-
-            // Update Objects
-            var object_registry = objects.registry;
-            for(var objid in jgutils.objects.registry) {
-                var obj = object_registry[objid];
-
-                var mod_sec = (obj.mod_seconds ? obj.mod_seconds : 1000),
-                    mod_dur = (obj.mod_duration ? obj.mod_duration : 1),
-                    otick = ticks / mod_dur % mod_sec;
-
-                // Outsourced for easy update as well as setup.
-                if(jgutils.objects.update(obj, otick, _val))
-                    jgutils.objects.layers[obj.registry_layer].updated = true;
-            }
-
-            jgutils.objects.redrawLayers();
-
-            for(var register in timing.registers) {
-                var reg = timing.registers[register];
-                if(ticks - reg.last_called > reg.interval * 1000) {
-                    reg.callback(ticks);
-                    reg.last_called = ticks;
-                }
-            }
-
         }
     }
 };
