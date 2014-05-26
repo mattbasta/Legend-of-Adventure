@@ -1,6 +1,0 @@
-noise==1.0b3
--e git://github.com/facebook/tornado.git#egg=tornado
--e git://github.com/evilkost/brukva.git#egg=brukva
-hiredis
-redis
-nose
