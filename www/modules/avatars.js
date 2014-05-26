@@ -214,15 +214,15 @@ define('avatars',
                     a.y += a_y * speed;
                 }
 
-                spriteDirection = getSpriteDirection(a.direction);
+                spriteDirection = getSpriteDirection(a.direction[0], a.direction[1]);
                 if (a.sprite_cycle++ === spriteDirection[a.cycle_position].duration) {
                     a.dirty = true;
                     a.sprite_cycle = 0;
                     a.cycle_position = a.cycle_position + 1 === 3 ? 1 : 2;
                     a.position = spriteDirection[a.cycle_position].position;
-                    console.log(spriteDirection);
                     draw(av);
                 }
+                a.dirty = true;
                 doRedrawAVS = true;
             }
 
