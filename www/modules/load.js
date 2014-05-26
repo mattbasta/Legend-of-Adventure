@@ -17,5 +17,5 @@ define('load', ['defer', 'events'], function(defer, events) {
             return promise;
         },
         completeTask: dependencyBus.fire
-    }
+    };
 });

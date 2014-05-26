@@ -133,7 +133,7 @@ define('playerStatsOverlay',
             };
             redraw();
         });
-    }
+    };
 
     redraw();
 

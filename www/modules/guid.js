@@ -4,5 +4,5 @@ define('guid', [], function() {
     }
     return function() {
         return S4() + S4() + S4() + S4();
-    }
+    };
 });

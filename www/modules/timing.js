@@ -68,7 +68,7 @@ define('timing',
             // Recompute whether the player is actually moving. Useful for when
             // we're backed into a corner or something; this will make the
             // player stop walking.
-            playerMoving = _x || _y
+            playerMoving = _x || _y;
         }
 
         if (playerMoving) {
@@ -103,23 +103,21 @@ define('timing',
 
             doSetCenter = true;
 
-            function beginSwapRegion(x, y, avx, avy) {
-                avx = Math.floor(avx);
-                avy = Math.floor(avy);
-                jgutils.level.load(x, y, avx, avy);
-            }
             // If the user can navigate to adjacent regions by walking off the
             // edge, perform those calculations now.
             if (jgame.level.can_slide) {
                 // TODO: This should be moved to the server.
+                var beginSwapRegion = function(x, y, avx, avy) {
+                    jgutils.level.load(x, y, avx | 0, avy | 0);
+                }
                 if(_y < 0 && avatar.y < settings.tilesize / 2)
-                    begin_swap_region(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y);
+                    beginSwapRegion(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y);
                 else if(_y > 0 && avatar.y >= (jgame.level.h - 1) * settings.tilesize)
-                    begin_swap_region(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y);
+                    beginSwapRegion(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y);
                 else if(_x < 0 && avatar.x < settings.tilesize / 2)
-                    begin_swap_region(jgame.level.x - 1, jgame.level.y, avatar.x, avatar.y);
+                    beginSwapRegion(jgame.level.x - 1, jgame.level.y, avatar.x, avatar.y);
                 else if(_x > 0 && avatar.x >= (jgame.level.w - 1) * settings.tilesize)
-                    begin_swap_region(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
+                    beginSwapRegion(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
 
             }
 

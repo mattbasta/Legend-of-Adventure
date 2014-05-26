@@ -9,9 +9,10 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
     var changed = {
         terrain: false,
         objects: false,
-        avatars: false
+        avatars: false,
+        positioning: false
     };
-    var order = ['terrain', 'objects', 'avatars'];
+    var order = ['terrain', 'avatars'];
     var lastDraw;
     var drawing = false;
     var state;
@@ -30,7 +31,7 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
 
     function draw() {
         var output = canvases.getContext('output');
-        if(state && (changed.terrain || changed.objects || changed.avatars)) {
+        if(state && (changed.terrain || changed.objects || changed.avatars || changed.positioning)) {
             var scale;
             for(var i = 0; i < order.length; i++) {
                 scale = settings.scales[order[i]];
@@ -41,6 +42,7 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
                 );
                 changed[order[i]] = false;
             }
+            changed.positioning = false;
         }
         if(settings.show_fps) {
             output.fillStyle = 'white';
@@ -109,6 +111,7 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
             state[5] = y2;
             state[6] = w2;
             state[7] = h2;
+            changed.positioning = true;
         }
     };
 });

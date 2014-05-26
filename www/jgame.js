@@ -141,11 +141,11 @@ var jgutils = {
             if(c_levelh * c_tilesize > c_offseth) { // The scene isn't narrower than the canvas
 
                 var half_h = c_offseth / 2,
-                    level_h = c_levelh * c_tilesize;
+                    levH = c_levelh * c_tilesize;
 
                 if(y < half_h)
                     jgame.offset.y = 0;
-                else if(y > (temp = (level_h - half_h)))
+                else if(y > (temp = (levH - half_h)))
                     jgame.offset.y = temp - half_h;
                 else {
                     jgame.offset.y = y - half_h;

@@ -7,6 +7,8 @@ define('avatars',
 
     var avatarHeight = 32;
     var avatarWidth = 32;
+    var avatarBodyOffset = -7;
+    var avatarScale = settings.scales.avatars;
 
     // Add avatar
     comm.messages.on('add', function(body) {
@@ -37,18 +39,18 @@ define('avatars',
         av.y = parseInt(data[2], 10);
         // TODO: Make this recycle the existing direction
         var new_direction = [data[3] * 1, data[4] * 1];
-        if(follow === data[0])
+        if (follow === data[0])
             jgutils.level.setCenterPosition(true);
 
         var sp_dir;
-        if(!new_direction[0] && !new_direction[1] && (av.direction[0] || av.direction[1])) {
+        if (!new_direction[0] && !new_direction[1] && (av.direction[0] || av.direction[1])) {
             sp_dir = getSpriteDirection(av.direction);
             av.dirty = true;
             av.position = sp_dir[0].position;
             av.cycle_position = 0;
             av.sprite_cycle = 0;
 
-        } else if(new_direction != av.direction) {
+        } else if (new_direction != av.direction) {
             av.dirty = true;
             sp_dir = getSpriteDirection(new_direction);
             av.position = sp_dir[1].position;
@@ -107,10 +109,15 @@ define('avatars',
             dirty = dirty || a.dirty;
             avatars.push(a);
         }
-        if(!dirty) return;
+        if (!dirty) return;
 
         var ctx = canvases.getContext('avatars');
-        ctx.clearRect(game.offset.x, game.offset.y, game.offset.w, game.offset.h);
+        ctx.clearRect(
+            game.offset.x * avatarScale,
+            game.offset.y * avatarScale,
+            game.offset.w * avatarScale,
+            game.offset.h * avatarScale
+        );
 
         if (avatars.length > 1) {
             // Sort such that avatars with a lower Y are further back.
@@ -121,7 +128,11 @@ define('avatars',
         drawing.setChanged('avatars');
         for(var i = 0; i < avatars.length; i++) {
             avatar = avatars[i];
-            ctx.drawImage(avatar.canvas, avatar.x - 7, avatar.y - game.avatar.h);
+            ctx.drawImage(
+                avatar.canvas,
+                (avatar.x + avatarBodyOffset) * avatarScale,
+                (avatar.y - avatarHeight) * avatarScale
+            );
             avatar.dirty = false;
         }
     }
@@ -176,9 +187,9 @@ define('avatars',
             var a_x;
             var a_y;
             for (var av in registry) {
-                var a = registry[av];
-                var a_x = a.direction[0];
-                var a_y = a.direction[1];
+                a = registry[av];
+                a_x = a.direction[0];
+                a_y = a.direction[1];
                 if (!a_x && !a_y) continue;
 
                 if (av !== 'local') {

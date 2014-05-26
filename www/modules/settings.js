@@ -12,7 +12,7 @@ define('settings', [], function() {
 
         scales: {
             terrain: 16 / 50,
-            avatars: 1,
+            avatars: 32 / 50,
             objects: 1
         },
 
