@@ -1,1 +1,5 @@
-define('game', ['comm', 'drawing', 'keys', 'level', 'timing'], function() {});
+define(
+    'game',
+    ['comm', 'drawing', 'keys', 'level', 'playerStatsOverlay', 'timing'],
+    function() {}
+);

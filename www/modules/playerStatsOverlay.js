@@ -83,8 +83,8 @@ define('playerStatsOverlay',
             if (i === 0) {
                 if (hovering === 0)
                     sx = selected ? 240 : 160;
-                else if (s == i)
-                    sx = 80;
+                // else if (s == i)
+                //     sx = 80;
                 else if (hovering === -1 && selected)
                     sx = 240;
                 ctx.drawImage(inventoryImg, sx, 0, 80, 80,
