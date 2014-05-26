@@ -5,10 +5,16 @@ define('settings', [], function() {
         fps: 30,
         speed: 0.2,
         tilesize: 50,
-        tilesetTileSize: 5,  // The size of a tile in the tileset
+        tilesetTileSize: 16,  // The size of a tile in the tileset
 
         show_epu: false,
         show_fps: false,
+
+        scales: {
+            terrain: 16 / 50,
+            avatars: 1,
+            objects: 1
+        },
 
         set: function(settings) {
             for (var setting in settings) {

@@ -41,6 +41,7 @@ var jgutils = {
             ).done(function() {
                 // Start everything back up
                 jgutils.level.setCenterPosition();
+                require('drawing').start();
                 require('timing').start();
             });
 
@@ -59,6 +60,7 @@ var jgutils = {
         },
         unload : function() {
             // Remove everything level-specific
+            require('drawing').stop();
             require('timing').stop();
             require('chat').stopChat();
 
@@ -75,7 +77,6 @@ var jgutils = {
             var avatar = require('avatars').getLocal();
             avatar.x = jgame.level.w / 2 * jgame.tilesize;
             avatar.y = jgame.level.h / 2 * jgame.tilesize;
-            console.log(avatar);
             if(data.hitmap) {
                 var x_map = require('hitmapping').generate_x(data.hitmap, avatar.x, avatar.y),
                     y_map = require('hitmapping').generate_y(data.hitmap, avatar.x, avatar.y);
@@ -86,8 +87,7 @@ var jgutils = {
         },
         // Centers the screen around an avatar
         setCenterPosition : function(resize) {
-            var output_buffer = require('canvases').getCanvas('output'),
-                terrain = require('canvases').getCanvas('terrain');
+            var output_buffer = require('canvases').getCanvas('output');
             var level_h = jgame.level.h * jgame.tilesize,
                 level_w = jgame.level.w * jgame.tilesize;
 
@@ -163,9 +163,9 @@ var jgutils = {
 
             require('drawing').setState(
                 Math.max(jgame.offset.x, 0), Math.max(jgame.offset.y, 0),
-                Math.min(output_buffer.clientWidth, terrain.width), Math.min(output_buffer.clientHeight, terrain.height),
+                Math.min(output_buffer.clientWidth, level_w), Math.min(output_buffer.clientHeight, level_h),
                 Math.max(n_x, 0), Math.max(n_y, 0),
-                Math.min(output_buffer.clientWidth, terrain.width), Math.min(output_buffer.clientHeight, terrain.height)
+                Math.min(output_buffer.clientWidth, level_w), Math.min(output_buffer.clientHeight, level_h)
             );
         }
     }

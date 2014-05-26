@@ -155,7 +155,6 @@ define('timing',
         start: function() {
             if (timer) return;
             tick();
-            drawing.start();
             timer = setInterval(tick, settings.fps);
         },
         stop: function() {
@@ -163,7 +162,6 @@ define('timing',
             clearInterval(timer);
             timer = null;
             last = 0;
-            drawing.stop();
         },
         getLastTick: function() {
             return last || Date.now();

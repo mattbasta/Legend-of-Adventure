@@ -1,4 +1,4 @@
-define('canvases', [], function() {
+define('canvases', ['settings'], function(settings) {
 
     var canvases = {};
     var contexts = {};
@@ -8,14 +8,22 @@ define('canvases', [], function() {
     var defaultWidth = 0;
     var defaultHeight = 0;
 
+    var outputCanvas = document.getElementById('output_full');
+    canvases.output = outputCanvas;
+    contexts.output = prepareContext(outputCanvas.getContext('2d'));
+
+    function prepareContext(context) {
+        context.imageSmoothingEnabled = false;
+        context.mozImageSmoothingEnabled = false;
+        context.webkitImageSmoothingEnabled = false;
+        return context;
+    }
+
     function create(name, canvasSet, contextSet) {
-        var canvas;
-        if (canvasSet === canvases && name === 'output') {
-            canvas = document.getElementById('output_full');
-        } else {
-            canvas = document.createElement('canvas');
-            canvas.height = defaultHeight;
-            canvas.width = defaultWidth;
+        var canvas = document.createElement('canvas');
+        if (canvasSet === canvases) {
+            canvas.height = defaultHeight * settings.scales[name];
+            canvas.width = defaultWidth * settings.scales[name];
         }
         (canvases || canvasSet)[name] = canvas;
         (contexts || contextSet)[name] = canvas.getContext('2d');
@@ -24,7 +32,7 @@ define('canvases', [], function() {
     return {
         getCanvas: function(name, setName) {
             var canvasSet = canvases;
-            var contextSet;
+            var contextSet = contexts;
             if (setName) {
                 if (!sets[setName]) sets[setName] = {canvases: {}, contexts: {}};
                 canvasSet = sets[setName].canvases;
@@ -34,7 +42,7 @@ define('canvases', [], function() {
             return canvasSet[name];
         },
         getContext: function(name, setName) {
-            var canvasSet;
+            var canvasSet = canvases;
             var contextSet = contexts;
             if (setName) {
                 if (!sets[setName]) sets[setName] = {canvases: {}, contexts: {}};
@@ -43,20 +51,15 @@ define('canvases', [], function() {
             }
             if (!(name in contextSet)) create(name, canvasSet, contextSet);
 
-            var context = contextSet[name];
-            context.imageSmoothingEnabled = false;
-            context.mozImageSmoothingEnabled = false;
-            context.webkitImageSmoothingEnabled = false;
-
-            return context;
+            return prepareContext(contextSet[name]);
         },
         setSizes: function(width, height) {
             defaultWidth = width;
             defaultHeight = height;
             for (var c in canvases) {
-                if (c === 'terrain') continue;  // Don't scale terrain
-                canvases[c].height = height;
-                canvases[c].width = width;
+                if (c === 'output') continue;  // Don't scale output
+                canvases[c].height = height * settings.scales[c];
+                canvases[c].width = width * settings.scales[c];
             }
         }
     };

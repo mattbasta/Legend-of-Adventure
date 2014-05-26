@@ -18,8 +18,11 @@ html, body {
     height:100%;
 }
 body {
-    background: #222 url(/static/images/ajax-loader.gif) no-repeat center center;
+    background: #222;
     overflow: hidden;
+}
+body.loading {
+    background: #222 url(/static/images/ajax-loader.gif) no-repeat center center;
 }
 #bg_tile_wrap,
 #bg_tile_wrap {z-index:5;}
@@ -81,7 +84,7 @@ canvas {
 }
 </style>
 </head>
-<body>
+<body class="loading">
 <div>
     <input type="text" id="talkbar" />
     <div id="chatbox">

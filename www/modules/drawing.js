@@ -4,7 +4,7 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
     var tilesetTileSize = settings.tilesetTileSize;
     // var terrainScaling =
 
-    var requestAnimationFrame = window.requestAnimationFrame || function(callback) {setTimeout(1000 / 30, callback);};
+    var requestAnimationFrame = window.requestAnimationFrame || function(cb) {setTimeout(cb, 1000 / 30);};
 
     var changed = {
         terrain: false,
@@ -13,7 +13,7 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
     };
     var order = ['terrain', 'objects', 'avatars'];
     var lastDraw;
-    var drawing;
+    var drawing = false;
     var state;
 
     /*
@@ -28,55 +28,28 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
     8. The height of the rectangle to clip from the layer canvases
     */
 
-    function redrawBackground() {
-        var tileset = game.images.tileset;
-        if(!tileset) return;
-
-        var c = canvases.getContext('terrain');
-
-        var terrain = game.level.level;
-        var tilesetSize = tileset.width / tilesetTileSize;
-
-        var spriteY;
-        var spriteX;
-
-        var xx;
-        var yy = 0;
-        for(var y = 0; y < game.level.h; y++) {
-            xx = 0;
-            for(var x = 0; x < game.level.w; x++) {
-
-                spriteY = Math.floor(terrain[y][x] / tilesetTileSize) * tilesetSize;
-                spriteX = (terrain[y][x] % tilesetTileSize) * tilesetSize;
-
-                c.drawImage(tileset, spriteX, spriteY, tilesetSize, tilesetSize, xx, yy, tilesize, tilesize);
-                xx += tilesize;
-            }
-            yy += tilesize;
-        }
-        changed.terrain = true;
-    }
-
-    function draw(forced) {
+    function draw() {
         var output = canvases.getContext('output');
-        if(state && (changed.terrain || changed.objects || changed.avatars) || forced === true) {
+        if(state && (changed.terrain || changed.objects || changed.avatars)) {
+            var scale;
             for(var i = 0; i < order.length; i++) {
+                scale = settings.scales[order[i]];
                 output.drawImage(
                     canvases.getCanvas(order[i]),
-                    state[0], state[1], state[2], state[3],
+                    state[0] * scale, state[1] * scale, state[2] * scale, state[3] * scale,
                     state[4], state[5], state[6], state[7]
                 );
                 changed[order[i]] = false;
             }
         }
-        var now = Date.now();
         if(settings.show_fps) {
             output.fillStyle = 'white';
             output.fillRect(0, 0, 20, 20);
             output.fillStyle = 'red';
-            output.fillText((1000 / (now - lastDraw)) | 0 + '', 0, 10);
+            var now = Date.now();
+            output.fillText(1000 / (now - lastDraw) | 0, 0, 10);
+            lastDraw = now;
         }
-        lastDraw = now;
         if(drawing)
             requestAnimationFrame(draw);
     }
@@ -86,10 +59,13 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
             jgutils.level.setCenterPosition(true);
         },
         start: function() {
+            if (drawing) return;
+            document.body.className = '';
             drawing = true;
-            requestAnimationFrame(draw);
+            draw();
         },
         stop: function() {
+            document.body.className = 'loading';
             drawing = false;
         },
         redrawBackground: function() {  // TODO: Rename to something more apt
@@ -108,19 +84,16 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
                     xx = 0;
                     for(var x = 0; x < game.level.w; x++) {
 
-                        spriteY = Math.floor(terrain[y][x] / tilesetTileSize) * tilesetSize;
-                        spriteX = (terrain[y][x] % tilesetTileSize) * tilesetSize;
+                        spriteY = Math.floor(terrain[y][x] / tilesetSize) * tilesetTileSize;
+                        spriteX = (terrain[y][x] % tilesetSize) * tilesetTileSize;
 
-                        c.drawImage(tileset, spriteX, spriteY, tilesetSize, tilesetSize, xx, yy, tilesize, tilesize);
-                        xx += tilesize;
+                        c.drawImage(tileset, spriteX, spriteY, tilesetTileSize, tilesetTileSize, xx, yy, tilesetTileSize, tilesetTileSize);
+                        xx += tilesetTileSize;
                     }
-                    yy += tilesize;
+                    yy += tilesetTileSize;
                 }
                 changed.terrain = true;
             });
-        },
-        forceRedraw: function() {
-            draw(true);
         },
         setChanged: function(element) {
             if (!(element in changed)) return;
@@ -136,7 +109,6 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
             state[5] = y2;
             state[6] = w2;
             state[7] = h2;
-            draw(true);
         }
     };
 });

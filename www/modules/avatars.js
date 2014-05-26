@@ -5,6 +5,9 @@ define('avatars',
     var registry = {};
     var follow = 'local';
 
+    var avatarHeight = 32;
+    var avatarWidth = 32;
+
     // Add avatar
     comm.messages.on('add', function(body) {
         var data = body.split(':');
@@ -84,11 +87,12 @@ define('avatars',
         context.webkitImageSmoothingEnabled = false;
 
         images.waitFor(av.image).done(function(sprite) {
-            context.clearRect(0, 0, jgame.avatar.w, jgame.avatar.h);
-            context.drawImage(sprite,
-                              (av.position % 3) * 32, ((av.position / 3) | 0) * 32,
-                              32, 32, 0, 0,
-                              jgame.avatar.w, jgame.avatar.h);
+            context.clearRect(0, 0, game.avatar.w, game.avatar.h);
+            context.drawImage(
+                sprite,
+                (av.position % 3) * avatarWidth, (av.position / 3 | 0) * avatarHeight, avatarWidth, avatarHeight,
+                0, 0, avatarWidth, avatarHeight
+            );
             av.dirty = true;
         });
     }
