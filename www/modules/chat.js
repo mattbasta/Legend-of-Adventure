@@ -1,4 +1,4 @@
-define('chat', ['comm', 'keys'], function(comm, keys) {
+define('chat', ['comm', 'keys', 'level'], function(comm, keys, level) {
 
     var started = false;
 
@@ -17,6 +17,15 @@ define('chat', ['comm', 'keys'], function(comm, keys) {
     }
 
     comm.messages.on('cha', handleMessage);
+
+    function stopChat() {
+        started = false;
+        textbox.value = "";
+        textbox.style.display = "none";
+        chatbox.style.bottom = "100px";
+    }
+
+    level.on('pause', stopChat);
 
     var ret = {
         startChat : function() {
@@ -40,12 +49,7 @@ define('chat', ['comm', 'keys'], function(comm, keys) {
             chatbox.style.bottom = "130px";
             return false;
         },
-        stopChat : function() {
-            started = false;
-            textbox.value = "";
-            textbox.style.display = "none";
-            chatbox.style.bottom = "100px";
-        }
+        stopChat: stopChat
     };
 
     comm.ready.done(function() {

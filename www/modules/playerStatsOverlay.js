@@ -1,6 +1,6 @@
 define('playerStatsOverlay',
-    ['comm', 'images', 'inventory', 'keys', 'player'],
-    function(comm, images, inventory, keys, player) {
+    ['comm', 'images', 'inventory', 'keys', 'level', 'player'],
+    function(comm, images, inventory, keys, level, player) {
 
     var canvas = document.getElementById('canvas_inventory');
     var ctx = canvas.getContext("2d");
@@ -136,6 +136,8 @@ define('playerStatsOverlay',
     };
 
     redraw();
+
+    level.on('redraw', redraw);
 
     return {
         redraw: redraw

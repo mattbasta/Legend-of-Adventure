@@ -4,7 +4,8 @@ define('comm',
 
     var localID = guid();
 
-    var commEvents = new events.EventTarget();
+    var commEventsRaw = new events.EventTarget();
+    var commEvents = commEventsRaw.endpoint();
     var commMessages = new events.EventTarget();
 
     var readyPromise = defer();
@@ -12,7 +13,7 @@ define('comm',
     var socket = new WebSocket("ws://" + document.domain + ":" + settings.port + "/socket");
 
     socket.onopen = function(message) {
-        commEvents.fire('connected', socket);
+        commEventsRaw.fire('connected', socket);
         readyPromise.resolve();
     };
     socket.onmessage = function(message) {
@@ -35,21 +36,6 @@ define('comm',
         var dist = Math.sqrt(Math.pow(s_x - follow_av.x, 2) + Math.pow(s_y - follow_av.y, 2));
         dist /= settings.tilesize;
         sound.playSound(data[0], dist);
-    });
-
-    // Location change notification
-    commMessages.on('flv', function(body) {
-        jgutils.level.unload();
-        load.startTask(
-            ["load", "comm_reg"],
-            jgutils.level.init
-        );
-        register().done(jgutils.level.prepare);
-    });
-
-    // New level data
-    commMessages.on('lev', function(body) {
-        commEvents.fire('level', JSON.parse(body));
     });
 
     // Error

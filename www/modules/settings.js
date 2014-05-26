@@ -16,6 +16,34 @@ define('settings', [], function() {
             objects: 1
         },
 
+        avatar: {
+            image: "avatar",
+            h: 65,
+            w: 65,
+            sprite: {
+                left: [
+                    {position:4, duration:5},
+                    {position:5, duration:5},
+                    {position:3, duration:5}
+                ],
+                right: [
+                    {position:7, duration:5},
+                    {position:8, duration:5},
+                    {position:6, duration:5}
+                ],
+                up: [
+                    {position:10, duration:5},
+                    {position:11, duration:5},
+                    {position:9, duration:5}
+                ],
+                down: [
+                    {position:1, duration:5},
+                    {position:2, duration:5},
+                    {position:0, duration:5}
+                ]
+            }
+        },
+
         set: function(settings) {
             for (var setting in settings) {
                 this[setting] = settings[setting];

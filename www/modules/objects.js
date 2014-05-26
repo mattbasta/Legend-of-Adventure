@@ -1,9 +1,10 @@
 define('objects',
-    ['canvases', 'comm', 'drawing', 'frames', 'game', 'images', 'settings'],
-    function(canvases, comm, drawing, frames, game, images, settings) {
+    ['canvases', 'comm', 'drawing', 'frames', 'images', 'level', 'settings'],
+    function(canvases, comm, drawing, frames, images, level, settings) {
 
     var layers = {};
     var registry = {};
+
 
     // Spawn object
     comm.messages.on('spa', function(body) {
@@ -18,17 +19,21 @@ define('objects',
     });
 
     // Entity position update
+    var epuMatcher = /(.*):([\s.]*)/;
+    var epuLineSplitter = /(.*)=(.*)/;
     comm.messages.on('epu', function(body) {
         body = body.explode(":", 1);
-        var entity = registry[body[0]];
+        var parts = epuMatcher.exec(body);
+
+        var entity = registry[parts[1]];
         if(!entity) return;
 
-        var data = body[1].split("\n");
+        var data = body[2].split('\n');
         for(var i = 0; i < data.length; i++) {
-            var line = data[i].explode("=", 2);
-            var key = line[0];
-            var value = JSON.parse(line[1]);
-            if(key === "x" || key === "y")
+            var line = epuLineSplitter.exec(data[i]);
+            var key = line[1];
+            var value = JSON.parse(line[2]);
+            if(key === 'x' || key === 'y')
                 entity[key] = value * settings.tilesize;
             else
                 entity[key] = value;
@@ -51,8 +56,8 @@ define('objects',
         props.updated = true;
         props.movement_prerender = [];
         props.registry_layer = layer;
-        props.x *= game.tilesize;
-        props.y *= game.tilesize;
+        props.x *= settings.tilesize;
+        props.y *= settings.tilesize;
         props.start_x = props.x;
         props.start_y = props.y;
         lay.child_objects[id] = props;
@@ -104,8 +109,9 @@ define('objects',
 
     function createLayer(name) {
         var layer = canvases.getCanvas(name, 'objects');
-        layer.height = game.canvases.objects.height;
-        layer.width = game.canvases.objects.width;
+        var objects = canvases.getCanvas('objects')
+        layer.height = objects.height;
+        layer.width = objects.width;
         return layers[name] = {
             obj: layer,
             child_objects: {},
@@ -176,21 +182,19 @@ define('objects',
         }
     }
 
+    level.on('newLevel', function(width, height) {
+        registry = {};
+        for(var i in layers) {
+            layers[i].child_objects = {};
+            layers[i].updated = true;
+            layers[i].obj.width = width;
+            layers[i].obj.height = height;
+        }
+    });
+
+    level.on('redraw', redrawLayers);
+
     return {
-        redrawLayers: redrawLayers,
-        clear: function() {
-            registry = {};
-            for(var i in layers) {
-                layers[i].child_objects = {};
-                layers[i].updated = true;
-            }
-        },
-        setLayerSizes: function(width, height) {
-            for(var i in layers) {
-                layers[i].obj.width = width;
-                layers[i].obj.height = height;
-            }
-        },
         tick: function(ticks, speed) {
             var obj;
             var modSec;

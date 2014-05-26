@@ -1,3 +1,1 @@
-define('game', ['keys', 'playerStatsOverlay'], function() {
-    return window.jgame;
-});
+define('game', ['comm', 'drawing', 'keys', 'level', 'timing'], function() {});

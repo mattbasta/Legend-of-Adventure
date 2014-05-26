@@ -1,6 +1,6 @@
 define('avatars',
-    ['canvases', 'comm', 'drawing', 'game', 'images', 'settings'],
-    function(canvases, comm, drawing, game, images, settings) {
+    ['canvases', 'comm', 'drawing', 'hitmapping', 'images', 'level', 'offset', 'settings'],
+    function(canvases, comm, drawing, hitmapping, images, level, offset, settings) {
 
     var registry = {};
     var follow = 'local';
@@ -40,7 +40,7 @@ define('avatars',
         // TODO: Make this recycle the existing direction
         var new_direction = [data[3] * 1, data[4] * 1];
         if (follow === data[0])
-            jgutils.level.setCenterPosition(true);
+            require('level').setCenterPosition(true);
 
         var sp_dir;
         if (!new_direction[0] && !new_direction[1] && (av.direction[0] || av.direction[1])) {
@@ -65,7 +65,7 @@ define('avatars',
 
 
     function register(id, props, nodraw) {
-        props.position = props.position || game.avatar.sprite.down[0].position;
+        props.position = props.position || settings.avatar.sprite.down[0].position;
         props.direction = props.direction || [0, 1];
         props.hitmap = props.hitmap || [0, Infinity, Infinity, 0];
         props.dirty = true;
@@ -89,7 +89,7 @@ define('avatars',
         context.webkitImageSmoothingEnabled = false;
 
         images.waitFor(av.image).done(function(sprite) {
-            context.clearRect(0, 0, game.avatar.w, game.avatar.h);
+            context.clearRect(0, 0, settings.avatar.w, settings.avatar.h);
             context.drawImage(
                 sprite,
                 (av.position % 3) * avatarWidth, (av.position / 3 | 0) * avatarHeight, avatarWidth, avatarHeight,
@@ -113,10 +113,10 @@ define('avatars',
 
         var ctx = canvases.getContext('avatars');
         ctx.clearRect(
-            game.offset.x * avatarScale,
-            game.offset.y * avatarScale,
-            game.offset.w * avatarScale,
-            game.offset.h * avatarScale
+            offset.x * avatarScale,
+            offset.y * avatarScale,
+            offset.w * avatarScale,
+            offset.h * avatarScale
         );
 
         if (avatars.length > 1) {
@@ -143,13 +143,13 @@ define('avatars',
 
     function getSpriteDirection(x, y) {
         if (x < 0)
-            return game.avatar.sprite.left;
+            return settings.avatar.sprite.left;
         else if (x > 0)
-            return game.avatar.sprite.right;
+            return settings.avatar.sprite.right;
         else if (y < 0)
-            return game.avatar.sprite.up;
+            return settings.avatar.sprite.up;
         else
-            return game.avatar.sprite.down;
+            return settings.avatar.sprite.down;
     }
 
     register(
@@ -164,14 +164,27 @@ define('avatars',
         true // No Draw
     );
 
+    level.on('newLevel', function(width, height, hitmap) {
+        var avatar = registry.local;
+        avatar.x = width / 2;
+        avatar.y = height / 2;
+        if(hitmap) {
+            hitmapping.updateAvatarX(avatar, hitmap);
+            hitmapping.updateAvatarY(avatar, hitmap);
+        }
+    });
+
+    level.on('redraw', redrawAvatars);
+    level.on('unload', function() {
+        for (var avatar in registry) {
+            if (avatar === 'local') continue;
+            delete registry[avatar];
+        }
+        follow = 'local';
+    });
+
     return {
         redrawAvatars: redrawAvatars,
-        unregisterAll: function() {
-            for (var avatar in registry) {
-                if (avatar === 'local') continue;
-                delete registry[avatar];
-            }
-        },
         getLocal: function() {
             return registry.local;
         },
@@ -207,6 +220,7 @@ define('avatars',
                     a.sprite_cycle = 0;
                     a.cycle_position = a.cycle_position + 1 === 3 ? 1 : 2;
                     a.position = spriteDirection[a.cycle_position].position;
+                    console.log(spriteDirection);
                     draw(av);
                 }
                 doRedrawAVS = true;

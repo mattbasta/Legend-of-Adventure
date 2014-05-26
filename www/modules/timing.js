@@ -1,6 +1,6 @@
 define('timing',
-    ['avatars', 'comm', 'drawing', 'game', 'hitmapping', 'keys', 'objects', 'settings'],
-    function(avatars, comm, drawing, game, hitmapping, keys, objects, settings) {
+    ['avatars', 'comm', 'drawing', 'hitmapping', 'keys', 'level', 'objects', 'settings'],
+    function(avatars, comm, drawing, hitmapping, keys, level, objects, settings) {
 
     var registers = {};
     var timer;
@@ -10,7 +10,7 @@ define('timing',
         var ticks = Date.now();
         var ms = ticks - last;
         last = ticks;
-        var speed = game.speed * ms;
+        var speed = settings.speed * ms;
 
         // Move Avatar
         var _x = 0;
@@ -44,8 +44,8 @@ define('timing',
             var hitmap = avatar.hitmap;
             if (_x) {
                 // Are we hitting the right hitmap?
-                if (_x > 0 && avatar.x + adjustedX + game.avatar.w > hitmap[1])
-                    adjustedX = hitmap[1] - avatar.x - game.avatar.w;
+                if (_x > 0 && avatar.x + adjustedX + settings.avatar.w > hitmap[1])
+                    adjustedX = hitmap[1] - avatar.x - settings.avatar.w;
                 // What about the left hitmap?
                 else if (_x < 0 && avatar.x + adjustedX < hitmap[3])
                     adjustedX = hitmap[3] - avatar.x;
@@ -56,8 +56,8 @@ define('timing',
 
             if (_y) {
                 // Are we hitting the bottom hitmap?
-                if(_y > 0 && avatar.y + adjustedY + game.avatar.h > hitmap[2])
-                    adjustedY = hitmap[2] - avatar.y - game.avatar.h;
+                if(_y > 0 && avatar.y + adjustedY + settings.avatar.h > hitmap[2])
+                    adjustedY = hitmap[2] - avatar.y - settings.avatar.h;
                 // What about the top hitmap?
                 else if(_y < 0 && avatar.y + adjustedY < hitmap[0])
                     adjustedY = hitmap[0] - avatar.y;
@@ -72,21 +72,11 @@ define('timing',
         }
 
         if (playerMoving) {
-            var update_y_hitmap = function() {
-                var y_hitmap = hitmapping.generate_y(jgame.level.hitmap, avatar.x + 7.5, avatar.y - settings.tilesize);
-                avatar.hitmap[0] = y_hitmap[0];
-                avatar.hitmap[2] = y_hitmap[1] + 15;
-            };
-            var update_x_hitmap = function() {
-                var x_hitmap = hitmapping.generate_x(jgame.level.hitmap, avatar.x + 7.5, avatar.y - settings.tilesize);
-                avatar.hitmap[1] = x_hitmap[1] + 7.5;
-                avatar.hitmap[3] = x_hitmap[0] - 7.5;
-            };
             avatar.x += adjustedX;
             avatar.y += adjustedY;
 
-            if (_x) update_y_hitmap();
-            if (_y) update_x_hitmap();
+            if (_x) hitmapping.updateAvatarY(avatar);
+            if (_y) hitmapping.updateAvatarX(avatar);
 
             var spriteDirection = avatars.getSpriteDirection(_x, _y);
             if(_x != avatar.direction[0] || _y != avatar.direction[1]) {
@@ -105,19 +95,19 @@ define('timing',
 
             // If the user can navigate to adjacent regions by walking off the
             // edge, perform those calculations now.
-            if (jgame.level.can_slide) {
+            if (level.canSlide()) {
                 // TODO: This should be moved to the server.
                 var beginSwapRegion = function(x, y, avx, avy) {
-                    jgutils.level.load(x, y, avx | 0, avy | 0);
+                    level.load(x, y, avx | 0, avy | 0);
                 }
                 if(_y < 0 && avatar.y < settings.tilesize / 2)
-                    beginSwapRegion(jgame.level.x, jgame.level.y - 1, avatar.x, avatar.y);
-                else if(_y > 0 && avatar.y >= (jgame.level.h - 1) * settings.tilesize)
-                    beginSwapRegion(jgame.level.x, jgame.level.y + 1, avatar.x, avatar.y);
+                    beginSwapRegion(level.getX(), level.getY() - 1, avatar.x, avatar.y);
+                else if(_y > 0 && avatar.y >= (level.getH() - 1) * settings.tilesize)
+                    beginSwapRegion(level.getX(), level.getY() + 1, avatar.x, avatar.y);
                 else if(_x < 0 && avatar.x < settings.tilesize / 2)
-                    beginSwapRegion(jgame.level.x - 1, jgame.level.y, avatar.x, avatar.y);
-                else if(_x > 0 && avatar.x >= (jgame.level.w - 1) * settings.tilesize)
-                    beginSwapRegion(jgame.level.x + 1, jgame.level.y, avatar.x, avatar.y);
+                    beginSwapRegion(level.getX() - 1, level.getY(), avatar.x, avatar.y);
+                else if(_x > 0 && avatar.x >= (level.getW() - 1) * settings.tilesize)
+                    beginSwapRegion(level.getX() + 1, level.getY(), avatar.x, avatar.y);
 
             }
 
@@ -142,25 +132,31 @@ define('timing',
 
         doRedrawAVS = avatars.tick() || doRedrawAVS;
 
-        if (doSetCenter) jgutils.level.setCenterPosition();
+        if (doSetCenter) level.setCenterPosition();
         if (doRedrawAVS) avatars.redrawAvatars();
 
         objects.tick(ticks, speed);
 
     }
 
+    function start() {
+        if (timer) return;
+        tick();
+        timer = setInterval(tick, settings.fps);
+    }
+    function stop() {
+        if (!timer) return;
+        clearInterval(timer);
+        timer = null;
+        last = 0;
+    }
+
+    level.on('pause', stop);
+    level.on('unpause', start);
+
     return {
-        start: function() {
-            if (timer) return;
-            tick();
-            timer = setInterval(tick, settings.fps);
-        },
-        stop: function() {
-            if (!timer) return;
-            clearInterval(timer);
-            timer = null;
-            last = 0;
-        },
+        start: start,
+        stop: stop,
         getLastTick: function() {
             return last || Date.now();
         }

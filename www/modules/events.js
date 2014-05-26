@@ -11,19 +11,24 @@ define('events', [], function() {
         }
 
         this.fire = function(name) {
+            var results = [];
+            var result;
             var args = Array.prototype.slice.call(arguments, 1);
             var i;
             if (name in listeners) {
                 for (i = 0; i < listeners[name].length; i++) {
-                    listeners[name][i].apply(null, args);
+                    result = listeners[name][i].apply(null, args);
+                    if (result) results.push(result);
                 }
             }
             if (name in oneListeners) {
                 for (i = 0; i < oneListeners[name].length; i++) {
-                    oneListeners[name][i].apply(null, args);
+                    result = oneListeners[name][i].apply(null, args);
+                    if (result) results.push(result);
                 }
                 delete oneListeners[name];
             }
+            return results;
         };
         var on = this.on = function(name, listener) {
             setDefault(name, listeners, listener);

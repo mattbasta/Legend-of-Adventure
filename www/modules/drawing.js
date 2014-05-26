@@ -1,4 +1,6 @@
-define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases, game, images, settings) {
+define('drawing',
+    ['canvases', 'images', 'level', 'settings'],
+    function(canvases, images, level, settings) {
 
     var tilesize = settings.tilesize;
     var tilesetTileSize = settings.tilesetTileSize;
@@ -56,62 +58,73 @@ define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases,
             requestAnimationFrame(draw);
     }
 
-    return {
-        forceRecenter: function() {
-            jgutils.level.setCenterPosition(true);
-        },
-        start: function() {
-            if (drawing) return;
-            document.body.className = '';
-            drawing = true;
-            draw();
-        },
-        stop: function() {
-            document.body.className = 'loading';
-            drawing = false;
-        },
-        redrawBackground: function() {  // TODO: Rename to something more apt
-            var c = canvases.getContext('terrain');
+    function redrawBackground() {  // TODO: Rename to something more apt
+        var c = canvases.getContext('terrain');
 
-            images.waitFor(game.level.tileset).done(function(tileset) {
-                var terrain = game.level.level;
-                var tilesetSize = tileset.width / tilesetTileSize;
+        images.waitFor(level.getTileset()).done(function(tileset) {
+            var terrain = level.getTerrain();
+            var terrainH = terrain.length;
+            var terrainW = terrain[0].length;
 
-                var spriteY;
-                var spriteX;
+            var tilesetSize = tileset.width / tilesetTileSize;
 
-                var xx;
-                var yy = 0;
-                for(var y = 0; y < game.level.h; y++) {
-                    xx = 0;
-                    for(var x = 0; x < game.level.w; x++) {
+            var spriteY;
+            var spriteX;
 
-                        spriteY = Math.floor(terrain[y][x] / tilesetSize) * tilesetTileSize;
-                        spriteX = (terrain[y][x] % tilesetSize) * tilesetTileSize;
+            var xx;
+            var yy = 0;
+            for(var y = 0; y < terrainH; y++) {
+                xx = 0;
+                for(var x = 0; x < terrainW; x++) {
 
-                        c.drawImage(tileset, spriteX, spriteY, tilesetTileSize, tilesetTileSize, xx, yy, tilesetTileSize, tilesetTileSize);
-                        xx += tilesetTileSize;
-                    }
-                    yy += tilesetTileSize;
+                    spriteY = Math.floor(terrain[y][x] / tilesetSize) * tilesetTileSize;
+                    spriteX = (terrain[y][x] % tilesetSize) * tilesetTileSize;
+
+                    c.drawImage(tileset, spriteX, spriteY, tilesetTileSize, tilesetTileSize, xx, yy, tilesetTileSize, tilesetTileSize);
+                    xx += tilesetTileSize;
                 }
-                changed.terrain = true;
-            });
-        },
+                yy += tilesetTileSize;
+            }
+            changed.terrain = true;
+        });
+    }
+
+    function setState(x, y, w, h, x2, y2, w2, h2) {
+        if (!state) state = [];
+        state[0] = x;
+        state[1] = y;
+        state[2] = w;
+        state[3] = h;
+        state[4] = x2;
+        state[5] = y2;
+        state[6] = w2;
+        state[7] = h2;
+        changed.positioning = true;
+    }
+
+    function start() {
+        if (drawing) return;
+        document.body.className = '';
+        drawing = true;
+        draw();
+    }
+    function stop() {
+        document.body.className = 'loading';
+        drawing = false;
+    }
+
+    level.on('pause', stop);
+    level.on('unpause', start);
+    level.on('stateUpdated', setState);
+    level.on('redraw', redrawBackground);
+
+    return {
+        start: start,
+        stop: stop,
+        redrawBackground: redrawBackground,
         setChanged: function(element) {
             if (!(element in changed)) return;
             changed[element] = true;
-        },
-        setState: function(x, y, w, h, x2, y2, w2, h2) {
-            if (!state) state = [];
-            state[0] = x;
-            state[1] = y;
-            state[2] = w;
-            state[3] = h;
-            state[4] = x2;
-            state[5] = y2;
-            state[6] = w2;
-            state[7] = h2;
-            changed.positioning = true;
         }
     };
 });
