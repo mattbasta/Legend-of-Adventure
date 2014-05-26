@@ -108,6 +108,8 @@ define('timing',
                 avy = Math.floor(avy);
                 jgutils.level.load(x, y, avx, avy);
             }
+            // If the user can navigate to adjacent regions by walking off the
+            // edge, perform those calculations now.
             if (jgame.level.can_slide) {
                 // TODO: This should be moved to the server.
                 if(_y < 0 && avatar.y < settings.tilesize / 2)
@@ -121,14 +123,22 @@ define('timing',
 
             }
 
-        } else if (_x || _y) {
-            avatar.position = avatars.getSpriteDirection(_x, _y)[0].position;
+        } else if (avatar.direction[0] || avatar.direction[1]) {
+            // Set the avatar into the neutral standing position for the
+            // direction it is facing.
+            avatar.position = avatars.getSpriteDirection(avatar.direction[0], avatar.direction[1])[0].position;
+            // Reset the avatar to a downward facing rest position.
             avatar.direction[0] = 0;
             avatar.direction[1] = 0;
+            // Reset any ongoing animation with the avatar.
+            avatar.sprite_cycle = 0;
             avatar.cycle_position = 0;
-            avatar.dirty = true;
+            // Have the avatar redrawn.
             avatars.draw('local');
+            // Indicate that the avatar layer needs to be redrawn.
             doRedrawAVS = true;
+            // Send one last position update to the server indicating where the
+            // user stopped moving.
             updateLocation();
         }
 

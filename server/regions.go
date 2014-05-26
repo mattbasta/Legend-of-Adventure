@@ -105,5 +105,5 @@ func (self *Region) AddEntity(entity Entity) {
 }
 
 func (self Region) String() string {
-	return self.terrain.String() + ", \"tileset\": \"tileset_default\""
+	return self.terrain.String() + ", \"tileset\": \"tileset_default\", \"can_slide\": true"
 }
