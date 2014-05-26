@@ -8,12 +8,8 @@ define('timing',
 
     function tick() {
         var ticks = Date.now();
-
-        if (last) {
-            last = ticks;
-        }
-
         var ms = ticks - last;
+        last = ticks;
         var speed = game.speed * ms;
 
         // Move Avatar

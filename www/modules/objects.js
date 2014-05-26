@@ -1,6 +1,6 @@
 define('objects',
-    ['comm', 'drawing', 'frames', 'game', 'images', 'settings'],
-    function(comm, drawing, frames, game, images, settings) {
+    ['canvases', 'comm', 'drawing', 'frames', 'game', 'images', 'settings'],
+    function(canvases, comm, drawing, frames, game, images, settings) {
 
     var layers = {};
     var registry = {};
@@ -103,7 +103,7 @@ define('objects',
     }
 
     function createLayer(name) {
-        var layer = document.createElement('canvas');
+        var layer = canvases.getCanvas(name, 'objects');
         layer.height = game.canvases.objects.height;
         layer.width = game.canvases.objects.width;
         return layers[name] = {
@@ -166,8 +166,8 @@ define('objects',
         }
         if(!updated) return;
 
-        var layer_canvas = jgame.canvases.objects;
-        var c = layer_canvas.getContext("2d");
+        var layer_canvas = canvases.getCanvas('objects'); // TODO: Elimate this extra step
+        var c = canvases.getContext('objects');
         c.clearRect(0, 0, layer_canvas.width, layer_canvas.height);
         drawing.setChanged('objects');
         for(var layer_id in layers) {

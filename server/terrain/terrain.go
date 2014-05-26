@@ -5,8 +5,8 @@ import "strconv"
 
 
 type Terrain struct {
-    Height int
-    Width int
+    Height uint
+    Width uint
     X int
     Y int
 	Tiles  [][]uint
@@ -16,14 +16,14 @@ type Terrain struct {
 type Portal struct {
     X int
     Y int
-    Width int
-    Height int
+    Width uint
+    Height uint
     Destination string
     DestinationX float32
     DestinationY float32
 }
 
-func New(world string, height, width, x, y int) *Terrain {
+func New(world string, height, width uint, x, y int) *Terrain {
     tiles := make([][]uint, width)
     hitmap := make([][]bool, width)
     for i := range tiles {
@@ -93,9 +93,9 @@ func (self *Terrain) String() string {
         buf.WriteString("]")
     }
     buf.WriteString("], \"h\": ")
-    buf.WriteString(strconv.Itoa(self.Height))
+    buf.WriteString(strconv.Itoa(int(self.Height)))
     buf.WriteString(", \"w\": ")
-    buf.WriteString(strconv.Itoa(self.Width))
+    buf.WriteString(strconv.Itoa(int(self.Width)))
     buf.WriteString(", \"x\": ")
     buf.WriteString(strconv.Itoa(self.X))
     buf.WriteString(", \"y\": ")

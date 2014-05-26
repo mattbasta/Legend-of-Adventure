@@ -1,7 +1,8 @@
-define('drawing', ['game', 'images', 'settings'], function(game, images, settings) {
+define('drawing', ['canvases', 'game', 'images', 'settings'], function(canvases, game, images, settings) {
 
     var tilesize = settings.tilesize;
-    var tilesetTileSize = 5;
+    var tilesetTileSize = settings.tilesetTileSize;
+    // var terrainScaling =
 
     var requestAnimationFrame = window.requestAnimationFrame || function(callback) {setTimeout(1000 / 30, callback);};
 
@@ -11,20 +12,27 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
         avatars: false
     };
     var order = ['terrain', 'objects', 'avatars'];
-    var state;
     var lastDraw;
     var drawing;
+    var state;
+
+    /*
+    State is in the following form:
+    1. X coord of the left edge of where the level starts to draw
+    2. Y coord of the top edge of where the level starts to draw
+    3. Width of the drawing surface
+    4. Height of the drawing surface
+    5. The X coord in the layer canvases to clip from
+    6. The Y coord in the layer canvases to clip from
+    7. The width of the rectangle to clip from the layer canvases
+    8. The height of the rectangle to clip from the layer canvases
+    */
 
     function redrawBackground() {
-        var output = game.canvases.terrain;
         var tileset = game.images.tileset;
-
         if(!tileset) return;
 
-        var c = output.getContext("2d");
-        c.imageSmoothingEnabled = false;
-        c.mozImageSmoothingEnabled = false;
-        c.webkitImageSmoothingEnabled = false;
+        var c = canvases.getContext('terrain');
 
         var terrain = game.level.level;
         var tilesetSize = tileset.width / tilesetTileSize;
@@ -50,11 +58,11 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
     }
 
     function draw(forced) {
-        var output = game.canvases.output.getContext("2d");
+        var output = canvases.getContext('output');
         if(state && (changed.terrain || changed.objects || changed.avatars) || forced === true) {
             for(var i = 0; i < order.length; i++) {
                 output.drawImage(
-                    game.canvases[order[i]],
+                    canvases.getCanvas(order[i]),
                     state[0], state[1], state[2], state[3],
                     state[4], state[5], state[6], state[7]
                 );
@@ -85,11 +93,7 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
             drawing = false;
         },
         redrawBackground: function() {  // TODO: Rename to something more apt
-            var output = game.canvases.terrain;
-            var c = output.getContext("2d");
-            c.imageSmoothingEnabled = false;
-            c.webkitImageSmoothingEnabled = false;
-            c.mozImageSmoothingEnabled = false;
+            var c = canvases.getContext('terrain');
 
             images.waitFor(game.level.tileset).done(function(tileset) {
                 var terrain = game.level.level;
@@ -132,6 +136,7 @@ define('drawing', ['game', 'images', 'settings'], function(game, images, setting
             state[5] = y2;
             state[6] = w2;
             state[7] = h2;
+            draw(true);
         }
     };
 });

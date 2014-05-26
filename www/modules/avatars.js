@@ -1,6 +1,9 @@
-define('avatars', ['comm', 'drawing', 'game', 'images', 'settings'], function(comm, drawing, game, images, settings) {
+define('avatars',
+    ['canvases', 'comm', 'drawing', 'game', 'images', 'settings'],
+    function(canvases, comm, drawing, game, images, settings) {
 
     var registry = {};
+    var follow = 'local';
 
     // Add avatar
     comm.messages.on('add', function(body) {
@@ -31,7 +34,7 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings'], function(co
         av.y = parseInt(data[2], 10);
         // TODO: Make this recycle the existing direction
         var new_direction = [data[3] * 1, data[4] * 1];
-        if(game.follow_avatar === data[0])
+        if(follow === data[0])
             jgutils.level.setCenterPosition(true);
 
         var sp_dir;
@@ -57,10 +60,10 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings'], function(co
 
 
     function register(id, props, nodraw) {
-        props.dirty = props.dirty || true;
         props.position = props.position || game.avatar.sprite.down[0].position;
         props.direction = props.direction || [0, 1];
         props.hitmap = props.hitmap || [0, Infinity, Infinity, 0];
+        props.dirty = true;
         props.hidden = false;
         props.cycle_position = 0;
         props.sprite_cycle = 0;
@@ -68,21 +71,25 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings'], function(co
         props.canvas = document.createElement("canvas");
 
         registry[id] = props;
+        draw(id);
 
         if (!nodraw) redrawAvatars();
     }
 
     function draw(avatar) {
         var av = registry[avatar];
-        if(!av.dirty) return;
-
         var context = av.canvas.getContext('2d');
+        context.imageSmoothingEnabled = false;
+        context.mozImageSmoothingEnabled = false;
+        context.webkitImageSmoothingEnabled = false;
+
         images.waitFor(av.image).done(function(sprite) {
             context.clearRect(0, 0, jgame.avatar.w, jgame.avatar.h);
             context.drawImage(sprite,
                               (av.position % 3) * 32, ((av.position / 3) | 0) * 32,
                               32, 32, 0, 0,
                               jgame.avatar.w, jgame.avatar.h);
+            av.dirty = true;
         });
     }
 
@@ -98,23 +105,25 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings'], function(co
         }
         if(!dirty) return;
 
-        var canvas = game.canvases.avatars;
-        var ctx = canvas.getContext("2d");
+        var ctx = canvases.getContext('avatars');
         ctx.clearRect(game.offset.x, game.offset.y, game.offset.w, game.offset.h);
 
-        // Sort such that avatars with a lower Y are further back.
-        avatars = avatars.sort(function(a, b) {
-            return a.y - b.y;
-        });
+        if (avatars.length > 1) {
+            // Sort such that avatars with a lower Y are further back.
+            avatars.sort(function(a, b) {
+                return a.y - b.y;
+            });
+        }
         drawing.setChanged('avatars');
         for(var i = 0; i < avatars.length; i++) {
             avatar = avatars[i];
             ctx.drawImage(avatar.canvas, avatar.x - 7, avatar.y - game.avatar.h);
+            avatar.dirty = false;
         }
     }
 
     function getFollowing() {
-        return registry[game.follow_avatar];
+        return registry[follow];
     }
 
     function getSpriteDirection(x, y) {
@@ -127,6 +136,18 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings'], function(co
         else
             return game.avatar.sprite.down;
     }
+
+    register(
+        "local",
+        {
+            image: "avatar",
+            x: 0,
+            y: 0,
+            facing: "down",
+            direction: [0, 0]
+        },
+        true // No Draw
+    );
 
     return {
         redrawAvatars: redrawAvatars,
@@ -177,6 +198,9 @@ define('avatars', ['comm', 'drawing', 'game', 'images', 'settings'], function(co
             }
 
             return doRedrawAVS;
+        },
+        resetFollow: function() {
+            follow = 'local';
         }
     };
 });

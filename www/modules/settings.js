@@ -5,6 +5,7 @@ define('settings', [], function() {
         fps: 30,
         speed: 0.2,
         tilesize: 50,
+        tilesetTileSize: 5,  // The size of a tile in the tileset
 
         show_epu: false,
         show_fps: false,

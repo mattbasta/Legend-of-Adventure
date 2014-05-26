@@ -8,62 +8,31 @@ String.prototype.explode = function(value, count) {
     return split;
 };
 
-function adjust_diagonal(direction) {
-    if(direction[0] && direction[1])
-        return direction.map(function(x) {return x * Math.SQRT1_2;});
-    return direction;
-}
+// Make sure it stays in sync.
+$(window).resize(function(){
+    jgame.offset.w = document.body.offsetWidth;
+    jgame.offset.h = document.body.offsetHeight;
+
+    // Update the scene to make sure everything is onscreen.
+    jgutils.level.setCenterPosition(true);
+});
 
 var jgutils = {
     setup : function() {
 
         // Setup the jgame instance
         jgame.level = {};
-        jgame.follow_avatar = "local";
         jgame.offset = {
             x : 0,
             y : 0,
             w : document.body.offsetWidth,
             h : document.body.offsetHeight
         };
-        jgame.location_id = "";
-        jgame.canvases = {
-            output: document.getElementById("output_full"),
-            terrain: document.createElement("canvas"),
-            objects: document.createElement("canvas"),
-            avatars: document.createElement("canvas")
-        };
 
-        jgame.show_fps = false;
-        jgame.show_epu = false;
-        jgame.filter_console = false;
-
-        require('avatars').register(
-            "local",
-            {
-                image: "avatar",
-                x:0,
-                y:0,
-                facing: "down"
-            },
-            true // No Draw
-        );
-
-        // Make sure it stays in sync.
-        $(window).resize(function(){
-            jgame.offset.w = document.body.offsetWidth;
-            jgame.offset.h = document.body.offsetHeight;
-
-            // Update the scene to make sure everything is onscreen.
-            jgutils.level.update();
-            jgutils.level.setCenterPosition(true);
-            require('drawing').forceRedraw();
-        });
     },
     level : {
         init : function() {
-            jgutils.level.update(); // Update game constants and canvas sizes
-
+            jgutils.level.setCenterPosition();
             require('defer').when(
                 require('playerStatsOverlay').redraw(), // Redraw the player stats menu
                 require('objects').redrawLayers(), // Redraw objects on the screen
@@ -71,7 +40,7 @@ var jgutils = {
                 require('drawing').redrawBackground() // Redraw terrain
             ).done(function() {
                 // Start everything back up
-                jgutils.level.setCenterPosition(true);
+                jgutils.level.setCenterPosition();
                 require('timing').start();
             });
 
@@ -94,11 +63,12 @@ var jgutils = {
             require('chat').stopChat();
 
             require('avatars').unregisterAll();
-            if (jgame.follow_avatar != "local")
-                jgame.follow_avatar = "local";
+            require('avatars').resetFollow();
         },
         prepare : function(data) {
             jgame.level = data;
+            require('canvases').setSizes(data.w * jgame.tilesize, data.h * jgame.tilesize);
+            require('objects').setLayerSizes(data.w * jgame.tilesize, data.h * jgame.tilesize);
 
             require('objects').clear();
 
@@ -114,35 +84,22 @@ var jgutils = {
 
             require('load').completeTask('load');
         },
-        update : function() {
-            var output_buffer = jgame.canvases.output,
-                output = jgame.canvases.terrain;
+        // Centers the screen around an avatar
+        setCenterPosition : function(resize) {
+            var output_buffer = require('canvases').getCanvas('output'),
+                terrain = require('canvases').getCanvas('terrain');
             var level_h = jgame.level.h * jgame.tilesize,
                 level_w = jgame.level.w * jgame.tilesize;
 
-            // Resize the output canvas if the window size has changed.
-            if(output.height != level_h ||
-               output.width != level_w) {
-                for(var canvas in jgame.canvases) {
-                    jgame.canvases[canvas].height = level_h;
-                    jgame.canvases[canvas].width = level_w;
-                }
-                require('objects').setLayerSizes(level_w, level_h);
-
-                //require('drawing').redrawBackground();
-            }
+            // Resize the terrain canvas if the window size has changed.
             output_buffer.height = jgame.offset.h;
             output_buffer.width = jgame.offset.w;
 
-            // Adjust the window offsets to recent the game.
             if(jgame.offset.h > level_h)
                 jgame.offset.y = ((jgame.offset.h / 2 - level_h / 2) | 0) * -1;
             if(jgame.offset.w > level_w)
                 jgame.offset.x = ((jgame.offset.w / 2 - level_w / 2) | 0) * -1;
 
-        },
-        // Centers the screen around an avatar
-        setCenterPosition : function(resize) {
             var avatar = require('avatars').getFollowing();
             var x = avatar.x,
                 y = avatar.y;
@@ -204,14 +161,11 @@ var jgutils = {
             var n_x = jgame.offset.x * -1,
                 n_y = jgame.offset.y * -1;
 
-            var output = jgame.canvases.output,
-                terrain = jgame.canvases.terrain;
-
             require('drawing').setState(
                 Math.max(jgame.offset.x, 0), Math.max(jgame.offset.y, 0),
-                Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height),
+                Math.min(output_buffer.clientWidth, terrain.width), Math.min(output_buffer.clientHeight, terrain.height),
                 Math.max(n_x, 0), Math.max(n_y, 0),
-                Math.min(output.clientWidth, terrain.width), Math.min(output.clientHeight, terrain.height)
+                Math.min(output_buffer.clientWidth, terrain.width), Math.min(output_buffer.clientHeight, terrain.height)
             );
         }
     }
