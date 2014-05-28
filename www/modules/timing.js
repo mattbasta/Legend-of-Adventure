@@ -6,6 +6,8 @@ define('timing',
     var timer;
     var last = 0;
 
+    var tilesize = settings.tilesize;
+
     function tick() {
         var ticks = Date.now();
         var ms = ticks - last;
@@ -23,10 +25,6 @@ define('timing',
         var avatar = avatars.getLocal();
         var doSetCenter = false;
 
-        function updateLocation() {
-            comm.send("loc", (avatar.x | 0) + ":" + (avatar.y | 0) + ":" + _x + ":" + _y);
-        }
-
         var playerMoving = _x || _y;
         // Adjust for diagonals
         if (_x && _y) {
@@ -34,8 +32,18 @@ define('timing',
             _y *= Math.SQRT1_2;
         }
 
-        var adjustedX = _x * speed;
-        var adjustedY = _y * speed;
+        function updateLocation() {
+            comm.send(
+                "loc",
+                (avatar.x / tilesize) + ":" +
+                (avatar.y / tilesize) + ":" +
+                _x + ":" + _y + ":" +
+                avatar.direction[0] + ":" + avatar.direction[1]
+            );
+        }
+
+        var adjustedX = avatar.velocity[0] = _x * speed;
+        var adjustedY = avatar.velocity[1] = _y * speed;
 
         var doRedrawAVS = false;
 
@@ -79,7 +87,7 @@ define('timing',
             if (_y) hitmapping.updateAvatarX(avatar);
 
             var spriteDirection = avatars.getSpriteDirection(_x, _y);
-            if(_x != avatar.direction[0] || _y != avatar.direction[1]) {
+            if(_x !== avatar.direction[0] || _y !== avatar.direction[1]) {
                 avatar.dirty = true;
                 avatar.direction[0] = _x;
                 avatar.direction[1] = _y;
@@ -116,8 +124,8 @@ define('timing',
             // direction it is facing.
             avatar.position = avatars.getSpriteDirection(avatar.direction[0], avatar.direction[1])[0].position;
             // Reset the avatar to a downward facing rest position.
-            avatar.direction[0] = 0;
-            avatar.direction[1] = 0;
+            // avatar.direction[0] = 0;
+            // avatar.direction[1] = 0;
             // Reset any ongoing animation with the avatar.
             avatar.sprite_cycle = 0;
             avatar.cycle_position = 0;
@@ -130,6 +138,7 @@ define('timing',
             updateLocation();
         }
 
+        // Perform avatar processing
         doRedrawAVS = avatars.tick() || doRedrawAVS;
 
         if (doSetCenter) level.setCenterPosition();

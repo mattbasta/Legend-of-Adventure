@@ -5,12 +5,12 @@ define('objects',
     var layers = {};
     var registry = {};
 
-
     // Spawn object
-    comm.messages.on('spa', function(body) {
-        var data = body.split("\n");
-        if(data[0] in registry) return;
-        var jdata = JSON.parse(data[1]);
+    comm.messages.on('add', function(body) {
+        var data = body.split(" ");
+        if (data[0] === 'player') return;
+        if (data[1] in registry) return;
+        var jdata = JSON.parse(data[2]);
         create(
             data[0],
             jdata,

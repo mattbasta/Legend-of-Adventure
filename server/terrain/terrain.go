@@ -24,11 +24,11 @@ type Portal struct {
 }
 
 func New(world string, height, width uint, x, y int) *Terrain {
-    tiles := make([][]uint, width)
-    hitmap := make([][]bool, width)
+    tiles := make([][]uint, height)
+    hitmap := make([][]bool, height)
     for i := range tiles {
-        tiles[i] = make([]uint, height)
-        hitmap[i] = make([]bool, height)
+        tiles[i] = make([]uint, width)
+        hitmap[i] = make([]bool, width)
     }
 
     terrain := new(Terrain)
@@ -40,7 +40,8 @@ func New(world string, height, width uint, x, y int) *Terrain {
     terrain.Y = y
 
     perlin := NewNoiseGenerator(DEFAULT_SEED)
-    perlin.FillGrid(&tiles, 10)
+    perlin.FillGrid(&tiles, TERRAIN_PERLIN_MAX)
+    TerrainRounding(tiles, FieldTileset)
 
     return terrain
 }

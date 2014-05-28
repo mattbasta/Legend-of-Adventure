@@ -2,6 +2,7 @@ package main
 
 import (
 	"code.google.com/p/go.net/websocket"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -18,35 +19,43 @@ type Player struct {
 	outbound_raw chan string
 	closing      chan bool
 
-	name   string
-	x, y   float64
-	isDead bool
+	name       string
+	x, y       float64
+	velX, velY int
+	dirX, dirY int
+	isDead     bool
 
 	inventory *Inventory
 }
 
-func NewPlayer(conn *websocket.Conn, reg *Region) *Player {
+func NewPlayer(conn *websocket.Conn) *Player {
 	if conn == nil {
 		panic("WebSocket connection required")
-	} else if reg == nil {
-		panic("Player must exist in region")
 	}
 
 	outbound := make(chan *Event, SOCKET_BUFFER_SIZE)
 	outbound_raw := make(chan string, SOCKET_BUFFER_SIZE)
 	closing := make(chan bool)
 
+	reg := GetRegion(WORLD_OVERWORLD, 0, 0) // Get the region and make it active.
+	reg.KeepAlive <- true                   // Let the region know to stay alive.
+
 	player := Player{conn, reg,
 		outbound, outbound_raw, closing,
-		NextEntityID(), REGION_WIDTH / 2, REGION_HEIGHT / 2, false,
+		NextEntityID(),
+		REGION_WIDTH / 2, REGION_HEIGHT / 2, 0, 0, 0, 1,
+		false,
 		nil}
+	reg.AddEntity(&player)
 	player_ent := (Entity)(player)
+
+	// Set up the player's inventory
 	player.inventory = NewInventory(&player_ent, PLAYER_INV_SIZE)
 
-	player.location = GetRegion(WORLD_OVERWORLD, 0, 0) // Get the region and make it active.
-	player.location.KeepAlive <- true                  // Let the region know to stay alive.
-	player.location.AddEntity(&player)
 	player.startPinging()
+
+	// Send the player the initial level
+	outbound_raw <- "lev{" + reg.String() + "}"
 
 	return &player
 }
@@ -72,7 +81,7 @@ func (self *Player) listenOutbound() {
 		select {
 		case msg := <-self.outbound:
 			// `msg` gets cast to a string
-			websocket.Message.Send(self.connection, msg)
+			websocket.Message.Send(self.connection, msg.String())
 		case msg := <-self.outbound_raw:
 			websocket.Message.Send(self.connection, msg)
 		case <-self.closing:
@@ -128,24 +137,74 @@ func (self *Player) handle(msg string) {
 	}
 
 	switch split[0] {
-	case "reg": // reg == register
-		name := strings.TrimSpace(split[1])
-		// You cannot choose the name "local".
-		if name == "" || name == "local" {
-			self.closing <- true
-			return
-		}
-		self.name = name
-		return
-
-	case "lev": // lev == level
-		self.outbound_raw <- "lev{" + self.location.String() + "}"
-		return
-
 	case "cyc": // cyc == cycle inventory
 		self.inventory.Cycle(split[1])
 		self.update_inventory()
-		return
+
+	case "cha": // cha == chat
+		body := fmt.Sprintf("%f %f %s", self.x, self.y, split[1])
+		self.location.Broadcast(
+			self.location.GetEvent(CHAT, body, self),
+			self.ID(),
+		)
+
+	case "loc": // loc == location
+		posdata := strings.Split(split[1], ":")
+		if len(posdata) < 4 {
+			self.closing <- true
+			return
+		}
+		// TODO: Perform more cheat testing here
+		newX, err := strconv.ParseFloat(posdata[0], 64)
+		if err != nil {
+			return
+		}
+		newY, err := strconv.ParseFloat(posdata[1], 64)
+		if err != nil {
+			return
+		}
+		if newX < 0 || newX > float64(self.location.terrain.Width) ||
+			newY < 0 || newY > float64(self.location.terrain.Height) {
+			log.Println("User attempted to exceed bounds of the level")
+			self.closing <- true
+		}
+		velX, err := strconv.ParseInt(posdata[2], 10, 0)
+		if err != nil {
+			return
+		}
+		velY, err := strconv.ParseInt(posdata[3], 10, 0)
+		if err != nil {
+			return
+		}
+		if velX < -1 || velX > 1 || velY < -1 || velX > 1 {
+			log.Println("User attempted to go faster than possible")
+			self.closing <- true
+			return
+		}
+		dirX, err := strconv.ParseInt(posdata[4], 10, 0)
+		if err != nil {
+			return
+		}
+		dirY, err := strconv.ParseInt(posdata[5], 10, 0)
+		if err != nil {
+			return
+		}
+		if dirX < -1 || dirX > 1 || dirY < -1 || dirX > 1 {
+			log.Println("User attempted face invalid direction")
+			self.closing <- true
+			return
+		}
+		self.x = newX
+		self.y = newY
+		self.velX = int(velX)
+		self.velY = int(velY)
+		self.dirX = int(dirX)
+		self.dirY = int(dirY)
+
+		self.location.Broadcast(
+			self.location.GetEvent(LOCATION, self.String(), self),
+			self.ID(),
+		)
 	}
 }
 
@@ -180,3 +239,20 @@ func (self Player) Dead() bool                   { return self.isDead }
 func (self Player) Location() *Region            { return self.location }
 func (self Player) Inventory() *Inventory        { return self.inventory }
 func (self Player) Killer(in chan<- bool)        { return }
+
+func (self Player) GetIntroduction() string {
+	return "player " + self.String()
+}
+
+func (self Player) String() string {
+	return fmt.Sprintf(
+		"%s %f %f %d %d %d %d",
+		self.ID(),
+		self.x,
+		self.y,
+		self.dirX,
+		self.dirY,
+		self.dirX,
+		self.dirY,
+	)
+}

@@ -18,7 +18,13 @@ define('comm',
     };
     socket.onmessage = function(message) {
         var header = message.data.substr(0, 3);
-        var body = message.data.substr(3);
+        var subheader = message.data.substr(3, 3);
+        var body;
+        if (subheader === 'evt') {
+            body = message.data.substr(message.data.indexOf('\n') + 1);
+        } else {
+            body = message.data.substr(3);
+        }
 
         if (header !== 'epu' || settings.show_epu) {
             // console.log('Server message: ' +  message.data);

@@ -59,7 +59,7 @@ type Region struct {
 
 func (self *Region) Broadcast(evt *Event, except string) {
 	for _, entity := range self.entities {
-		if except != "" && (*entity).ID() == except {
+		if (*entity).ID() == except {
 			continue
 		}
 		(*entity).Receive() <- evt
@@ -73,13 +73,15 @@ func (self *Region) doTTL() {
 			select {
 			case <-self.KeepAlive:
 				log.Println("Keeping region " + self.ID() + " alive.")
+
 			case <-time.After(2 * time.Minute):
+				log.Println("Region " + self.ID() + " timed out.")
 				// Remove references to the region from the region cache.
 				delete(regionCache, self.ID())
 				// Tell the entities that are listening that they need to clean up.
 				self.killer <- true
+				close(self.KeepAlive)
 
-				log.Println("Region " + self.ID() + " timed out.")
 				return
 			}
 		}
@@ -100,8 +102,22 @@ func (self *Region) GetEvent(evt_type EventType, body string, origin Entity) *Ev
 }
 
 func (self *Region) AddEntity(entity Entity) {
-	self.entities = append(self.entities, &entity)
 	entity.Killer(self.killer)
+
+	// Tell everyone else that the entity is here.
+	self.Broadcast(
+		self.GetEvent(REGION_ENTRANCE, entity.GetIntroduction(), entity),
+		entity.ID(),
+	)
+
+	// Tell the entity about everyone else.
+	for _, regEnt := range self.entities {
+		entity.Receive() <- self.GetEvent(REGION_ENTRANCE, (*regEnt).GetIntroduction(), *regEnt)
+	}
+
+	// Add the entity to the list of entities.
+	self.entities = append(self.entities, &entity)
+
 }
 
 func (self Region) String() string {

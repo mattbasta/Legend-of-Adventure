@@ -12,16 +12,20 @@ define('avatars',
 
     // Add avatar
     comm.messages.on('add', function(body) {
-        var data = body.split(':');
+        var data = body.split(' ');
+        if (data[0] !== 'player') return;
         register(
-            data[0],
-            {image: "avatar",
-             sprite: registry.local.sprite,
-             x: data[1] * 1,
-             y: data[2] * 1},
+            data[1],
+            {
+                image: "avatar",
+                sprite: registry.local.sprite,
+                x: data[2] * settings.tilesize,
+                y: data[3] * settings.tilesize,
+                velocity: [data[4] | 0, data[5] | 0],
+                direction: [data[6] | 0, data[7] | 0],
+            },
             true
         );
-        draw(data[0]);
     });
 
     // Remove avatar
@@ -33,32 +37,34 @@ define('avatars',
 
     // Change avatar position and direction
     comm.messages.on('loc', function(body) {
-        var data = body.split(":");
+        var data = body.split(" ");
         var av = registry[data[0]];
-        av.x = parseInt(data[1], 10);
-        av.y = parseInt(data[2], 10);
-        // TODO: Make this recycle the existing direction
-        var new_direction = [data[3] * 1, data[4] * 1];
+        av.x = data[1] * settings.tilesize;
+        av.y = data[2] * settings.tilesize;
+
+        var oldVX = av.velocity[0];
+        var oldVY = av.velocity[1];
+
+        av.velocity[0] = data[3] | 0;
+        av.velocity[1] = data[4] | 0;
+        av.direction[0] = data[5] | 0;
+        av.direction[1] = data[6] | 0;
+
         if (follow === data[0])
-            require('level').setCenterPosition(true);
+            require('level').setCenterPosition();
 
         var sp_dir;
-        if (!new_direction[0] && !new_direction[1] && (av.direction[0] || av.direction[1])) {
+        if (!av.velocity[0] && !av.velocity[1] && (oldVX || oldVY)) {
             sp_dir = getSpriteDirection(av.direction);
-            av.dirty = true;
             av.position = sp_dir[0].position;
-            av.cycle_position = 0;
-            av.sprite_cycle = 0;
 
-        } else if (new_direction != av.direction) {
-            av.dirty = true;
-            sp_dir = getSpriteDirection(new_direction);
+        } else {
+            sp_dir = getSpriteDirection(av.direction);
             av.position = sp_dir[1].position;
-            av.cycle_position = 0;
-            av.sprite_cycle = 0;
         }
+        av.cycle_position = 0;
+        av.sprite_cycle = 0;
 
-        av.direction = new_direction;
         draw(data[0]);
         redrawAvatars();
     });
@@ -66,6 +72,7 @@ define('avatars',
 
     function register(id, props, nodraw) {
         props.position = props.position || settings.avatar.sprite.down[0].position;
+        props.velocity = props.velocity || [0, 0];
         props.direction = props.direction || [0, 1];
         props.hitmap = props.hitmap || [0, Infinity, Infinity, 0];
         props.dirty = true;
@@ -192,7 +199,7 @@ define('avatars',
         getSpriteDirection: getSpriteDirection,
         register: register,
         draw: draw,
-        tick: function() {
+        tick: function(speed) {
             var doRedrawAVS = false;
 
             var spriteDirection;
@@ -201,8 +208,8 @@ define('avatars',
             var a_y;
             for (var av in registry) {
                 a = registry[av];
-                a_x = a.direction[0];
-                a_y = a.direction[1];
+                a_x = a.velocity[0];
+                a_y = a.velocity[1];
                 if (!a_x && !a_y) continue;
 
                 if (av !== 'local') {
@@ -210,8 +217,8 @@ define('avatars',
                         a_x *= Math.SQRT1_2;
                         a_y *= Math.SQRT1_2;
                     }
-                    a.x += a_x * speed;
-                    a.y += a_y * speed;
+                    a.x += a_x * settings.tilesize * speed;
+                    a.y += a_y * settings.tilesize * speed;
                 }
 
                 spriteDirection = getSpriteDirection(a.direction[0], a.direction[1]);

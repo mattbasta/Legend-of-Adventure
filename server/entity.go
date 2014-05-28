@@ -24,6 +24,10 @@ type Entity interface {
 
 	Location() *Region
 	Inventory() *Inventory // May return nil
+
+	GetIntroduction() string // Entity add command's body
+
+	String() string
 }
 
 type Animat interface {

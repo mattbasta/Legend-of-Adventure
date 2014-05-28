@@ -2,7 +2,6 @@ import noise
 import internals.constants as constants
 import internals.levelbuilder.finishing as finishing
 import internals.levelbuilder.tilesets.field
-import internals.levelbuilder.towns as towns
 
 
 REGIONS = {"field": internals.levelbuilder.tilesets.field.TILESET}

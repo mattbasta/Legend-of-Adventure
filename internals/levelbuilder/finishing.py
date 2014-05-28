@@ -60,19 +60,14 @@ def rounding(region, tileset):
 
             # Second column and up, test for horiz gradient.
             if x and orig[y][x] != orig[y][x - 1]:
-                region[y][x] = mutate(region[y][x],
-                                      tl=orig[y][x - 1],
-                                      bl=orig[y][x - 1])
+                mutate(region[y][x], tl=orig[y][x - 1], bl=orig[y][x - 1])
                 continue
 
             # Second row and down, test for vertical gradient.
             if (y and orig[y][x] != orig[y - 1][x] and
                 region[y - 1][x][2] == region[y - 1][x][3]):
-                region[y][x] = mutate(region[y][x],
-                                      tl=orig[y - 1][x],
-                                      tr=orig[y - 1][x])
+                mutate(region[y][x], tl=orig[y - 1][x], tr=orig[y - 1][x])
 
-    rlen_minus = rlen - 1
     # Second pass, basic corner matching. Also contains an optimized
     # version of the third pass to save resources.
     for y in rrlen:
