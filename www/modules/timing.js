@@ -35,15 +35,15 @@ define('timing',
         function updateLocation() {
             comm.send(
                 "loc",
-                (avatar.x / tilesize) + ":" +
-                (avatar.y / tilesize) + ":" +
+                (avatar.x / tilesize).toFixed(2) + ":" +
+                (avatar.y / tilesize).toFixed(2) + ":" +
                 _x + ":" + _y + ":" +
                 avatar.direction[0] + ":" + avatar.direction[1]
             );
         }
 
-        var adjustedX = avatar.velocity[0] = _x * speed;
-        var adjustedY = avatar.velocity[1] = _y * speed;
+        var adjustedX = _x * speed;
+        var adjustedY = _y * speed;
 
         var doRedrawAVS = false;
 
@@ -119,7 +119,8 @@ define('timing',
 
             }
 
-        } else if (avatar.direction[0] || avatar.direction[1]) {
+        } else if ((avatar.direction[0] || avatar.direction[1]) &&
+                   (avatar.velocity[0] || avatar.velocity[1]) !== (adjustedX || adjustedY)) {
             // Set the avatar into the neutral standing position for the
             // direction it is facing.
             avatar.position = avatars.getSpriteDirection(avatar.direction[0], avatar.direction[1])[0].position;
@@ -136,7 +137,11 @@ define('timing',
             // Send one last position update to the server indicating where the
             // user stopped moving.
             updateLocation();
+            console.log('ul')
         }
+
+        avatar.velocity[0] = adjustedX;
+        avatar.velocity[1] = adjustedY;
 
         // Perform avatar processing
         doRedrawAVS = avatars.tick() || doRedrawAVS;
