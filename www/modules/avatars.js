@@ -217,8 +217,8 @@ define('avatars',
                         a_x *= Math.SQRT1_2;
                         a_y *= Math.SQRT1_2;
                     }
-                    a.x += a_x * settings.tilesize * speed;
-                    a.y += a_y * settings.tilesize * speed;
+                    a.x += a_x * speed;
+                    a.y += a_y * speed;
                 }
 
                 spriteDirection = getSpriteDirection(a.direction[0], a.direction[1]);

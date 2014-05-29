@@ -142,7 +142,7 @@ func (self *Player) handle(msg string) {
 		self.update_inventory()
 
 	case "cha": // cha == chat
-		body := fmt.Sprintf("%f %f %s", self.x, self.y, split[1])
+		body := fmt.Sprintf("%f %f\n%s", self.x, self.y, split[1])
 		self.location.Broadcast(
 			self.location.GetEvent(CHAT, body, self),
 			self.ID(),
@@ -250,8 +250,8 @@ func (self Player) String() string {
 		self.ID(),
 		self.x,
 		self.y,
-		self.dirX,
-		self.dirY,
+		self.velX,
+		self.velY,
 		self.dirX,
 		self.dirY,
 	)

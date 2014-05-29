@@ -16,7 +16,10 @@ define('chat', ['comm', 'keys', 'level'], function(comm, keys, level) {
         chatbox.appendChild(p);
     }
 
-    comm.messages.on('cha', handleMessage);
+    comm.messages.on('cha', function(body) {
+        // TODO: Make this handle the X and Y coords.
+        handleMessage(body.substr(body.indexOf('\n') + 1))
+    });
 
     function stopChat() {
         started = false;

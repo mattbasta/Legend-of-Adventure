@@ -137,14 +137,13 @@ define('timing',
             // Send one last position update to the server indicating where the
             // user stopped moving.
             updateLocation();
-            console.log('ul')
         }
 
         avatar.velocity[0] = adjustedX;
         avatar.velocity[1] = adjustedY;
 
         // Perform avatar processing
-        doRedrawAVS = avatars.tick() || doRedrawAVS;
+        doRedrawAVS = avatars.tick(speed) || doRedrawAVS;
 
         if (doSetCenter) level.setCenterPosition();
         if (doRedrawAVS) avatars.redrawAvatars();
