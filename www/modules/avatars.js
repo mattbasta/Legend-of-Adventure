@@ -32,7 +32,7 @@ define('avatars',
     comm.messages.on('del', function(body) {
         if (!(body in registry)) return;
         delete registry[body];
-        redrawAvatars();
+        redrawAvatars(true);
     });
 
     // Change avatar position and direction
@@ -53,13 +53,11 @@ define('avatars',
         if (follow === data[0])
             require('level').setCenterPosition();
 
-        var sp_dir;
+        var sp_dir = getSpriteDirection(av.direction[0], av.direction[1]);
         if (!av.velocity[0] && !av.velocity[1] && (oldVX || oldVY)) {
-            sp_dir = getSpriteDirection(av.direction);
             av.position = sp_dir[0].position;
 
         } else {
-            sp_dir = getSpriteDirection(av.direction);
             av.position = sp_dir[1].position;
         }
         av.cycle_position = 0;
@@ -88,13 +86,14 @@ define('avatars',
         if (!nodraw) redrawAvatars();
     }
 
-    function draw(avatar) {
+    function draw(avatar, fromRedraw) {
         var av = registry[avatar];
         var context = av.canvas.getContext('2d');
         context.imageSmoothingEnabled = false;
         context.mozImageSmoothingEnabled = false;
         context.webkitImageSmoothingEnabled = false;
 
+        var immediate = true;
         images.waitFor(av.image).done(function(sprite) {
             context.clearRect(0, 0, settings.avatar.w, settings.avatar.h);
             context.drawImage(
@@ -103,14 +102,19 @@ define('avatars',
                 0, 0, avatarWidth, avatarHeight
             );
             av.dirty = true;
+            if (!immediate) {
+                redrawAvatars(true);
+            }
         });
+        immediate = false;
     }
 
-    function redrawAvatars() {
-        var dirty = false;
+    function redrawAvatars(dirty) {
+        dirty = dirty || false;
         var avatars = [];
 
         var avatar;
+
         for (avatar in registry) {
             var a = registry[avatar];
             dirty = dirty || a.dirty;

@@ -26,27 +26,29 @@ define('timing',
         var doSetCenter = false;
 
         var playerMoving = _x || _y;
-        // Adjust for diagonals
-        if (_x && _y) {
-            _x *= Math.SQRT1_2;
-            _y *= Math.SQRT1_2;
-        }
 
         function updateLocation() {
             comm.send(
                 "loc",
                 (avatar.x / tilesize).toFixed(2) + ":" +
                 (avatar.y / tilesize).toFixed(2) + ":" +
-                _x + ":" + _y + ":" +
+                avatar.velocity[0] + ":" + avatar.velocity[1] + ":" +
                 avatar.direction[0] + ":" + avatar.direction[1]
             );
         }
 
         var adjustedX = _x * speed;
         var adjustedY = _y * speed;
+        // Adjust for diagonals
+        if (_x && _y) {
+            adjustedX *= Math.SQRT1_2;
+            adjustedY *= Math.SQRT1_2;
+        }
 
         var doRedrawAVS = false;
 
+        // If the player is moving, perform hitmapping. Then reompute whether
+        // the player is still moving.
         if (playerMoving) {
             // Perform hit mapping against the terrain.
             var hitmap = avatar.hitmap;
@@ -79,6 +81,7 @@ define('timing',
             playerMoving = _x || _y;
         }
 
+        // If the player is moving, perform updates.
         if (playerMoving) {
             avatar.x += adjustedX;
             avatar.y += adjustedY;
@@ -86,11 +89,13 @@ define('timing',
             if (_x) hitmapping.updateAvatarY(avatar);
             if (_y) hitmapping.updateAvatarX(avatar);
 
-            var spriteDirection = avatars.getSpriteDirection(_x, _y);
-            if(_x !== avatar.direction[0] || _y !== avatar.direction[1]) {
+            if(_x !== avatar.velocity[0] || _y !== avatar.velocity[1]) {
                 avatar.dirty = true;
-                avatar.direction[0] = _x;
-                avatar.direction[1] = _y;
+                avatar.velocity[0] = _x;
+                avatar.velocity[1] = _y;
+                avatar.direction[0] = Math.round(_x);
+                avatar.direction[1] = Math.round(_y);
+                var spriteDirection = avatars.getSpriteDirection(avatar.direction[0], avatar.direction[1]);
                 avatar.position = spriteDirection[1].position;
                 avatar.cycle_position = 0;
                 avatar.sprite_cycle = 0;
@@ -119,8 +124,10 @@ define('timing',
 
             }
 
-        } else if ((avatar.direction[0] || avatar.direction[1]) &&
-                   (avatar.velocity[0] || avatar.velocity[1]) !== (adjustedX || adjustedY)) {
+        } else if ((avatar.velocity[0] || avatar.velocity[1]) &&
+                   (avatar.velocity[0] || avatar.velocity[1]) !== (_x || _y)) {
+            avatar.velocity[0] = _x;
+            avatar.velocity[1] = _y;
             // Set the avatar into the neutral standing position for the
             // direction it is facing.
             avatar.position = avatars.getSpriteDirection(avatar.direction[0], avatar.direction[1])[0].position;
@@ -138,9 +145,6 @@ define('timing',
             // user stopped moving.
             updateLocation();
         }
-
-        avatar.velocity[0] = adjustedX;
-        avatar.velocity[1] = adjustedY;
 
         // Perform avatar processing
         doRedrawAVS = avatars.tick(speed) || doRedrawAVS;
