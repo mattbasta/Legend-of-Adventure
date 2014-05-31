@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"./terrain"
@@ -14,35 +15,71 @@ const (
 	WORLD_UNDERWORLD = "underworld"
 )
 
+type regionRequest struct {
+	ID       string
+	Receiver chan *Region
+}
+
 var regionCache = make(map[string]*Region)
+var regionGetter = make(chan regionRequest, 64)
+var startedRegionGetter = false
+
+func startRegionGetter() {
+	startedRegionGetter = true
+	go func() {
+		for {
+			select {
+			case request := <-regionGetter:
+				world, x, y := getRegionData(request.ID)
+				reg := new(Region)
+				reg.World = world
+				reg.X = x
+				reg.Y = y
+				reg.killer = make(chan bool)
+				reg.doTTL()
+
+				reg.entities = make([]*Entity, 0, 32)
+				reg.terrain = *terrain.New(world, REGION_WIDTH, REGION_HEIGHT, x, y)
+
+				// TODO: Do level building here.
+
+				regionCache[request.ID] = reg
+
+				request.Receiver <- reg
+			}
+		}
+	}()
+}
 
 func getRegionID(world string, x int, y int) string {
 	return world + ":" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
 }
+func getRegionData(ID string) (string, int, int) {
+	split := strings.Split(ID, ":")
+	x, _ := strconv.ParseInt(split[1], 10, 0)
+	y, _ := strconv.ParseInt(split[1], 10, 0)
+	return split[0], int(x), int(y)
+}
 
 func GetRegion(world string, x int, y int) *Region {
+	if !startedRegionGetter {
+		startRegionGetter()
+	}
+
 	regionID := getRegionID(world, x, y)
-	reg, ok := regionCache[regionID]
-	if ok {
+
+	if reg, ok := regionCache[regionID]; ok {
 		return reg
 	}
 
-	// FIXME: There might be a very slim race condition here, where two
-	// clients can create a new region simultaneously.
-	reg = new(Region)
-	regionCache[regionID] = reg
-	reg.World = world
-	reg.X = x
-	reg.Y = y
-	reg.killer = make(chan bool)
-	reg.doTTL()
+	responseChan := make(chan *Region, 1)
+	request := regionRequest{
+		regionID,
+		responseChan,
+	}
+	regionGetter <- request
 
-	reg.terrain = *terrain.New(world, REGION_WIDTH, REGION_HEIGHT, x, y)
-	// TODO: Do level building here
-
-	reg.entities = make([]*Entity, 0, 32)
-
-	return reg
+	return <-responseChan
 }
 
 type Region struct {
@@ -120,6 +157,38 @@ func (self *Region) AddEntity(entity Entity) {
 
 }
 
+func (self *Region) RemoveEntity(entity Entity) {
+	entity.Killer(self.killer)
+
+	// Tell everyone else that the entity is leaving.
+	self.Broadcast(
+		self.GetEvent(REGION_EXIT, entity.ID(), entity),
+		entity.ID(),
+	)
+
+	// Find the entity
+	location := -1
+	for i, e := range self.entities {
+		if *e == entity {
+			location = i
+			break
+		}
+	}
+
+	if location == -1 {
+		log.Println("Could not find entity to remove!")
+		return
+	}
+
+	// ...and remove it
+	self.entities = append(self.entities[:location], self.entities[location+1:]...)
+
+}
+
 func (self Region) String() string {
 	return self.terrain.String() + ", \"tileset\": \"tileset_default\", \"can_slide\": true"
+}
+
+func (self Region) IsTown() bool {
+	return false
 }

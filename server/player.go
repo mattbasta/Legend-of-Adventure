@@ -86,6 +86,10 @@ func (self *Player) listenOutbound() {
 			websocket.Message.Send(self.connection, msg)
 		case <-self.closing:
 			log.Println("Client disconnecting.")
+
+			// Tell the region that the client is going away.
+			self.location.RemoveEntity(self)
+
 			self.closing <- true
 			return
 		}
