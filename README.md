@@ -32,6 +32,8 @@ This project is currently undergoing a port from Python to Go. As such, most of
 the Python code is considered deprecated and may not run. Most of the
 functionality from the Python code has not yet been ported.
 
+The last stable version of the Python server can be found on the `python` branch.
+
 
 ## Requirements
 
