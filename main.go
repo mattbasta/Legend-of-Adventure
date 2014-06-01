@@ -8,12 +8,14 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"legend-of-adventure/server"
 )
 
 var HTTP_PORT int
 
 func httphandler(w http.ResponseWriter, r *http.Request) {
-	b, err := ioutil.ReadFile("../www/index.html")
+	b, err := ioutil.ReadFile("www/index.html")
 	if err != nil {
 		panic(err)
 	}
@@ -29,8 +31,8 @@ func main() {
 	log.Println("Starting server...")
 
 	http.HandleFunc("/", httphandler)
-	http.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("../www/"))))
-	http.Handle("/socket", GetWSHandler())
+	http.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("www/"))))
+	http.Handle("/socket", server.GetWSHandler())
 
 	http.ListenAndServe(":"+strconv.Itoa(HTTP_PORT), nil)
 

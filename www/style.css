@@ -1,0 +1,79 @@
+@font-face {
+    font-family: 'VT323';
+    font-style: normal;
+    font-weight: 400;
+    src: local('VT323'), local('VT323-Regular'), url(http://themes.googleusercontent.com/static/fonts/vt323/v5/SSPdB6sO_7a9ZMMiCroIGqCWcynf_cDxXwCLxiixG1c.woff) format('woff');
+}
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+html, body {
+    height:100%;
+}
+body {
+    background: #222;
+    overflow: hidden;
+}
+body.loading {
+    background: #222 url(/static/images/ajax-loader.gif) no-repeat center center;
+}
+#bg_tile_wrap,
+#bg_tile_wrap {z-index:5;}
+#bg_tile_full {
+    position:absolute;
+    top:0;
+    left:0;
+    height:100%;
+    width:100%;
+}
+#chatbox {
+    position:absolute;
+    bottom:130px;
+    left:0;
+    padding:0.5em;
+    z-index:100006;
+    font-size:2em;
+    letter-spacing:2px;
+}
+#chatbox, #talkbar {font-family:'VT323', Courier, Courier New, monospace;}
+#chatbox p {
+    opacity:0;
+    text-shadow: 1px 1px #fff;
+}
+#chatbox p+p {opacity:0.4;}
+#chatbox p+p+p {opacity:0.8;}
+#chatbox p+p+p+p {opacity:1;}
+#chatbox p span {color:#a00;}
+#chatbox p small {color:#888;}
+#talkbar {
+    display:none;
+    position:absolute;
+    bottom:100px;
+    left:0.5em;
+    z-index:1000;
+    font-size:20px;
+    background:#000;
+    color:#fff;
+    border-radius:5px;
+    padding:0.1em 0.25em;
+    letter-spacing:0.2ex;
+}
+#talkbar.empty {
+    color:#aaa;
+}
+#inventory {
+    z-index: 100008; /* Don't judge. */
+    position:fixed;
+    left:0;
+    bottom:0;
+}
+canvas {
+    image-rendering: optimizeSpeed;             // Older versions of FF
+    image-rendering: -moz-crisp-edges;          // FF 6.0+
+    image-rendering: -webkit-optimize-contrast; // Webkit
+    image-rendering: -o-crisp-edges;            // OS X & Windows Opera (12.02+)
+    image-rendering: optimize-contrast;         // Possible future browsers.
+    -ms-interpolation-mode: nearest-neighbor;   // IE
+}

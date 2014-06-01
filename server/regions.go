@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"log"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"./terrain"
+	"legend-of-adventure/server/terrain"
 )
 
 // Region IDs should be structured like this:

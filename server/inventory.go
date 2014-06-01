@@ -1,4 +1,4 @@
-package main
+package server
 
 type Inventory struct {
 	Owner    *Entity

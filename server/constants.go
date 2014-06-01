@@ -1,4 +1,4 @@
-package main
+package server
 
 const MAX_CONNECTED_PLAYERS = 256
 

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"code.google.com/p/go.net/websocket"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"./terrain"
+	"legend-of-adventure/server/terrain"
 )
 
 var playerCounter = 0

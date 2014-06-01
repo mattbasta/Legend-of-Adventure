@@ -1,9 +1,9 @@
-package main
+package server
 
 import (
 	"math"
 
-	"./terrain"
+	"legend-of-adventure/server/terrain"
 )
 
 type Hitmap struct {
