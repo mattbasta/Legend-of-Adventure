@@ -3,6 +3,24 @@ package terrain
 import "bytes"
 import "strconv"
 
+const (
+    WORLD_OVERWORLD = "overworld"
+    WORLD_ETHER     = "ether"
+
+    REGIONTYPE_FIELD   = "field"
+    REGIONTYPE_DUNGEON = "field"
+)
+
+type Region interface {
+    IsTown() bool
+    IsDungeonEntrance() bool
+
+    GetParent() string
+    GetType() string
+    GetX() int
+    GetY() int
+}
+
 
 type Terrain struct {
     Height uint
@@ -23,7 +41,24 @@ type Portal struct {
     DestinationY float32
 }
 
-func New(world string, height, width uint, x, y int) *Terrain {
+func Get(region Region, height, width uint) *Terrain {
+    terrain := New(height, width)
+    terrain.X = region.GetX()
+    terrain.Y = region.GetY()
+
+    perlin := NewNoiseGenerator(DEFAULT_SEED)
+
+    regType := region.GetType()
+    if regType == REGIONTYPE_FIELD {
+        perlin.FillGrid(&terrain.Tiles, TERRAIN_PERLIN_MAX)
+    }
+    TerrainRounding(terrain.Tiles, FieldTileset)
+
+    return terrain
+}
+
+
+func New(height, width uint) *Terrain {
     tiles := make([][]uint, height)
     hitmap := make([][]bool, height)
     for i := range tiles {
@@ -36,12 +71,6 @@ func New(world string, height, width uint, x, y int) *Terrain {
     terrain.Hitmap = hitmap
     terrain.Height = height
     terrain.Width = width
-    terrain.X = x
-    terrain.Y = y
-
-    perlin := NewNoiseGenerator(DEFAULT_SEED)
-    perlin.FillGrid(&tiles, TERRAIN_PERLIN_MAX)
-    TerrainRounding(tiles, FieldTileset)
 
     return terrain
 }

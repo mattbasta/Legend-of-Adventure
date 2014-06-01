@@ -239,5 +239,3 @@ def build_town(grid, hitmap, seed=0):
     smooth_roads(grid)
 
     return grid, hitmap, portals
-
-

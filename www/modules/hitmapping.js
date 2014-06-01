@@ -28,29 +28,6 @@ define('hitmapping', ['level', 'settings'], function(level, settings) {
         return [x_min, x_max];
     }
 
-    function generate_y(map, x_orig, y) {
-        var x = (x_orig / tilesize) | 0,
-            x2 = (((x_orig - 1) / tilesize) | 0) + 1;
-
-        y = ((y / tilesize) - 1) | 0;
-
-        var y_min = 0, y_max = map.length * tilesize;
-        var i;
-        for(i = y; i >= 0; i--) {
-            if(map[i][x] || map[i][x2]) {
-                y_min = (i + 2) * tilesize;
-                break;
-            }
-        }
-        for(i = y + 1, maplen = map.length; i < maplen; i++) {
-            if(map[i][x] || map[i][x2]) {
-                y_max = (i + 1) * tilesize;
-                break;
-            }
-        }
-        return [y_min, y_max];
-    }
-
     return {
         updateAvatarX: function(avatar, hitmap) {
             hitmap = hitmap || level.getHitmap();
@@ -60,9 +37,28 @@ define('hitmapping', ['level', 'settings'], function(level, settings) {
         },
         updateAvatarY: function(avatar, hitmap) {
             hitmap = hitmap || level.getHitmap();
-            var x_hitmap = generate_x(hitmap, avatar.x + 7.5, avatar.y - tilesize);
-            avatar.hitmap[1] = x_hitmap[1] + 7.5;
-            avatar.hitmap[3] = x_hitmap[0] - 7.5;
+
+            var x_orig = avatar.x + 7.5;
+
+            var x = x_orig / tilesize | 0;
+            var x2 = (((x_orig - 1) / tilesize) | 0) + 1;
+
+            var y = ((avatar.y - tilesize) / tilesize) - 1 | 0;
+
+            var y_min = 0, y_max = hitmap.length * tilesize;
+            var i;
+            for(i = y; i >= 0; i--) {
+                if(hitmap[i][x] || hitmap[i][x2]) {
+                    avatar.hitmap[1] = (i + 2) * tilesize + 7.5;
+                    break;
+                }
+            }
+            for(i = y + 1, maplen = hitmap.length; i < maplen; i++) {
+                if(hitmap[i][x] || hitmap[i][x2]) {
+                    avatar.hitmap[3] = (i + 1) * tilesize - 7.5;
+                    break;
+                }
+            }
         }
     };
 });

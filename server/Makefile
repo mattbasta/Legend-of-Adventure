@@ -3,7 +3,7 @@ run: build
 
 build: clean
 	go env
-	go get .
+	export GOPATH=/opt/ && go get .
 	go build
 
 clean:

@@ -9,11 +9,18 @@ import (
 	"./terrain"
 )
 
-const (
-	WORLD_OVERWORLD  = "overworld"
-	WORLD_MIRROR     = "mirror"
-	WORLD_UNDERWORLD = "underworld"
-)
+// Region IDs should be structured like this:
+//     parent:type x y
+// parent: The ID of the parent or the name of the world
+// type: The type of area that the region is
+// x: The X coordinate of the area
+// y: The Y coordinate of the area
+// Examples:
+//     overworld:field 0 0
+//     overworld:field 0 0:house0 1 0
+//     overworld:field 123 456:dungeon 0 0
+//     overworld:field 123 456:dungeon 2 3:dungeon:1 1
+//     overworld:field 123 456:dungeon 2 3:dungeon:1 1
 
 type regionRequest struct {
 	ID       string
@@ -30,16 +37,17 @@ func startRegionGetter() {
 		for {
 			select {
 			case request := <-regionGetter:
-				world, x, y := getRegionData(request.ID)
+				parent, regType, x, y := GetRegionData(request.ID)
 				reg := new(Region)
-				reg.World = world
+				reg.ParentID = parent
+				reg.Type = regType
 				reg.X = x
 				reg.Y = y
 				reg.killer = make(chan bool)
 				reg.doTTL()
 
 				reg.entities = make([]*Entity, 0, 32)
-				reg.terrain = *terrain.New(world, REGION_WIDTH, REGION_HEIGHT, x, y)
+				reg.terrain = *terrain.Get(reg, REGION_WIDTH, REGION_HEIGHT)
 
 				// TODO: Do level building here.
 
@@ -51,22 +59,27 @@ func startRegionGetter() {
 	}()
 }
 
-func getRegionID(world string, x int, y int) string {
-	return world + ":" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
+func getRegionID(parent, regType string, x, y int) string {
+	return parent + ":" + regType + ":" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
 }
-func getRegionData(ID string) (string, int, int) {
+func GetRegionData(ID string) (string, string, int, int) {
 	split := strings.Split(ID, ":")
-	x, _ := strconv.ParseInt(split[1], 10, 0)
-	y, _ := strconv.ParseInt(split[1], 10, 0)
-	return split[0], int(x), int(y)
+	x, _ := strconv.ParseInt(split[2], 10, 0)
+	y, _ := strconv.ParseInt(split[3], 10, 0)
+	return split[0], split[1], int(x), int(y)
 }
 
-func GetRegion(world string, x int, y int) *Region {
+func GetRegion(parent, regType string, x, y int) *Region {
 	if !startedRegionGetter {
 		startRegionGetter()
 	}
 
-	regionID := getRegionID(world, x, y)
+	regionID := getRegionID(parent, regType, x, y)
+
+	if !IsValidRegionID(regionID) {
+		log.Println("Invalid region ID requested: " + regionID)
+		return nil
+	}
 
 	if reg, ok := regionCache[regionID]; ok {
 		return reg
@@ -83,8 +96,9 @@ func GetRegion(world string, x int, y int) *Region {
 }
 
 type Region struct {
-	World string
-	X, Y  int
+	ParentID string
+	Type     string
+	X, Y     int
 
 	// Bits and pieces to clean up the region.
 	KeepAlive chan bool
@@ -126,7 +140,7 @@ func (self *Region) doTTL() {
 }
 
 func (self Region) ID() string {
-	return getRegionID(self.World, self.X, self.Y)
+	return getRegionID(self.ParentID, self.Type, self.X, self.Y)
 }
 
 func (self *Region) GetEvent(evt_type EventType, body string, origin Entity) *Event {
@@ -189,6 +203,73 @@ func (self Region) String() string {
 	return self.terrain.String() + ", \"tileset\": \"tileset_default\", \"can_slide\": true"
 }
 
+func (self Region) GetParent() string {
+	return self.ParentID
+}
+
+func (self Region) GetType() string {
+	return self.Type
+}
+
+func (self Region) GetX() int {
+	return self.X
+}
+
+func (self Region) GetY() int {
+	return self.Y
+}
+
 func (self Region) IsTown() bool {
+	if self.ParentID != terrain.WORLD_OVERWORLD &&
+		self.ParentID != terrain.WORLD_ETHER &&
+		self.Type != terrain.REGIONTYPE_FIELD {
+		return false
+	}
+	return isTownPos(self.X, self.Y)
+}
+
+func isTownPos(x, y int) bool {
+	// Always force spawn to be a town.
+	if x == 0 && y == 0 {
+		return true
+	}
 	return false
+}
+
+func (self Region) IsDungeonEntrance() bool {
+	if self.ParentID != terrain.WORLD_OVERWORLD && self.ParentID != terrain.WORLD_ETHER {
+		return false
+	}
+	return isDungeonPos(self.X, self.Y)
+}
+
+func isDungeonPos(x, y int) bool {
+	// Always force 1 0 to be a dungeon.
+	if x == 1 && y == 0 {
+		return true
+	}
+	return false
+}
+
+func IsValidRegionID(ID string) bool {
+	parent, regType, _, _ := GetRegionData(ID)
+	if parent == terrain.WORLD_OVERWORLD || parent == terrain.WORLD_ETHER {
+		return regType == terrain.REGIONTYPE_FIELD
+	}
+
+	if !IsValidRegionID(parent) {
+		return false
+	}
+
+	_, parentType, parentX, parentY := GetRegionData(parent)
+
+	if regType == terrain.REGIONTYPE_DUNGEON {
+		return (parentType == terrain.REGIONTYPE_DUNGEON ||
+			parentType == terrain.REGIONTYPE_FIELD && isDungeonPos(parentX, parentY))
+	}
+	if regType == terrain.REGIONTYPE_FIELD {
+		return parentType == terrain.WORLD_OVERWORLD || parentType == terrain.WORLD_ETHER
+	}
+
+	return true
 }

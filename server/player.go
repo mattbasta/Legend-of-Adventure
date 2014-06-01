@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"./terrain"
 )
 
 var playerCounter = 0
@@ -37,8 +39,10 @@ func NewPlayer(conn *websocket.Conn) *Player {
 	outbound_raw := make(chan string, SOCKET_BUFFER_SIZE)
 	closing := make(chan bool)
 
-	reg := GetRegion(WORLD_OVERWORLD, 0, 0) // Get the region and make it active.
-	reg.KeepAlive <- true                   // Let the region know to stay alive.
+	// Get the region and make it active.
+	reg := GetRegion(terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0)
+	// Let the region know to stay alive.
+	reg.KeepAlive <- true
 
 	player := Player{conn, reg,
 		outbound, outbound_raw, closing,
