@@ -47,9 +47,13 @@ func startRegionGetter() {
 				reg.doTTL()
 
 				reg.entities = make([]*Entity, 0, 32)
-				reg.terrain = *terrain.Get(reg, REGION_WIDTH, REGION_HEIGHT)
+				reg.terrain = terrain.Get(reg, REGION_WIDTH, REGION_HEIGHT)
 
-				// TODO: Do level building here.
+				if reg.IsTown() {
+					terrain.ApplyTown(reg.terrain)
+				} else if reg.IsDungeonEntrance() {
+					terrain.ApplyDungeonEntrance(reg.terrain)
+				}
 
 				regionCache[request.ID] = reg
 
@@ -104,7 +108,7 @@ type Region struct {
 	KeepAlive chan bool
 	killer    chan bool
 
-	terrain  terrain.Terrain
+	terrain  *terrain.Terrain
 	entities []*Entity
 }
 

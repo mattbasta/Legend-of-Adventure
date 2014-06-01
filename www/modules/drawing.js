@@ -4,7 +4,7 @@ define('drawing',
 
     var tilesize = settings.tilesize;
     var tilesetTileSize = settings.tilesetTileSize;
-    // var terrainScaling =
+    var tbSize = tilesetTileSize * 10;
 
     var requestAnimationFrame = window.requestAnimationFrame || function(cb) {setTimeout(cb, 1000 / 30);};
 
@@ -14,10 +14,12 @@ define('drawing',
         avatars: false,
         positioning: false
     };
-    var order = ['terrain', 'avatars'];
+    var order = ['avatars'];
     var lastDraw;
     var drawing = false;
     var state;
+
+    var terrainBuffers = [];
 
     /*
     State is in the following form:
@@ -35,7 +37,33 @@ define('drawing',
         var output = canvases.getContext('output');
         if(state && (changed.terrain || changed.objects || changed.avatars || changed.positioning)) {
             var scale;
-            for(var i = 0; i < order.length; i++) {
+            var i;
+            var j;
+
+            // Draw the terrain
+            scale = settings.scales.terrain;
+            var topmostTB = Math.floor(state[1] / tilesize / 10);
+            var leftmostTB = Math.floor(state[0] / tilesize / 10);
+            var bottommostTB = Math.ceil((state[1] + state[3]) / tilesize / 10);
+            var rightmostTB = Math.ceil((state[0] + state[2]) / tilesize / 10);
+
+            for (i = topmostTB; i <= bottommostTB; i++) {
+                for (j = leftmostTB; j <= rightmostTB; j++) {
+                    // console.log('Drawing ' + i + ',' + j + ' at ' + (j * tilesize * 10 - state[0]) + ',' + (i * tilesize * 10 - state[1]));
+                    output.drawImage(
+                        terrainBuffers[i][j],
+                        0, 0, tbSize, tbSize,
+                        j * tilesize * 10 - state[0],
+                        i * tilesize * 10 - state[1],
+                        tilesize * 10,
+                        tilesize * 10
+                    );
+                }
+            }
+            changed.terrain = false;
+
+            // Draw everything else
+            for(i = 0; i < order.length; i++) {
                 scale = settings.scales[order[i]];
                 output.drawImage(
                     canvases.getCanvas(order[i]),
@@ -58,7 +86,7 @@ define('drawing',
             requestAnimationFrame(draw);
     }
 
-    function redrawBackground() {  // TODO: Rename to something more apt
+    function redrawTerrain() {
         var c = canvases.getContext('terrain');
 
         images.waitFor(level.getTileset()).done(function(tileset) {
@@ -71,19 +99,36 @@ define('drawing',
             var spriteY;
             var spriteX;
 
-            var xx;
-            var yy = 0;
-            for(var y = 0; y < terrainH; y++) {
-                xx = 0;
-                for(var x = 0; x < terrainW; x++) {
+            var buffer;
+            var bufferCtx;
+            var cell;
+            for (var y = 0; y < Math.ceil(terrainH / 10); y++) {
+                terrainBuffers[y] = [];
+                for (var x = 0; x < Math.ceil(terrainW / 10); x++) {
+                    terrainBuffers[y][x] = buffer = document.createElement('canvas');
+                    buffer.height = tbSize;
+                    buffer.width = tbSize;
+                    bufferCtx = canvases.prepareContext(buffer.getContext('2d'));
+                    for (var i = 0; i < 10; i++) {
+                        if (y * 10 + i >= terrain.length) continue;
+                        for (var j = 0; j < 10; j++) {
+                            if (x * 10 + j >= terrain[y * 10 + i].length) continue;
+                            var cell = terrain[y * 10 + i][x * 10 + j];
+                            bufferCtx.drawImage(
+                                tileset,
+                                (cell % tilesetSize) * tilesetTileSize,
+                                Math.floor(cell / tilesetSize) * tilesetTileSize,
+                                tilesetTileSize,
+                                tilesetTileSize,
+                                j * tilesetTileSize,
+                                i * tilesetTileSize,
+                                tilesetTileSize,
+                                tilesetTileSize
+                            );
+                        }
+                    }
 
-                    spriteY = Math.floor(terrain[y][x] / tilesetSize) * tilesetTileSize;
-                    spriteX = (terrain[y][x] % tilesetSize) * tilesetTileSize;
-
-                    c.drawImage(tileset, spriteX, spriteY, tilesetTileSize, tilesetTileSize, xx, yy, tilesetTileSize, tilesetTileSize);
-                    xx += tilesetTileSize;
                 }
-                yy += tilesetTileSize;
             }
             changed.terrain = true;
         });
@@ -116,12 +161,12 @@ define('drawing',
     level.on('pause', stop);
     level.on('unpause', start);
     level.on('stateUpdated', setState);
-    level.on('redraw', redrawBackground);
+    level.on('redraw', redrawTerrain);
 
     return {
         start: start,
         stop: stop,
-        redrawBackground: redrawBackground,
+        redrawTerrain: redrawTerrain,
         setChanged: function(element) {
             if (!(element in changed)) return;
             changed[element] = true;

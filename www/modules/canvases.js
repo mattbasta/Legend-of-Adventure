@@ -61,6 +61,7 @@ define('canvases', ['settings'], function(settings) {
                 canvases[c].height = height * settings.scales[c];
                 canvases[c].width = width * settings.scales[c];
             }
-        }
+        },
+        prepareContext: prepareContext
     };
 });
