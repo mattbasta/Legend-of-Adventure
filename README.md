@@ -12,14 +12,25 @@ LoA has the following goals:
 * Horizontally scalable to hundreds or thousands of machines.
 
 
+## Running
+
+I absolutely hate how Go's `GOPATH` variable, since it requires your project to be in the same location as its dependencies. To get around this limitation, LoA lives in `/opt/legend-of-adventure` (I keep all of my code in `/opt`). `/opt/src` is a soft link to `/opt`. If you have your own Go workspace set up locally, you should only need to link `/opt/legend-of-adventure` to where you've `go get`'d it to and create the `/opt/src` link.
+
+Once you have the package cloned, simply run
+
+```bash
+make  # go fmt, get, build, etc.
+./server.o  # Run!
+```
+
+The server will start on port `8080` or whatever you pass as `--port`.
+
+
 ## Status
 
 This project is currently undergoing a port from Python to Go. As such, most of
 the Python code is considered deprecated and may not run. Most of the
 functionality from the Python code has not yet been ported.
-
-Additionally, a major refactor of the JavaScript is underway, which may mean
-that the client contains many nasty bugs.
 
 
 ## Requirements
