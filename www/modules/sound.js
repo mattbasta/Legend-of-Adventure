@@ -1,6 +1,4 @@
-define('sound', [], function() {
-
-    // TODO: make `buzz` into a module
+define('sound', ['buzz'], function(buzz) {
 
     var sounds = {};
     var loops = {};
@@ -40,10 +38,8 @@ define('sound', [], function() {
     // playLoop('daylight');
 
     return {
-        loadLoop : function(name, url) {
-
-        },
-        playLoop : function(name) {
+        loadLoop: loadLoop,
+        playLoop: function(name) {
             if(playing_loop == name)
                 return;
 
@@ -60,7 +56,7 @@ define('sound', [], function() {
                 loops[name].play().setVolume(0).fadeTo(20, 2000);
             });
         },
-        playSound : function(name, distance) {
+        playSound: function(name, distance) {
             if(!(name in sounds))
                 return;
             if(distance > 25)
@@ -69,7 +65,7 @@ define('sound', [], function() {
             var sc = sound.getStateCode();
             if(sc >= 2) {
                 distance /= 2.5;
-                // TODO : Make this a constant somewhere.
+                // TODO: Make this a constant somewhere.
                 sound.setVolume(100 - distance * distance);
                 sound.play();
             }

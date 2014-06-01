@@ -11,7 +11,7 @@ define('level',
         registerLevel();
     });
 
-    $(window).resize(function(){
+    window.addEventListener('resize', function() {
         offset.w = document.body.offsetWidth;
         offset.h = document.body.offsetHeight;
         setCenterPosition(true);
