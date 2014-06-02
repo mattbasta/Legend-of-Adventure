@@ -157,8 +157,6 @@ define('drawing',
 
     return {
         start: start,
-        stop: stop,
-        redrawTerrain: redrawTerrain,
-        setChanged: function(element) {}
+        stop: stop
     };
 });

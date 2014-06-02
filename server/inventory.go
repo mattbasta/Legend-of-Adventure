@@ -1,5 +1,9 @@
 package server
 
+import (
+	"log"
+)
+
 type Inventory struct {
 	Owner    *Entity
 	inv      []string
@@ -96,6 +100,24 @@ func (self *Inventory) Cycle(command string) {
 			self.inv[i] = self.inv[i-1]
 		}
 		self.inv[0] = last
+	}
+}
+
+func (self *Inventory) Use(index uint, holder Animat) {
+	if int(index) > self.capacity || self.inv[index] == "" {
+		return
+	}
+
+	log.Println(holder.ID() + " using " + self.inv[index])
+
+	switch self.inv[index][0] {
+	case 'f':
+		// Don't let the player waste the food.
+		if holder.IsAtMaxHealth() {
+			return
+		}
+		holder.IncrementHealth(5)
+		self.inv[index] = ""
 	}
 
 }

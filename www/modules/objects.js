@@ -1,6 +1,6 @@
 define('objects',
-    ['canvases', 'comm', 'drawing', 'frames', 'images', 'level', 'settings'],
-    function(canvases, comm, drawing, frames, images, level, settings) {
+    ['canvases', 'comm', 'frames', 'images', 'level', 'settings'],
+    function(canvases, comm, frames, images, level, settings) {
 
     var layers = {};
     var registry = {};
@@ -175,7 +175,6 @@ define('objects',
         var layer_canvas = canvases.getCanvas('objects'); // TODO: Elimate this extra step
         var c = canvases.getContext('objects');
         c.clearRect(0, 0, layer_canvas.width, layer_canvas.height);
-        drawing.setChanged('objects');
         for(var layer_id in layers) {
             layer = layers[layer_id].obj;
             c.drawImage(layer, 0, 0);

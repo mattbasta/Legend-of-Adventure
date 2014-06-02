@@ -33,11 +33,19 @@ type Entity interface {
 type Animat interface {
 	Entity
 
-	Properties() (int, string, string) // Layer, image, view
+	// Properties() (int, string, string) // Layer, image, view
 
-	Direction() (float64, float64)
-	Speed() float64
+	Direction() (int, int)
+	Velocity() (int, int)
 
-	ShouldWeightDirections() bool
+	// ShouldWeightDirections() bool
 	MovementEffect() string
+
+	GetHealth() uint
+	IsAtMaxHealth() bool
+	IncrementHealth(amount uint)
+}
+
+type SentientAnimat interface {
+	Animat
 }

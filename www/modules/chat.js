@@ -33,7 +33,7 @@ define('chat', ['comm', 'keys', 'level'], function(comm, keys, level) {
     var ret = {
         startChat : function() {
             textbox.style.display = "block";
-            setTimeout(function() {textbox.focus();}, 15);
+            setTimeout(function() {textbox.focus();}, 0);
             textbox.onkeydown = function(e) {
                 e.stopPropagation();
                 switch(e.keyCode) {
@@ -46,7 +46,10 @@ define('chat', ['comm', 'keys', 'level'], function(comm, keys, level) {
                     case 27:
                         ret.stopChat();
                 }
-                return true;
+            };
+            // This stops keyup events from mucking with the game.
+            textbox.onkeyup = function(e) {
+                e.stopPropagation();
             };
             started = true;
             chatbox.style.bottom = "130px";

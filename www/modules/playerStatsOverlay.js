@@ -122,20 +122,22 @@ define('playerStatsOverlay',
     }
 
     var waiting = false;
-    var redraw = function() {
+    var redrawHook = function() {
         if (waiting) return;
         waiting = true;
         return images.waitFor('inventory', 'items').done(function(inventoryImg, itemsImg) {
             var inventory = inventoryImg[0];
             var items = itemsImg[0];
-            redraw = function() {
+            (redrawHook = function() {
                 doRedraw(inventory, items);
-            };
-            redraw();
+            })();
         });
     };
+    function redraw() {
+        redrawHook();
+    };
 
-    redraw();
+    redrawHook();
 
     level.on('redraw', redraw);
 

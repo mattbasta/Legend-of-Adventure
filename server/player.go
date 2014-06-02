@@ -26,6 +26,7 @@ type Player struct {
 	velX, velY int
 	dirX, dirY int
 	isDead     bool
+	health	   uint
 
 	inventory *Inventory
 }
@@ -49,7 +50,9 @@ func NewPlayer(conn *websocket.Conn) *Player {
 		NextEntityID(),
 		REGION_WIDTH / 2, REGION_HEIGHT / 2, 0, 0, 0, 1,
 		false,
-		nil}
+		PLAYER_MAX_HEALTH,
+		nil,
+	}
 	reg.AddEntity(&player)
 	player_ent := (Entity)(player)
 
@@ -130,7 +133,7 @@ func (self Player) Setup() {
 	// TODO: Add inventory persistence
 	self.inventory.Give("wsw.sharp.12")
 	self.inventory.Give("f5")
-	self.update_inventory()
+	self.updateInventory()
 
 	// TODO: Do lookup of player location here.
 
@@ -147,10 +150,13 @@ func (self *Player) handle(msg string) {
 	switch split[0] {
 	case "cyc": // cyc == cycle inventory
 		self.inventory.Cycle(split[1])
-		self.update_inventory()
+		self.updateInventory()
 
 	case "cha": // cha == chat
 		body := fmt.Sprintf("%f %f\n%s", self.x, self.y, split[1])
+		if HandleCheat(split[1], self) {
+			return
+		}
 		self.location.Broadcast(
 			self.location.GetEvent(CHAT, body, self),
 			self.ID(),
@@ -213,10 +219,18 @@ func (self *Player) handle(msg string) {
 			self.location.GetEvent(LOCATION, self.String(), self),
 			self.ID(),
 		)
+
+	case "use":
+		index, err := strconv.ParseUint(split[1], 10, 0)
+		if err != nil {
+			return
+		}
+		self.inventory.Use(uint(index), self)
+		self.updateInventory()
 	}
 }
 
-func (self *Player) update_inventory() {
+func (self *Player) updateInventory() {
 	out := "inv"
 	first := true
 	for i := 0; i < self.inventory.Capacity(); i++ {
@@ -241,12 +255,17 @@ func (self Player) Receive() chan<- *Event {
 	return (chan<- *Event)(self.outbound)
 }
 
-func (self Player) ID() string                   { return self.name }
-func (self Player) Position() (float64, float64) { return self.x, self.y }
 func (self Player) Dead() bool                   { return self.isDead }
-func (self Player) Location() *Region            { return self.location }
+func (self Player) Direction() (int, int) 		 { return self.dirX, self.dirY }
+func (self Player) GetHealth() uint 			 { return self.health }
+func (self Player) ID() string                   { return self.name }
 func (self Player) Inventory() *Inventory        { return self.inventory }
+func (self Player) IsAtMaxHealth() bool 		 { return self.health == PLAYER_MAX_HEALTH }
 func (self Player) Killer(in chan<- bool)        { return }
+func (self Player) Location() *Region            { return self.location }
+func (self Player) MovementEffect() string       { return "" }
+func (self Player) Position() (float64, float64) { return self.x, self.y }
+func (self Player) Velocity() (int, int) 		 { return self.velX, self.velY }
 
 func (self Player) GetIntroduction() string {
 	return "player " + self.String()
@@ -263,4 +282,17 @@ func (self Player) String() string {
 		self.dirX,
 		self.dirY,
 	)
+}
+
+
+func (self Player) IncrementHealth(amount uint) {
+	self.health += amount
+	if self.health > PLAYER_MAX_HEALTH {
+		self.health = PLAYER_MAX_HEALTH
+	} else if self.health < 0 {
+		self.health = 0
+		self.isDead = true
+		// TODO: Add death handler here
+	}
+	self.outbound_raw <- "hea" + strconv.Itoa(int(self.health))
 }

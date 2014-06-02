@@ -22,52 +22,56 @@ body.loading {
 #bg_tile_wrap,
 #bg_tile_wrap {z-index:5;}
 #bg_tile_full {
-    position:absolute;
-    top:0;
-    left:0;
-    height:100%;
-    width:100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
 }
 #chatbox {
-    position:absolute;
-    bottom:130px;
-    left:0;
-    padding:0.5em;
-    z-index:100006;
-    font-size:2em;
-    letter-spacing:2px;
+    position: absolute;
+    bottom: 130px;
+    left: 0;
+    max-width: 50%;
+    padding: 0.5em;
+    z-index: 6;
+    font-size: 2em;
+    letter-spacing: 2px;
 }
-#chatbox, #talkbar {font-family:'VT323', Courier, Courier New, monospace;}
+#chatbox, #talkbar {
+    font-family: 'VT323', Courier, Courier New, monospace;
+    font-size: 25px;
+}
 #chatbox p {
-    opacity:0;
+    opacity: 0;
     text-shadow: 1px 1px #fff;
 }
-#chatbox p+p {opacity:0.4;}
-#chatbox p+p+p {opacity:0.8;}
-#chatbox p+p+p+p {opacity:1;}
-#chatbox p span {color:#a00;}
-#chatbox p small {color:#888;}
+#chatbox p + p {opacity: 0.4;}
+#chatbox p + p + p {opacity: 0.8;}
+#chatbox p + p + p + p {opacity: 1;}
+#chatbox p span {color: #a00;}
+#chatbox p small {color: #888;}
 #talkbar {
-    display:none;
-    position:absolute;
-    bottom:100px;
-    left:0.5em;
-    z-index:1000;
-    font-size:20px;
-    background:#000;
-    color:#fff;
-    border-radius:5px;
-    padding:0.1em 0.25em;
-    letter-spacing:0.2ex;
+    background: #000;
+    border-radius: 5px;
+    bottom: 100px;
+    color: #fff;
+    display: none;
+    font-size: 20px;
+    left: 0.5em;
+    letter-spacing: 0.2ex;
+    padding: 0.1em 0.25em;
+    position: absolute;
+    z-index: 1000;
 }
 #talkbar.empty {
-    color:#aaa;
+    color: #aaa;
 }
 #inventory {
-    z-index: 100008; /* Don't judge. */
-    position:fixed;
-    left:0;
-    bottom:0;
+    z-index: 8;
+    position: fixed;
+    left: 0;
+    bottom: 0;
 }
 canvas {
     image-rendering: optimizeSpeed;             // Older versions of FF
