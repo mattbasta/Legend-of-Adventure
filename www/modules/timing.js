@@ -45,8 +45,6 @@ define('timing',
             adjustedY *= Math.SQRT1_2;
         }
 
-        var doRedrawAVS = false;
-
         // If the player is moving, perform hitmapping. Then reompute whether
         // the player is still moving.
         if (playerMoving) {
@@ -100,7 +98,6 @@ define('timing',
                 avatar.cycle_position = 0;
                 avatar.sprite_cycle = 0;
                 avatars.draw('local');
-                doRedrawAVS = true;
                 updateLocation();
             }
 
@@ -139,18 +136,15 @@ define('timing',
             avatar.cycle_position = 0;
             // Have the avatar redrawn.
             avatars.draw('local');
-            // Indicate that the avatar layer needs to be redrawn.
-            doRedrawAVS = true;
             // Send one last position update to the server indicating where the
             // user stopped moving.
             updateLocation();
         }
 
         // Perform avatar processing
-        doRedrawAVS = avatars.tick(speed) || doRedrawAVS;
+        avatars.tick(speed);
 
         if (doSetCenter) level.setCenterPosition();
-        if (doRedrawAVS) avatars.redrawAvatars();
 
         objects.tick(ticks, speed);
 

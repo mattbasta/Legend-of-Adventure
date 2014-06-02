@@ -9,3 +9,6 @@ const PERLIN_FREQUENCY = 128.0
 
 const BUILDINGS_MIN = 6
 const BUILDINGS_MAX = 15
+
+const TOWN_MIN_EDGE = 10
+const TOWN_MAX_EDGE = 190

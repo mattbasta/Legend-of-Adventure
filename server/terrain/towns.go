@@ -45,6 +45,13 @@ var roadMinorTiles = Tileset{
     Tile{1, 1, 1, 0}: 84,
 }
 
+var directionDefs = [4][2]int{
+    [2]int{0, 0},
+    [2]int{-1, 0},
+    [2]int{-1, -1},
+    [2]int{0, 0},
+}
+
 func isRoadMaterial(val uint) uint {
     if val > 77 && val < 88 {
         return 1
@@ -124,8 +131,8 @@ func ApplyTown(terrain *Terrain) {
     midpointX, midpointY := uint(terrain.Width / 2), uint(terrain.Height / 2)
 
     // There is no need for `floor` here because `/` on uint returns uint.
-    centerX := uint(midpointX - centerEntity.Width / 2)
-    centerY := uint(midpointY - centerEntity.Height / 2)
+    centerX := uint(midpointY - centerEntity.Width / 2)
+    centerY := uint(midpointX - centerEntity.Height / 2)
 
     // Boundaries are in the form (top, right, bottom, left)
     townBoundaries := [...]uint{
@@ -153,20 +160,12 @@ func ApplyTown(terrain *Terrain) {
     // point), we use these defs to offset this point by the building's height
     // and width.
 
-    // TODO: Make this a constant?
-    directionDefs := [4][2]int{
-        [2]int{0, 0},
-        [2]int{-1, 0},
-        [2]int{-1, -1},
-        [2]int{0, 0},
-    }
-
     iteration := 0
 
-    for (townBoundaries[0] > 10 && townBoundaries[0] < 90 &&
-         townBoundaries[1] > 10 && townBoundaries[1] < 90 &&
-         townBoundaries[2] > 10 && townBoundaries[2] < 90 &&
-         townBoundaries[3] > 10 && townBoundaries[3] < 90 &&
+    for (townBoundaries[0] > TOWN_MIN_EDGE && townBoundaries[0] < TOWN_MAX_EDGE &&
+         townBoundaries[1] > TOWN_MIN_EDGE && townBoundaries[1] < TOWN_MAX_EDGE &&
+         townBoundaries[2] > TOWN_MIN_EDGE && townBoundaries[2] < TOWN_MAX_EDGE &&
+         townBoundaries[3] > TOWN_MIN_EDGE && townBoundaries[3] < TOWN_MAX_EDGE &&
          buildingCount < buildingLimit) {
 
         iteration += 1

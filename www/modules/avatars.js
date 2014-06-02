@@ -1,6 +1,6 @@
 define('avatars',
-    ['canvases', 'comm', 'drawing', 'hitmapping', 'images', 'level', 'offset', 'settings'],
-    function(canvases, comm, drawing, hitmapping, images, level, offset, settings) {
+    ['canvases', 'comm', 'hitmapping', 'images', 'level', 'settings'],
+    function(canvases, comm, hitmapping, images, level, settings) {
 
     var registry = {};
     var follow = 'local';
@@ -32,7 +32,6 @@ define('avatars',
     comm.messages.on('del', function(body) {
         if (!(body in registry)) return;
         delete registry[body];
-        redrawAvatars(true);
     });
 
     // Change avatar position and direction
@@ -64,16 +63,14 @@ define('avatars',
         av.sprite_cycle = 0;
 
         draw(data[0]);
-        redrawAvatars();
     });
 
 
-    function register(id, props, nodraw) {
+    function register(id, props) {
         props.position = props.position || settings.avatar.sprite.down[0].position;
         props.velocity = props.velocity || [0, 0];
         props.direction = props.direction || [0, 1];
         props.hitmap = props.hitmap || [0, Infinity, Infinity, 0];
-        props.dirty = true;
         props.hidden = false;
         props.cycle_position = 0;
         props.sprite_cycle = 0;
@@ -82,18 +79,13 @@ define('avatars',
 
         registry[id] = props;
         draw(id);
-
-        if (!nodraw) redrawAvatars();
     }
 
     function draw(avatar, fromRedraw) {
         var av = registry[avatar];
         var context = av.canvas.getContext('2d');
-        context.imageSmoothingEnabled = false;
-        context.mozImageSmoothingEnabled = false;
-        context.webkitImageSmoothingEnabled = false;
+        canvases.prepareContext(context);
 
-        var immediate = true;
         images.waitFor(av.image).done(function(sprite) {
             context.clearRect(0, 0, settings.avatar.w, settings.avatar.h);
             context.drawImage(
@@ -101,51 +93,7 @@ define('avatars',
                 (av.position % 3) * avatarWidth, (av.position / 3 | 0) * avatarHeight, avatarWidth, avatarHeight,
                 0, 0, avatarWidth, avatarHeight
             );
-            av.dirty = true;
-            if (!immediate) {
-                redrawAvatars(true);
-            }
         });
-        immediate = false;
-    }
-
-    function redrawAvatars(dirty) {
-        dirty = dirty || false;
-        var avatars = [];
-
-        var avatar;
-
-        for (avatar in registry) {
-            var a = registry[avatar];
-            dirty = dirty || a.dirty;
-            avatars.push(a);
-        }
-        if (!dirty) return;
-
-        var ctx = canvases.getContext('avatars');
-        ctx.clearRect(
-            offset.x * avatarScale,
-            offset.y * avatarScale,
-            offset.w * avatarScale,
-            offset.h * avatarScale
-        );
-
-        if (avatars.length > 1) {
-            // Sort such that avatars with a lower Y are further back.
-            avatars.sort(function(a, b) {
-                return a.y - b.y;
-            });
-        }
-        drawing.setChanged('avatars');
-        for(var i = 0; i < avatars.length; i++) {
-            avatar = avatars[i];
-            ctx.drawImage(
-                avatar.canvas,
-                (avatar.x + avatarBodyOffset) * avatarScale,
-                (avatar.y - avatarHeight) * avatarScale
-            );
-            avatar.dirty = false;
-        }
     }
 
     function getFollowing() {
@@ -185,7 +133,6 @@ define('avatars',
         }
     });
 
-    level.on('redraw', redrawAvatars);
     level.on('unload', function() {
         for (var avatar in registry) {
             if (avatar === 'local') continue;
@@ -195,7 +142,6 @@ define('avatars',
     });
 
     return {
-        redrawAvatars: redrawAvatars,
         getLocal: function() {
             return registry.local;
         },
@@ -227,17 +173,49 @@ define('avatars',
 
                 spriteDirection = getSpriteDirection(a.direction[0], a.direction[1]);
                 if (a.sprite_cycle++ === spriteDirection[a.cycle_position].duration) {
-                    a.dirty = true;
                     a.sprite_cycle = 0;
                     a.cycle_position = a.cycle_position + 1 === 3 ? 1 : 2;
                     a.position = spriteDirection[a.cycle_position].position;
                     draw(av);
                 }
-                a.dirty = true;
                 doRedrawAVS = true;
             }
 
             return doRedrawAVS;
+        },
+        drawAll: function(context, state) {
+            var avatars = [];
+
+            var avatar;
+            for (avatar in registry) {
+                var a = registry[avatar];
+                if (a.x < state[0] - settings.tilesize ||
+                    a.x > state[0] + state[2] + settings.tilesize ||
+                    a.y < state[1] - settings.tilesize ||
+                    a.y > state[1] + state[3] + settings.tilesize) {
+                    continue
+                }
+                avatars.push(a);
+            }
+
+            if (!avatars.length) return;
+
+            if (avatars.length > 1) {
+                // Sort such that avatars with a lower Y are further back.
+                avatars.sort(function(a, b) {
+                    return a.y - b.y;
+                });
+            }
+            for(var i = 0; i < avatars.length; i++) {
+                avatar = avatars[i];
+                context.drawImage(
+                    avatar.canvas,
+                    0, 0, avatarWidth, avatarHeight,
+                    avatar.x + avatarBodyOffset - state[0],
+                    avatar.y - avatarHeight - state[1],
+                    settings.tilesize, settings.tilesize
+                );
+            }
         },
         resetFollow: function() {
             follow = 'local';

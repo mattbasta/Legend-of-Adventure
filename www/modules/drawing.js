@@ -1,20 +1,14 @@
 define('drawing',
-    ['canvases', 'images', 'level', 'settings'],
-    function(canvases, images, level, settings) {
+    ['avatars', 'canvases', 'images', 'level', 'settings'],
+    function(avatars, canvases, images, level, settings) {
 
     var tilesize = settings.tilesize;
     var tilesetTileSize = settings.tilesetTileSize;
-    var tbSize = tilesetTileSize * 10;
+    var terrainChunkSize = settings.terrainChunkSize;
+    var tbSize = tilesetTileSize * terrainChunkSize;
 
-    var requestAnimationFrame = window.requestAnimationFrame || function(cb) {setTimeout(cb, 1000 / 30);};
+    var requestAnimationFrame = window.requestAnimationFrame || function(cb) {setTimeout(cb, terrainChunkSize00 / 30);};
 
-    var changed = {
-        terrain: false,
-        objects: false,
-        avatars: false,
-        positioning: false
-    };
-    var order = ['avatars'];
     var lastDraw;
     var drawing = false;
     var state;
@@ -35,44 +29,44 @@ define('drawing',
 
     function draw() {
         var output = canvases.getContext('output');
-        if(state && (changed.terrain || changed.objects || changed.avatars || changed.positioning)) {
+        if(state) {
             var scale;
             var i;
             var j;
 
             // Draw the terrain
             scale = settings.scales.terrain;
-            var topmostTB = Math.floor(state[1] / tilesize / 10);
-            var leftmostTB = Math.floor(state[0] / tilesize / 10);
-            var bottommostTB = Math.ceil((state[1] + state[3]) / tilesize / 10);
-            var rightmostTB = Math.ceil((state[0] + state[2]) / tilesize / 10);
+            var topmostTB = Math.floor(state[1] / tilesize / terrainChunkSize);
+            var leftmostTB = Math.floor(state[0] / tilesize / terrainChunkSize);
+            var bottommostTB = Math.ceil((state[1] + state[3]) / tilesize / terrainChunkSize);
+            var rightmostTB = Math.ceil((state[0] + state[2]) / tilesize / terrainChunkSize);
 
             for (i = topmostTB; i <= bottommostTB; i++) {
                 for (j = leftmostTB; j <= rightmostTB; j++) {
-                    // console.log('Drawing ' + i + ',' + j + ' at ' + (j * tilesize * 10 - state[0]) + ',' + (i * tilesize * 10 - state[1]));
+                    // console.log('Drawing ' + i + ',' + j + ' at ' + (j * tilesize * terrainChunkSize - state[0]) + ',' + (i * tilesize * terrainChunkSize - state[1]));
                     output.drawImage(
                         terrainBuffers[i][j],
                         0, 0, tbSize, tbSize,
-                        j * tilesize * 10 - state[0],
-                        i * tilesize * 10 - state[1],
-                        tilesize * 10,
-                        tilesize * 10
+                        j * tilesize * terrainChunkSize - state[0],
+                        i * tilesize * terrainChunkSize - state[1],
+                        tilesize * terrainChunkSize,
+                        tilesize * terrainChunkSize
                     );
                 }
             }
-            changed.terrain = false;
 
-            // Draw everything else
-            for(i = 0; i < order.length; i++) {
-                scale = settings.scales[order[i]];
-                output.drawImage(
-                    canvases.getCanvas(order[i]),
-                    state[0] * scale, state[1] * scale, state[2] * scale, state[3] * scale,
-                    state[4], state[5], state[6], state[7]
-                );
-                changed[order[i]] = false;
-            }
-            changed.positioning = false;
+            // Draw the avatars
+            avatars.drawAll(output, state);
+
+            // // Draw everything else
+            // for(i = 0; i < order.length; i++) {
+            //     scale = settings.scales[order[i]];
+            //     output.drawImage(
+            //         canvases.getCanvas(order[i]),
+            //         state[0] * scale, state[1] * scale, state[2] * scale, state[3] * scale,
+            //         state[4], state[5], state[6], state[7]
+            //     );
+            // }
         }
         if(settings.show_fps) {
             output.fillStyle = 'white';
@@ -102,18 +96,18 @@ define('drawing',
             var buffer;
             var bufferCtx;
             var cell;
-            for (var y = 0; y < Math.ceil(terrainH / 10); y++) {
+            for (var y = 0; y < Math.ceil(terrainH / terrainChunkSize); y++) {
                 terrainBuffers[y] = [];
-                for (var x = 0; x < Math.ceil(terrainW / 10); x++) {
+                for (var x = 0; x < Math.ceil(terrainW / terrainChunkSize); x++) {
                     terrainBuffers[y][x] = buffer = document.createElement('canvas');
                     buffer.height = tbSize;
                     buffer.width = tbSize;
                     bufferCtx = canvases.prepareContext(buffer.getContext('2d'));
-                    for (var i = 0; i < 10; i++) {
-                        if (y * 10 + i >= terrain.length) continue;
-                        for (var j = 0; j < 10; j++) {
-                            if (x * 10 + j >= terrain[y * 10 + i].length) continue;
-                            var cell = terrain[y * 10 + i][x * 10 + j];
+                    for (var i = 0; i < terrainChunkSize; i++) {
+                        if (y * terrainChunkSize + i >= terrain.length) continue;
+                        for (var j = 0; j < terrainChunkSize; j++) {
+                            if (x * terrainChunkSize + j >= terrain[y * terrainChunkSize + i].length) continue;
+                            var cell = terrain[y * terrainChunkSize + i][x * terrainChunkSize + j];
                             bufferCtx.drawImage(
                                 tileset,
                                 (cell % tilesetSize) * tilesetTileSize,
@@ -130,7 +124,6 @@ define('drawing',
 
                 }
             }
-            changed.terrain = true;
         });
     }
 
@@ -144,7 +137,6 @@ define('drawing',
         state[5] = y2;
         state[6] = w2;
         state[7] = h2;
-        changed.positioning = true;
     }
 
     function start() {
@@ -167,9 +159,6 @@ define('drawing',
         start: start,
         stop: stop,
         redrawTerrain: redrawTerrain,
-        setChanged: function(element) {
-            if (!(element in changed)) return;
-            changed[element] = true;
-        }
+        setChanged: function(element) {}
     };
 });
