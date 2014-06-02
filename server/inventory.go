@@ -5,12 +5,12 @@ import (
 )
 
 type Inventory struct {
-	Owner    *Entity
+	Owner    Entity
 	inv      []string
 	capacity int
 }
 
-func NewInventory(owner *Entity, capacity int) *Inventory {
+func NewInventory(owner Entity, capacity int) *Inventory {
 	slots := make([]string, capacity)
 	return &Inventory{owner, slots, capacity}
 }
@@ -116,7 +116,7 @@ func (self *Inventory) Use(index uint, holder Animat) {
 		if holder.IsAtMaxHealth() {
 			return
 		}
-		holder.IncrementHealth(5)
+		holder.IncrementHealth(FOOD_HEALTH_INCREASE)
 		self.inv[index] = ""
 	}
 

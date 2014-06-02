@@ -54,10 +54,9 @@ func NewPlayer(conn *websocket.Conn) *Player {
 		nil,
 	}
 	reg.AddEntity(&player)
-	player_ent := (Entity)(player)
 
 	// Set up the player's inventory
-	player.inventory = NewInventory(&player_ent, PLAYER_INV_SIZE)
+	player.inventory = NewInventory(&player, PLAYER_INV_SIZE)
 
 	player.startPinging()
 
@@ -284,8 +283,7 @@ func (self Player) String() string {
 	)
 }
 
-
-func (self Player) IncrementHealth(amount uint) {
+func (self *Player) IncrementHealth(amount uint) {
 	self.health += amount
 	if self.health > PLAYER_MAX_HEALTH {
 		self.health = PLAYER_MAX_HEALTH
