@@ -49,7 +49,7 @@ var directionDefs = [4][2]int{
     [2]int{0, 0},
     [2]int{-1, 0},
     [2]int{-1, -1},
-    [2]int{0, 0},
+    [2]int{0, -1},
 }
 
 func isRoadMaterial(val uint) uint {
@@ -98,7 +98,7 @@ func smoothRoads(tiles [][]uint) {
     }
 }
 
-func fillRoad(terrain *Terrain, x, y, h, w uint) {
+func fillRoad(terrain *Terrain, x, y, w, h uint) {
     var i, j uint
     for i = 0; i < h; i++ {
         for j = 0; j < w; j++ {
@@ -166,7 +166,7 @@ func ApplyTown(terrain *Terrain) {
          townBoundaries[1] > TOWN_MIN_EDGE && townBoundaries[1] < TOWN_MAX_EDGE &&
          townBoundaries[2] > TOWN_MIN_EDGE && townBoundaries[2] < TOWN_MAX_EDGE &&
          townBoundaries[3] > TOWN_MIN_EDGE && townBoundaries[3] < TOWN_MAX_EDGE &&
-         buildingCount < buildingLimit) {
+         buildingCount <= buildingLimit) {
 
         iteration += 1
 
@@ -195,14 +195,14 @@ func ApplyTown(terrain *Terrain) {
             // Set conditions (per direction) for when the town border has been
             // surpassed.
             borderConds := [...]func(x, y uint) bool{
-                func(x, y uint) bool { return x < oldBoundaries[2] },
-                func(x, y uint) bool { return y > oldBoundaries[3] },
+                func(x, y uint) bool { return y > oldBoundaries[2] },
+                func(x, y uint) bool { return x < oldBoundaries[3] },
                 func(x, y uint) bool { return y < oldBoundaries[0] },
                 func(x, y uint) bool { return x > oldBoundaries[1] },
             }
 
             var widestBuilding uint = 0
-            for borderConds[direction](x, y) {
+            for !borderConds[direction](x, y) {
                 buildingIndex := rng.Intn(len(availableBuildings))
                 building := availableBuildings[buildingIndex]
                 buildingEntity := buildingEntities[building]
