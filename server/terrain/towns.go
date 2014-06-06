@@ -97,9 +97,9 @@ func smoothRoads(tiles [][]uint) {
             if !newValOk {
                 continue
             }
-            log.Println(newValue)
             if newValue != roadMaterial {
                 tiles[i][j] = newValue
+                continue
             }
 
             minor := Tile{
@@ -112,7 +112,6 @@ func smoothRoads(tiles [][]uint) {
                 continue
             }
             newMinorValue, newMinValOk := roadMinorTiles[minor]
-            log.Println(newMinorValue)
             if !newMinValOk {
                 continue
             }
