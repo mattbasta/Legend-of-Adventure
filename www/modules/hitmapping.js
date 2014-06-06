@@ -21,7 +21,7 @@ define('hitmapping', ['level', 'settings'], function(level, settings) {
             }
             for(i = y + 1, maplen = hitmap.length; i < maplen; i++) {
                 if(hitmap[i][x] || hitmap[i][x2]) {
-                    avatar.hitmap[2] = (i + 1) * tilesize + 15;
+                    avatar.hitmap[2] = (i ) * tilesize + 15;
                     break;
                 }
             }

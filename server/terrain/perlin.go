@@ -91,7 +91,7 @@ func (self NoiseGenerator) Get2D(x, y float64) float64 {
 }
 
 func (self NoiseGenerator) Get2DInt(x, y int, max uint) uint {
-    point := (self.Get2D(float64(x) / PERLIN_FREQUENCY, float64(y) / PERLIN_FREQUENCY) + 1.0) / 2.0
+    point := (self.Get2D(float64(x) / PERLIN_FREQUENCY, float64(y) / PERLIN_FREQUENCY) * PERLIN_DILATION + 1.0) / 2.0
     return uint(point * float64(max))
 }
 

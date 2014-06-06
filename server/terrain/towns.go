@@ -52,6 +52,14 @@ var directionDefs = [4][2]int{
     [2]int{0, -1},
 }
 
+func isRoad(val uint) uint {
+    if val == roadMaterial {
+        return 1
+    } else {
+        return 0
+    }
+}
+
 func isRoadMaterial(val uint) uint {
     if val > 77 && val < 88 {
         return 1
@@ -66,15 +74,15 @@ func smoothRoads(tiles [][]uint) {
     for i := 1; i < len(tiles) - 1; i++ {
         for j := 1; j < rowLen - 1; j++ {
             cell := tiles[i][j]
-            if isRoadMaterial(cell) == 1 {
+            if isRoad(cell) != 1 {
                 continue
             }
 
             major := Tile{
-                isRoadMaterial(tiles[i - 1][j]),
-                isRoadMaterial(tiles[i][j + 1]),
-                isRoadMaterial(tiles[i + 1][j]),
-                isRoadMaterial(tiles[i][j - 1]),
+                isRoad(tiles[i - 1][j]),
+                isRoad(tiles[i][j + 1]),
+                isRoad(tiles[i + 1][j]),
+                isRoad(tiles[i][j - 1]),
             }
             newValue, newValOk := roadMajorTiles[major]
             if !newValOk {
@@ -85,10 +93,10 @@ func smoothRoads(tiles [][]uint) {
             }
 
             minor := Tile{
-                isRoadMaterial(tiles[i - 1][j - 1]),
-                isRoadMaterial(tiles[i - 1][j + 1]),
-                isRoadMaterial(tiles[i + 1][j - 1]),
-                isRoadMaterial(tiles[i + 1][j + 1]),
+                isRoad(tiles[i - 1][j - 1]),
+                isRoad(tiles[i - 1][j + 1]),
+                isRoad(tiles[i + 1][j - 1]),
+                isRoad(tiles[i + 1][j + 1]),
             }
             if minor[0] == 1 && minor[1] == 1 && minor[2] == 1 && minor[3] == 1 {
                 continue

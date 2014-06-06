@@ -84,8 +84,8 @@ define('timing',
             avatar.x += adjustedX;
             avatar.y += adjustedY;
 
-            if (_x) hitmapping.updateAvatarY(avatar);
-            if (_y) hitmapping.updateAvatarX(avatar);
+            if (_y) hitmapping.updateAvatarY(avatar);
+            if (_x) hitmapping.updateAvatarX(avatar);
 
             if(_x !== avatar.velocity[0] || _y !== avatar.velocity[1]) {
                 avatar.dirty = true;
