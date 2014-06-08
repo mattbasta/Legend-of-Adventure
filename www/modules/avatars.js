@@ -5,9 +5,10 @@ define('avatars',
     var registry = {};
     var follow = 'local';
 
+    var drawnAvatarHeight = 50;
     var avatarHeight = 32;
     var avatarWidth = 32;
-    var avatarBodyOffset = -7;
+    var avatarBodyOffset = 0;
     var avatarScale = settings.scales.avatars;
 
     // Add avatar
@@ -186,6 +187,7 @@ define('avatars',
         drawAll: function(context, state) {
             var avatars = [];
 
+            // Ignore avatars that are not onscreen.
             var avatar;
             for (avatar in registry) {
                 var a = registry[avatar];
@@ -198,21 +200,21 @@ define('avatars',
                 avatars.push(a);
             }
 
-            if (!avatars.length) return;
-
+            // Sort such that avatars with a lower Y are further back.
             if (avatars.length > 1) {
-                // Sort such that avatars with a lower Y are further back.
                 avatars.sort(function(a, b) {
                     return a.y - b.y;
                 });
             }
+
+            // Draw each avatar in turn.
             for(var i = 0; i < avatars.length; i++) {
                 avatar = avatars[i];
                 context.drawImage(
                     avatar.canvas,
                     0, 0, avatarWidth, avatarHeight,
                     avatar.x + avatarBodyOffset - state[0],
-                    avatar.y - avatarHeight - state[1],
+                    avatar.y - drawnAvatarHeight - state[1],
                     settings.tilesize, settings.tilesize
                 );
             }

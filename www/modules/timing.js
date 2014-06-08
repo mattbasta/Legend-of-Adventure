@@ -64,11 +64,11 @@ define('timing',
 
             if (_y) {
                 // Are we hitting the bottom hitmap?
-                if(_y > 0 && avatar.y + adjustedY + settings.avatar.h > hitmap[2])
-                    adjustedY = hitmap[2] - avatar.y - settings.avatar.h;
+                if(_y > 0 && avatar.y + adjustedY > hitmap[2])
+                    adjustedY = hitmap[2] - avatar.y;
                 // What about the top hitmap?
-                else if(_y < 0 && avatar.y + adjustedY < hitmap[0])
-                    adjustedY = hitmap[0] - avatar.y;
+                else if(_y < 0 && avatar.y + adjustedY - settings.avatar.h + 15 < hitmap[0])
+                    adjustedY = hitmap[0] - avatar.y + settings.avatar.h - 15;
 
                 if(!adjustedY) _y = 0;
             }

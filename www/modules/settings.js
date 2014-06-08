@@ -10,7 +10,7 @@ define('settings', [], function() {
 
         show_epu: false,
         show_fps: false,
-        show_hitmap: true,
+        show_hitmap: false,
         show_hitmappings: false,
 
         scales: {
