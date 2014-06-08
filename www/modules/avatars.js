@@ -217,6 +217,17 @@ define('avatars',
                 );
             }
         },
+        drawHitmappings: function(context, state) {
+            var local = registry.local;
+            context.lineWidth = 3;
+            context.strokeStyle = 'red';
+            context.strokeRect(
+                local.hitmap[3] - state[0],
+                local.hitmap[0] - state[1],
+                local.hitmap[1] - local.hitmap[3],
+                local.hitmap[2] - local.hitmap[0]
+            );
+        },
         resetFollow: function() {
             follow = 'local';
         }

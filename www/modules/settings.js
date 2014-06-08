@@ -10,6 +10,8 @@ define('settings', [], function() {
 
         show_epu: false,
         show_fps: false,
+        show_hitmap: true,
+        show_hitmappings: false,
 
         scales: {
             terrain: 16 / 50,

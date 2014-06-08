@@ -43,7 +43,6 @@ define('drawing',
 
             for (i = topmostTB; i <= bottommostTB; i++) {
                 for (j = leftmostTB; j <= rightmostTB; j++) {
-                    // console.log('Drawing ' + i + ',' + j + ' at ' + (j * tilesize * terrainChunkSize - state[0]) + ',' + (i * tilesize * terrainChunkSize - state[1]));
                     output.drawImage(
                         terrainBuffers[i][j],
                         0, 0, tbSize, tbSize,
@@ -76,6 +75,9 @@ define('drawing',
             output.fillText(1000 / (now - lastDraw) | 0, 0, 10);
             lastDraw = now;
         }
+        if(settings.show_hitmappings) {
+            avatars.drawHitmappings(output, state);
+        }
         if(drawing)
             requestAnimationFrame(draw);
     }
@@ -85,6 +87,7 @@ define('drawing',
 
         images.waitFor(level.getTileset()).done(function(tileset) {
             var terrain = level.getTerrain();
+            var hitmap = settings.show_hitmap ? level.getHitmap() : null;
             var terrainH = terrain.length;
             var terrainW = terrain[0].length;
 
@@ -119,6 +122,14 @@ define('drawing',
                                 tilesetTileSize,
                                 tilesetTileSize
                             );
+                            if (settings.show_hitmap && hitmap[y * terrainChunkSize + i][x * terrainChunkSize + j]) {
+                                bufferCtx.strokeStyle = 'red';
+                                bufferCtx.moveTo(j * tilesetTileSize, i * tilesetTileSize);
+                                bufferCtx.lineTo((j + 1) * tilesetTileSize, (i + 1) * tilesetTileSize);
+                                bufferCtx.moveTo((j + 1) * tilesetTileSize, i * tilesetTileSize);
+                                bufferCtx.lineTo(j * tilesetTileSize, (i + 1) * tilesetTileSize);
+                                bufferCtx.stroke();
+                            }
                         }
                     }
 
