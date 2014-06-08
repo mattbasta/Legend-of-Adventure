@@ -41,6 +41,11 @@ define('drawing',
             var bottommostTB = Math.ceil((state[1] + state[3]) / tilesize / terrainChunkSize);
             var rightmostTB = Math.ceil((state[0] + state[2]) / tilesize / terrainChunkSize);
 
+            topmostTB = Math.max(Math.min(topmostTB, terrainBuffers.length - 1), 0);
+            leftmostTB = Math.max(Math.min(leftmostTB, terrainBuffers[0].length - 1), 0);
+            bottommostTB = Math.max(Math.min(bottommostTB, terrainBuffers.length - 1), 0);
+            rightmostTB = Math.max(Math.min(rightmostTB, terrainBuffers[0].length - 1), 0);
+
             for (i = topmostTB; i <= bottommostTB; i++) {
                 for (j = leftmostTB; j <= rightmostTB; j++) {
                     output.drawImage(
