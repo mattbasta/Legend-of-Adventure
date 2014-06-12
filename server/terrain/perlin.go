@@ -1,3 +1,6 @@
+// Parts of this file were created by nsf on GitHub
+// https://gist.github.com/nsf/1170424
+
 package terrain
 
 import (
@@ -5,101 +8,103 @@ import (
     "math/rand"
 )
 
-var PERIOD = 256
+const PI = 3.1415926535
 
-var F2 = 0.5 * (math.Sqrt(3.0) - 1.0)
-var G2 = (3.0 - math.Sqrt(3.0)) / 6.0
-
-var GRAD3 = [...][3]int{
-    {1,1,0},{-1,1,0},{1,-1,0},{-1,-1,0},
-    {1,0,1},{-1,0,1},{1,0,-1},{-1,0,-1},
-    {0,1,1},{0,-1,1},{0,1,-1},{0,-1,-1},
-    {1,1,0},{0,-1,1},{-1,1,0},{0,-1,-1},
+type Vec2 struct {
+    X, Y float64
 }
 
+func lerp(a, b, v float64) float64 {
+    return a * (1 - v) + b * v
+}
+
+func smooth(v float64) float64 {
+    return v * v * (3 - 2 * v)
+}
+
+func random_gradient(r *rand.Rand) Vec2 {
+    v := r.Float64() * PI * 2
+    return Vec2{
+        float64(math.Cos(v)),
+        float64(math.Sin(v)),
+    }
+}
+
+func gradient(orig, grad, p Vec2) float64 {
+    sp := Vec2{p.X - orig.X, p.Y - orig.Y}
+    return grad.X * sp.X + grad.Y * sp.Y
+}
 
 type NoiseGenerator struct {
-    Seed int
-    Permutation []int
+    rgradients []Vec2
+    permutations []int
+    gradients [4]Vec2
+    origins [4]Vec2
 }
 
 func NewNoiseGenerator(seed int) *NoiseGenerator {
+    rnd := rand.New(rand.NewSource(int64(seed)))
+
     gen := new(NoiseGenerator)
-    gen.Seed = seed
-    gen.Permutation = make([]int, PERIOD)
-
-    rng := rand.New(rand.NewSource(int64(seed)))
-    for i, _ := range gen.Permutation {
-        swapPos := rng.Intn(PERIOD-1)
-        gen.Permutation[i], gen.Permutation[swapPos] = gen.Permutation[swapPos], gen.Permutation[i]
+    gen.rgradients = make([]Vec2, TERRAIN_PERLIN_PERIOD)
+    gen.permutations = rand.Perm(TERRAIN_PERLIN_PERIOD)
+    for i := range gen.rgradients {
+        gen.rgradients[i] = random_gradient(rnd)
     }
-
-    // Double the permutation
-    gen.Permutation = append(gen.Permutation, gen.Permutation...)
 
     return gen
 }
 
-func (self NoiseGenerator) Get2D(x, y float64) float64 {
-    // int i1, j1, I, J, c;
-    s := (x + y) * F2
-    i := math.Floor(x + s)
-    j := math.Floor(y + s)
-    t := (i + j) * G2
-
-    xx := [3]float64{0.0, 0.0, 0.0}
-    yy := [3]float64{0.0, 0.0, 0.0}
-    f := [3]float64{0.0, 0.0, 0.0}
-    noise := [3]float64{0.0, 0.0, 0.0}
-
-    g := [3]int{0, 0, 0}
-
-    xx[0] = x - (i - t)
-    yy[0] = y - (j - t)
-
-    i1 := 0
-    if xx[0] > yy[0] {
-        i1 = 1
-    }
-    j1 := 0
-    if xx[0] <= yy[0] {
-        j1 = 1
-    }
-
-    xx[2] = xx[0] + G2 * 2.0 - 1.0
-    yy[2] = yy[0] + G2 * 2.0 - 1.0
-    xx[1] = xx[0] - float64(i1) + G2
-    yy[1] = yy[0] - float64(j1) + G2
-
-    I := int(i) & 255
-    J := int(j) & 255
-    g[0] = self.Permutation[I + self.Permutation[J]] % 12
-    g[1] = self.Permutation[I + i1 + self.Permutation[J + j1]] % 12
-    g[2] = self.Permutation[I + 1 + self.Permutation[J + 1]] % 12
-
-    for c := 0; c <= 2; c++ {
-        f[c] = 0.5 - xx[c] * xx[c] - yy[c] * yy[c]
-    }
-
-    for c := 0; c <= 2; c++ {
-        if f[c] > 0 {
-            noise[c] = f[c]*f[c]*f[c]*f[c] * (float64(GRAD3[g[c]][0]) * xx[c] + float64(GRAD3[g[c]][1]) * yy[c])
-        }
-    }
-
-    return (noise[0] + noise[1] + noise[2]) * 70.0
+func (self *NoiseGenerator) get_gradient(x, y int) Vec2 {
+    idx := self.permutations[x & (TERRAIN_PERLIN_PERIOD - 1)] + self.permutations[y & (TERRAIN_PERLIN_PERIOD - 1)]
+    return self.rgradients[idx & (TERRAIN_PERLIN_PERIOD - 1)]
 }
 
-func (self NoiseGenerator) Get2DInt(x, y int, max uint) uint {
-    point := (self.Get2D(float64(x) / PERLIN_FREQUENCY, float64(y) / PERLIN_FREQUENCY) * PERLIN_DILATION + 1.0) / 2.0
-    return uint(point * float64(max))
+func (self *NoiseGenerator) get_gradients(x, y float64) {
+    x0f := math.Floor(float64(x))
+    y0f := math.Floor(float64(y))
+    x0 := int(x0f)
+    y0 := int(y0f)
+    x1 := x0 + 1
+    y1 := y0 + 1
+
+    self.gradients[0] = self.get_gradient(x0, y0)
+    self.gradients[1] = self.get_gradient(x1, y0)
+    self.gradients[2] = self.get_gradient(x0, y1)
+    self.gradients[3] = self.get_gradient(x1, y1)
+
+    self.origins[0] = Vec2{float64(x0f + 0.0), float64(y0f + 0.0)}
+    self.origins[1] = Vec2{float64(x0f + 1.0), float64(y0f + 0.0)}
+    self.origins[2] = Vec2{float64(x0f + 0.0), float64(y0f + 1.0)}
+    self.origins[3] = Vec2{float64(x0f + 1.0), float64(y0f + 1.0)}
 }
 
-func (self NoiseGenerator) FillGrid(grid *[][]uint, max uint) {
+func (self *NoiseGenerator) Get2D(x, y float64) float64 {
+    p := Vec2{x, y}
+    self.get_gradients(x, y)
+    v0 := gradient(self.origins[0], self.gradients[0], p)
+    v1 := gradient(self.origins[1], self.gradients[1], p)
+    v2 := gradient(self.origins[2], self.gradients[2], p)
+    v3 := gradient(self.origins[3], self.gradients[3], p)
+    fx := smooth(x - self.origins[0].X)
+    vx0 := lerp(v0, v1, fx)
+    vx1 := lerp(v2, v3, fx)
+    fy := smooth(y - self.origins[0].Y)
+    return lerp(vx0, vx1, fy)
+}
+
+func (self *NoiseGenerator) Get2DInt(x, y int, max uint) uint {
+    v := self.Get2D(float64(x) * PERLIN_FREQUENCY, float64(y) * PERLIN_FREQUENCY)
+    v = v * 0.5 + 0.5
+    v = math.Pow(v, PERLIN_DILATION)
+    return uint(v * float64(max))
+}
+
+func (self *NoiseGenerator) FillGrid(grid *[][]uint, max uint) {
     for i := 0; i < len(*grid); i++ {
         row := (*grid)[i]
         for j := 0; j < len(row); j++ {
-            row[j] = self.Get2DInt(i, j, max - TERRAIN_PERLIN_INCREASE) + TERRAIN_PERLIN_INCREASE
+            row[j] = self.Get2DInt(i, j, max - 1) + PERLIN_UPLIFT
         }
     }
 }
