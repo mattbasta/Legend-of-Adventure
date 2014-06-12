@@ -1,4 +1,5 @@
 define('frames', [], function() {
+    'use strict';
 
     return {
         get: function(type, data, ticks, startTicks) {

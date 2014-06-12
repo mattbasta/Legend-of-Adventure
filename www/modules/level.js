@@ -2,6 +2,8 @@ define('level',
     ['canvases', 'comm', 'events', 'offset', 'settings'],
     function(canvases, comm, events, offset, settings) {
 
+    'use strict';
+
     var tilesize = settings.tilesize;
 
     var levelEvents = new events.EventTarget();

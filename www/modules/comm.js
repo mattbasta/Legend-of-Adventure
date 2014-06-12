@@ -2,6 +2,8 @@ define('comm',
     ['defer', 'events', 'guid', 'load', 'settings', 'sound'],
     function(defer, events, guid, load, settings, sound) {
 
+    'use strict';
+
     var localID = guid();
 
     var commEventsRaw = new events.EventTarget();

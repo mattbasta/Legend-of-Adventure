@@ -2,6 +2,8 @@ define('playerStatsOverlay',
     ['comm', 'images', 'inventory', 'keys', 'level', 'player'],
     function(comm, images, inventory, keys, level, player) {
 
+    'use strict';
+
     var canvas = document.getElementById('canvas_inventory');
     var ctx = canvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
@@ -63,7 +65,7 @@ define('playerStatsOverlay',
         function draw_item(x, y, h, w, code) {
             var sy = 0, sx = 0;
             if (code[0] == "w") {  // Weapons have special codes to allow modifiers
-                attributes = code.substr(1).split(".");
+                var attributes = code.substr(1).split(".");
                 sx = jgassets.weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
                 sy = jgassets.weapon_order.indexOf(attributes[0]) * 24;
             } else {

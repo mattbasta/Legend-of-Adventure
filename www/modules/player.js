@@ -1,4 +1,6 @@
 define('player', ['comm'], function(comm) {
+    'use strict';
+
     var health = 100;
     var lowHealth = null;
 

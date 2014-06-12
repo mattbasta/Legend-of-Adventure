@@ -2,6 +2,8 @@ define('drawing',
     ['avatars', 'canvases', 'images', 'level', 'settings'],
     function(avatars, canvases, images, level, settings) {
 
+    'use strict';
+
     var tilesize = settings.tilesize;
     var tilesetTileSize = settings.tilesetTileSize;
     var terrainChunkSize = settings.terrainChunkSize;

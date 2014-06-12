@@ -2,6 +2,8 @@ define('avatars',
     ['canvases', 'comm', 'hitmapping', 'images', 'level', 'settings'],
     function(canvases, comm, hitmapping, images, level, settings) {
 
+    'use strict';
+
     var registry = {};
     var follow = 'local';
 

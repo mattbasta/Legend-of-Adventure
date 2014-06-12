@@ -1,4 +1,6 @@
 define('inventory', ['comm', 'keys'], function(comm, keys) {
+    'use strict';
+
     var slots = [null, null, null, null, null];
     var selected = 0;
 

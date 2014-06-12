@@ -1,4 +1,5 @@
 define('sound', ['buzz'], function(buzz) {
+    'use strict';
 
     var sounds = {};
     var loops = {};

@@ -1,4 +1,6 @@
 define('events', [], function() {
+    'use strict';
+
     function EventTarget() {
         var listeners = {};
         var oneListeners = {};

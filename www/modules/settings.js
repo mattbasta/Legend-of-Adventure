@@ -1,4 +1,6 @@
 define('settings', [], function() {
+    'use strict';
+
     return {
         init_module: 'game',
         port: 80,

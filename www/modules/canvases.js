@@ -1,4 +1,5 @@
 define('canvases', ['settings'], function(settings) {
+    'use strict';
 
     var canvases = {};
     var contexts = {};

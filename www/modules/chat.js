@@ -1,4 +1,5 @@
 define('chat', ['comm', 'keys', 'level'], function(comm, keys, level) {
+    'use strict';
 
     var started = false;
 

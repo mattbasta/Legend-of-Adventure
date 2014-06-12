@@ -2,6 +2,8 @@ define('objects',
     ['canvases', 'comm', 'frames', 'images', 'level', 'settings'],
     function(canvases, comm, frames, images, level, settings) {
 
+    'use strict';
+
     var layers = {};
     var registry = {};
 

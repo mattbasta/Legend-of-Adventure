@@ -1,4 +1,6 @@
 define('keys', ['events'], function(events) {
+    'use strict';
+
     var keyUpHandler = new events.EventTarget();
     var keyDownHandler = new events.EventTarget();
 

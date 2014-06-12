@@ -1,4 +1,5 @@
 define('load', ['defer', 'events'], function(defer, events) {
+    'use strict';
 
     var dependencyBus = new events.EventTarget();
 

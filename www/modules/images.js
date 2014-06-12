@@ -1,4 +1,6 @@
 define('images', ['promise'], function(promise) {
+    'use strict';
+
     function loadImage(src) {
         return promise(function(resolve, reject) {
             var img = new Image();

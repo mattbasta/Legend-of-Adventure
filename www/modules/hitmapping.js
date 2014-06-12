@@ -1,4 +1,5 @@
 define('hitmapping', ['level', 'settings'], function(level, settings) {
+    'use strict';
 
     var tilesize = settings.tilesize;
 
@@ -13,6 +14,7 @@ define('hitmapping', ['level', 'settings'], function(level, settings) {
 
             var y_min = 0, y_max = hitmap.length * tilesize;
             var i;
+            var maplen;
             for(i = y; i >= 0; i--) {
                 if(hitmap[i][x] || hitmap[i][x2]) {
                     y_min = (i + 1) * tilesize;
@@ -39,6 +41,7 @@ define('hitmapping', ['level', 'settings'], function(level, settings) {
             var x_min = -1 * tilesize,
                 x_max = (hitmap[y].length + 1) * tilesize;
             var i;
+            var rowlen;
             for(i = x - 1; i >= 0; i--) {
                 if(hitmap[y][i] || hitmap[y2][i]) {
                     x_min = (i + 1) * tilesize - 7.5;
