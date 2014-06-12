@@ -8,11 +8,6 @@ define('level',
 
     var levelEvents = new events.EventTarget();
 
-    // Location change notification
-    comm.messages.on('flv', function() {
-        registerLevel();
-    });
-
     window.addEventListener('resize', function() {
         offset.w = document.body.offsetWidth;
         offset.h = document.body.offsetHeight;
@@ -107,6 +102,11 @@ define('level',
             if (position) comm.send('lev', position);
         });
     }
+
+    // Location change notification
+    comm.messages.on('flv', function() {
+        registerLevel(); // We want to strip the args.
+    });
 
     function prepare(data) {
         levelData = data;

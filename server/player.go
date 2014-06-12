@@ -226,6 +226,33 @@ func (self *Player) handle(msg string) {
 		}
 		self.inventory.Use(uint(index), self)
 		self.updateInventory()
+
+	case "lev":
+		pos := strings.Split(split[1], ":")
+		xPos, err := strconv.ParseInt(pos[0], 10, 0)
+		if err != nil {
+			return
+		}
+		yPos, err := strconv.ParseInt(pos[1], 10, 0)
+		if err != nil {
+			return
+		}
+
+		if Iabs(self.location.X - int(xPos)) > 1 ||
+		   Iabs(self.location.Y - int(yPos)) > 1 {
+		   	return
+		}
+
+		oldLocation := self.location
+		oldLocation.RemoveEntity(self)
+
+		newLocation := GetRegion(oldLocation.ParentID, oldLocation.Type, int(xPos), int(yPos))
+		newLocation.KeepAlive <- true
+		newLocation.AddEntity(self)
+		self.location = newLocation
+		// Send the player the initial level
+		self.outbound_raw <- "lev{" + newLocation.String() + "}"
+
 	}
 }
 

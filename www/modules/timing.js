@@ -11,8 +11,8 @@ define('timing',
     var tilesize = settings.tilesize;
 
 
-    function beginSwapRegion(x, y, avx, avy) {
-        level.load(x, y, avx | 0, avy | 0);
+    function beginSwapRegion(x, y) {
+        level.load(x, y);
     }
 
     function tick() {
@@ -124,15 +124,19 @@ define('timing',
             // edge, perform those calculations now.
             // TODO: This should be moved to the server.
             if (level.canSlide()) {
-                if(_y < 0 && avatar.y < settings.tilesize / 2)
-                    beginSwapRegion(level.getX(), level.getY() - 1, avatar.x, avatar.y);
-                else if(_y > 0 && avatar.y >= (level.getH() - 1) * settings.tilesize)
-                    beginSwapRegion(level.getX(), level.getY() + 1, avatar.x, avatar.y);
-                else if(_x < 0 && avatar.x < settings.tilesize / 2)
-                    beginSwapRegion(level.getX() - 1, level.getY(), avatar.x, avatar.y);
-                else if(_x > 0 && avatar.x >= (level.getW() - 1) * settings.tilesize)
-                    beginSwapRegion(level.getX() + 1, level.getY(), avatar.x, avatar.y);
-
+                if(_y < 0 && avatar.y < settings.tilesize * 1.5) {
+                    level.load(level.getX(), level.getY() - 1);
+                    avatar.y = level.getH();
+                } else if(_y > 0 && avatar.y >= (level.getH() - 1) * settings.tilesize) {
+                    level.load(level.getX(), level.getY() + 1);
+                    avatar.y = settings.avatar.h;
+                } else if(_x < 0 && avatar.x < settings.tilesize / 2) {
+                    level.load(level.getX() - 1, level.getY());
+                    avatar.x = level.getW() - settings.avatar.w;
+                } else if(_x > 0 && avatar.x >= (level.getW() - 1) * settings.tilesize) {
+                    level.load(level.getX() + 1, level.getY());
+                    avatar.x = 0;
+                }
             }
 
         } else if ((avatar.velocity[0] || avatar.velocity[1]) &&

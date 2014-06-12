@@ -126,10 +126,14 @@ define('avatars',
         true // No Draw
     );
 
+    var firstLevel = true;
     level.on('newLevel', function(width, height, hitmap) {
         var avatar = registry.local;
-        avatar.x = width / 2;
-        avatar.y = height / 2;
+        if (firstLevel) {
+            avatar.x = width / 2;
+            avatar.y = height / 2;
+            firstLevel = false;
+        }
         if(hitmap) {
             hitmapping.updateAvatarX(avatar, hitmap);
             hitmapping.updateAvatarY(avatar, hitmap);
