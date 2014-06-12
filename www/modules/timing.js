@@ -2,11 +2,18 @@ define('timing',
     ['avatars', 'comm', 'drawing', 'hitmapping', 'keys', 'level', 'objects', 'settings'],
     function(avatars, comm, drawing, hitmapping, keys, level, objects, settings) {
 
+    'use strict';
+
     var registers = {};
     var timer;
     var last = 0;
 
     var tilesize = settings.tilesize;
+
+
+    function beginSwapRegion(x, y, avx, avy) {
+        level.load(x, y, avx | 0, avy | 0);
+    }
 
     function tick() {
         var ticks = Date.now();
@@ -52,25 +59,35 @@ define('timing',
             var hitmap = avatar.hitmap;
             if (_x) {
                 // Are we hitting the right hitmap?
-                if (_x > 0 && avatar.x + adjustedX + settings.avatar.w > hitmap[1])
+                if (_x > 0 && avatar.x + adjustedX + settings.avatar.w > hitmap[1]) {
                     adjustedX = hitmap[1] - avatar.x - settings.avatar.w;
+                    _x = 0;
+                }
                 // What about the left hitmap?
-                else if (_x < 0 && avatar.x + adjustedX < hitmap[3])
+                else if (_x < 0 && avatar.x + adjustedX < hitmap[3]) {
                     adjustedX = hitmap[3] - avatar.x;
-
-                // Mark that we aren't moving if we've adjusted the hitmap not to move.
-                if(!adjustedX) _x = 0;
+                    _x = 0;
+                }
+                // If we aren't moving, adjust our Y speed to what it was.
+                if (!_x) {
+                    adjustedY = _y * speed;
+                }
             }
 
             if (_y) {
                 // Are we hitting the bottom hitmap?
-                if(_y > 0 && avatar.y + adjustedY > hitmap[2])
+                if(_y > 0 && avatar.y + adjustedY > hitmap[2]) {
                     adjustedY = hitmap[2] - avatar.y;
+                    _y = 0;
+                }
                 // What about the top hitmap?
-                else if(_y < 0 && avatar.y + adjustedY - settings.avatar.h + 15 < hitmap[0])
+                else if(_y < 0 && avatar.y + adjustedY - settings.avatar.h + 15 < hitmap[0]) {
                     adjustedY = hitmap[0] - avatar.y + settings.avatar.h - 15;
-
-                if(!adjustedY) _y = 0;
+                    _y = 0;
+                }
+                if (!_y) {
+                    adjustedX = _x * speed;
+                }
             }
 
             // Recompute whether the player is actually moving. Useful for when
@@ -105,11 +122,8 @@ define('timing',
 
             // If the user can navigate to adjacent regions by walking off the
             // edge, perform those calculations now.
+            // TODO: This should be moved to the server.
             if (level.canSlide()) {
-                // TODO: This should be moved to the server.
-                var beginSwapRegion = function(x, y, avx, avy) {
-                    level.load(x, y, avx | 0, avy | 0);
-                }
                 if(_y < 0 && avatar.y < settings.tilesize / 2)
                     beginSwapRegion(level.getX(), level.getY() - 1, avatar.x, avatar.y);
                 else if(_y > 0 && avatar.y >= (level.getH() - 1) * settings.tilesize)
