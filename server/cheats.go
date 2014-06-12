@@ -13,7 +13,7 @@ func sayToPlayer(message string, player *Player) {
 
 
 func HandleCheat(message string, player *Player) bool {
-    spl := strings.Split(message, " ")
+    spl := strings.SplitN(message, " ", 2)
     // All command have at least two components.
     if len(spl) < 2 {
         return false
@@ -58,6 +58,43 @@ func HandleCheat(message string, player *Player) bool {
             player.updateInventory()
         }
         return true
+
+    case "tel":
+        telSplit := strings.SplitN(spl[1], " ", 3)
+
+        xPos, err := strconv.ParseUint(telSplit[0], 10, 0)
+        if err != nil {
+            return false
+        }
+        yPos, err := strconv.ParseUint(telSplit[1], 10, 0)
+        if err != nil {
+            return false
+        }
+
+        player.x = float64(xPos)
+        player.y = float64(yPos)
+        player.velX = 0
+        player.velY = 0
+        player.dirX = 0
+        player.dirY = 0
+
+        // If the player is already in the region, don't run sendToLocation
+        if telSplit[2] != player.location.ID() {
+            parentID, type_, x, y := GetRegionData(telSplit[2])
+            player.sendToLocation(parentID, type_, x, y)
+
+            // TODO: make sure xPos and yPos are within the region
+            // TODO: warn the user if those coords are hitmapped.
+        }
+
+        player.outbound_raw <- (
+            "loclocal " +
+            strconv.Itoa(int(xPos)) + " " +
+            strconv.Itoa(int(yPos)) + " " +
+            "0 0 " + // Velocity
+            "0 1") // Direction
+        return true
+
     }
 
     return false

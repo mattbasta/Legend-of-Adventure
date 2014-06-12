@@ -243,17 +243,23 @@ func (self *Player) handle(msg string) {
 		   	return
 		}
 
-		oldLocation := self.location
-		oldLocation.RemoveEntity(self)
-
-		newLocation := GetRegion(oldLocation.ParentID, oldLocation.Type, int(xPos), int(yPos))
-		newLocation.KeepAlive <- true
-		newLocation.AddEntity(self)
-		self.location = newLocation
-		// Send the player the initial level
-		self.outbound_raw <- "lev{" + newLocation.String() + "}"
+		self.sendToLocation(self.location.ParentID, self.location.Type, int(xPos), int(yPos))
 
 	}
+}
+
+func (self *Player) sendToLocation(parentID, type_ string, x, y int) {
+	if self.location != nil {
+		self.location.RemoveEntity(self)
+	}
+
+	newLocation := GetRegion(parentID, type_, x, y)
+	newLocation.KeepAlive <- true
+	newLocation.AddEntity(self)
+	self.location = newLocation
+	// Send the player the initial level
+	self.outbound_raw <- "flv"
+	self.outbound_raw <- "lev{" + newLocation.String() + "}"
 }
 
 func (self *Player) updateInventory() {

@@ -16,8 +16,8 @@ import (
 // x: The X coordinate of the area
 // y: The Y coordinate of the area
 // Examples:
-//     overworld:field 0 0
-//     overworld:field 0 0:house0 1 0
+//     overworld:field:0:0
+//     overworld:field:0:0:house0 1 0
 //     overworld:field 123 456:dungeon 0 0
 //     overworld:field 123 456:dungeon 2 3:dungeon:1 1
 //     overworld:field 123 456:dungeon 2 3:dungeon:1 1
@@ -68,6 +68,9 @@ func getRegionID(parent, regType string, x, y int) string {
 }
 func GetRegionData(ID string) (string, string, int, int) {
 	split := strings.Split(ID, ":")
+	if len(split) != 4 {
+		return terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0
+	}
 	x, _ := strconv.ParseInt(split[2], 10, 0)
 	y, _ := strconv.ParseInt(split[3], 10, 0)
 	return split[0], split[1], int(x), int(y)

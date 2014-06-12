@@ -126,13 +126,13 @@ define('timing',
             if (level.canSlide()) {
                 if(_y < 0 && avatar.y < settings.tilesize * 1.5) {
                     level.load(level.getX(), level.getY() - 1);
-                    avatar.y = level.getH();
+                    avatar.y = level.getH() * settings.tilesize;
                 } else if(_y > 0 && avatar.y >= (level.getH() - 1) * settings.tilesize) {
                     level.load(level.getX(), level.getY() + 1);
                     avatar.y = settings.avatar.h;
                 } else if(_x < 0 && avatar.x < settings.tilesize / 2) {
                     level.load(level.getX() - 1, level.getY());
-                    avatar.x = level.getW() - settings.avatar.w;
+                    avatar.x = level.getW() * settings.tilesize - settings.avatar.w;
                 } else if(_x > 0 && avatar.x >= (level.getW() - 1) * settings.tilesize) {
                     level.load(level.getX() + 1, level.getY());
                     avatar.x = 0;
