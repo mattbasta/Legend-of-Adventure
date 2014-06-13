@@ -16,11 +16,11 @@ import (
 // x: The X coordinate of the area
 // y: The Y coordinate of the area
 // Examples:
-//     overworld:field:0:0
-//     overworld:field:0:0:house0 1 0
-//     overworld:field 123 456:dungeon 0 0
-//     overworld:field 123 456:dungeon 2 3:dungeon:1 1
-//     overworld:field 123 456:dungeon 2 3:dungeon:1 1
+//     overworld,field:0:0
+//     overworld,field:0:0,house0 1 0
+//     overworld,field:123:456,dungeon:0:0
+//     overworld,field:123:456,dungeon:2:3,dungeon:1:1
+//     overworld,field:123:456,dungeon:2:3,dungeon:1:1
 
 type regionRequest struct {
 	ID       string
@@ -64,16 +64,21 @@ func startRegionGetter() {
 }
 
 func getRegionID(parent, regType string, x, y int) string {
-	return parent + ":" + regType + ":" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
+	return parent + "," + regType + ":" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
 }
 func GetRegionData(ID string) (string, string, int, int) {
-	split := strings.Split(ID, ":")
-	if len(split) != 4 {
+	parentSplit := strings.Split(ID, ",")
+	if len(parentSplit) < 2 {
 		return terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0
 	}
-	x, _ := strconv.ParseInt(split[2], 10, 0)
-	y, _ := strconv.ParseInt(split[3], 10, 0)
-	return split[0], split[1], int(x), int(y)
+	regSplit := strings.Split(parentSplit[len(parentSplit) - 1], ":")
+	if len(regSplit) != 3 {
+		return terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0
+	}
+	parent := strings.Join(parentSplit[:len(parentSplit) - 1], ",")
+	x, _ := strconv.ParseInt(regSplit[1], 10, 0)
+	y, _ := strconv.ParseInt(regSplit[2], 10, 0)
+	return parent, regSplit[0], int(x), int(y)
 }
 
 func GetRegion(parent, regType string, x, y int) *Region {

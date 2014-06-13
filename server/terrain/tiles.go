@@ -15,6 +15,7 @@ type FeatureTiles struct {
 
     Tiles  [][]uint
     Hitmap [][]bool
+    Portals []Portal
 }
 
 
@@ -58,6 +59,7 @@ func GetFeatureTiles(setName string) *FeatureTiles {
 
     tiles := make([][]uint, 0)
     hitmap := make([][]bool, 0)
+    portals := make([]Portal, 0)
 
     tileScan := bufio.NewScanner(tileFile)
     hitmapScan := bufio.NewScanner(hitmapFile)
@@ -76,6 +78,34 @@ func GetFeatureTiles(setName string) *FeatureTiles {
     tileset.Height = uint(len(tiles))
     tileset.Width = uint(len(tiles[0]))
 
+    portalsFile, err := os.Open("resources/tilesets/" + setName + ".portals")
+    if err == nil {
+        portalScan := bufio.NewScanner(portalsFile)
+        for portalScan.Scan() {
+            pVals := strings.Split(portalScan.Text(), " ")
+            x, err := strconv.ParseUint(pVals[0], 10, 0)
+            if err != nil { break }
+            y, err := strconv.ParseUint(pVals[1], 10, 0)
+            if err != nil { break }
+            width, err := strconv.ParseUint(pVals[2], 10, 0)
+            if err != nil { break }
+            height, err := strconv.ParseUint(pVals[3], 10, 0)
+            if err != nil { break }
+            destX, err := strconv.ParseFloat(pVals[5], 32)
+            if err != nil { break }
+            destY, err := strconv.ParseFloat(pVals[6], 32)
+            if err != nil { break }
+            portal := NewPortal(
+                uint(x), uint(y),
+                uint(width), uint(height),
+                pVals[4],
+                destX, destY,
+            )
+            portals = append(portals, portal)
+        }
+    }
+    tileset.Portals = portals
+
     tilesetCache[setName] = tileset
 
     return tileset
@@ -87,5 +117,14 @@ func (self FeatureTiles) Apply(terrain *Terrain, x, y int) {
             terrain.Tiles[i + y][j + x] = self.Tiles[i][j]
             terrain.Hitmap[i + y][j + x] = self.Hitmap[i][j] || terrain.Hitmap[i + y][j + x]
         }
+    }
+    for _, portal := range self.Portals {
+        tPortal := NewPortal(
+            portal.X + uint(x), portal.Y + uint(y),
+            portal.W, portal. H,
+            portal.Target,
+            portal.DestX, portal.DestY,
+        )
+        terrain.Portals = append(terrain.Portals, tPortal)
     }
 }

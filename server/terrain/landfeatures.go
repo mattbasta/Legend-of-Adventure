@@ -11,5 +11,6 @@ func ApplyDungeonEntrance(terrain *Terrain) {
     tiles.Apply(
         terrain,
         rng.Intn(int(terrain.Width - tiles.Width - 1)),
-        rng.Intn(int(terrain.Height - tiles.Height - 1)))
+        rng.Intn(int(terrain.Height - tiles.Height - 1)),
+    )
 }

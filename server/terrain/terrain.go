@@ -29,16 +29,7 @@ type Terrain struct {
     Y int
 	Tiles  [][]uint
 	Hitmap [][]bool
-}
-
-type Portal struct {
-    X int
-    Y int
-    Width uint
-    Height uint
-    Destination string
-    DestinationX float32
-    DestinationY float32
+    Portals []Portal
 }
 
 func Get(region Region, height, width uint) *Terrain {
@@ -69,6 +60,7 @@ func New(height, width uint) *Terrain {
     terrain := new(Terrain)
     terrain.Tiles = tiles
     terrain.Hitmap = hitmap
+    terrain.Portals = make([]Portal, 0)
     terrain.Height = height
     terrain.Width = width
 

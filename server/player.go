@@ -55,10 +55,8 @@ func NewPlayer(conn *websocket.Conn) *Player {
 	}
 	reg.AddEntity(&player)
 
-	// Set up the player's inventory
-	player.inventory = NewInventory(&player, PLAYER_INV_SIZE)
-
-	player.startPinging()
+	go player.startPinging()
+	go player.gameTick()
 
 	// Send the player the initial level
 	outbound_raw <- "lev{" + reg.String() + "}"
@@ -67,19 +65,47 @@ func NewPlayer(conn *websocket.Conn) *Player {
 }
 
 func (self *Player) startPinging() {
-	go func(self *Player) {
-		ticker := time.NewTicker(1 * time.Minute)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				self.location.KeepAlive <- true
-			case <-self.closing:
-				self.closing <- true
-				return
-			}
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			self.location.KeepAlive <- true
+		case <-self.closing:
+			self.closing <- true
+			return
 		}
-	}(self)
+	}
+}
+
+func (self *Player) gameTick() {
+	ticker := time.NewTicker(250 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			if self.location == nil {
+				continue
+			}
+			for _, portal := range self.location.terrain.Portals {
+				if IsEntityCollidingWithPortal(portal, self) {
+					log.Println("Player in contact with portal")
+					parent, type_, x, y := GetRegionData(portal.Target)
+					if parent == ".." {
+						parent = self.location.ParentID
+					} else if parent == "." {
+						parent = self.location.ID()
+					} else {
+						parent = self.location.ID() + "," + parent
+					}
+					self.sendToLocation(parent, type_, x, y)
+				}
+			}
+		case <-self.closing:
+			self.closing <- true
+			return
+		}
+	}
 }
 
 func (self *Player) listenOutbound() {
@@ -130,6 +156,8 @@ func (self *Player) Listen() {
 
 func (self Player) Setup() {
 	// TODO: Add inventory persistence
+	// Set up the player's inventory
+	self.inventory = NewInventory(self, PLAYER_INV_SIZE)
 	self.inventory.Give("wsw.sharp.12")
 	self.inventory.Give("f5")
 	self.updateInventory()
@@ -297,6 +325,7 @@ func (self Player) Killer(in chan<- bool)        { return }
 func (self Player) Location() *Region            { return self.location }
 func (self Player) MovementEffect() string       { return "" }
 func (self Player) Position() (float64, float64) { return self.x, self.y }
+func (self Player) Size() (uint, uint) 			 { return 50, 50 }
 func (self Player) Velocity() (int, int) 		 { return self.velX, self.velY }
 
 func (self Player) GetIntroduction() string {

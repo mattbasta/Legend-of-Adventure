@@ -2,6 +2,8 @@ package server
 
 import (
 	"strconv"
+
+	"legend-of-adventure/server/terrain"
 )
 
 var entityNameCounter = 0
@@ -19,6 +21,7 @@ type Entity interface {
 
 	ID() string
 	Position() (float64, float64)
+	Size() (uint, uint)
 
 	Dead() bool
 
@@ -48,4 +51,13 @@ type Animat interface {
 
 type SentientAnimat interface {
 	Animat
+}
+
+func IsEntityCollidingWithPortal(portal terrain.Portal, entity Entity) bool {
+    ex, ey := entity.Position() // TODO: Update this to use ApproximatePosition
+    ew, eh := entity.Size()
+    return (uint(ex) + ew > portal.X * TILE_SIZE &&
+            uint(ex) - portal.W * TILE_SIZE > portal.X * TILE_SIZE &&
+            uint(ey) + eh > portal.Y * TILE_SIZE &&
+            uint(ey) - portal.H * TILE_SIZE > portal.Y * TILE_SIZE)
 }
