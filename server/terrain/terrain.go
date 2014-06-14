@@ -3,14 +3,6 @@ package terrain
 import "bytes"
 import "strconv"
 
-const (
-    WORLD_OVERWORLD = "overworld"
-    WORLD_ETHER     = "ether"
-
-    REGIONTYPE_FIELD   = "field"
-    REGIONTYPE_DUNGEON = "field"
-)
-
 type Region interface {
     IsTown() bool
     IsDungeonEntrance() bool
@@ -32,8 +24,11 @@ type Terrain struct {
     Portals []Portal
 }
 
-func Get(region Region, height, width uint) *Terrain {
-    terrain := New(height, width)
+func Get(region Region) *Terrain {
+    sizes := regionSizes[region.GetType()]
+    width, height := sizes[0], sizes[1]
+
+    terrain := New(width, height)
     terrain.X = region.GetX()
     terrain.Y = region.GetY()
 
@@ -49,7 +44,7 @@ func Get(region Region, height, width uint) *Terrain {
 }
 
 
-func New(height, width uint) *Terrain {
+func New(width, height uint) *Terrain {
     tiles := make([][]uint, height)
     hitmap := make([][]bool, height)
     for i := range tiles {

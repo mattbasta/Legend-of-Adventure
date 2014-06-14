@@ -17,8 +17,8 @@ define('level',
     var levelData;
 
     function setCenterPosition(resize) {
-        var level_h = levelData.h * tilesize,
-            level_w = levelData.w * tilesize;
+        var level_h = levelData.h * tilesize;
+        var level_w = levelData.w * tilesize;
 
         // Resize the terrain canvas if the window size has changed.
         var output_buffer = canvases.getCanvas('output');
@@ -42,50 +42,50 @@ define('level',
 
         var temp;
 
-        if(level_w * tilesize > c_offsetw) { // The scene isn't narrower than the canvas
+        if (level_w > c_offsetw) { // The scene isn't narrower than the canvas
 
             var half_w = c_offsetw / 2;
 
-            if(x < half_w)
+            if (x < half_w) {
                 offset.x = 0;
-            else if(x > (temp = (level_w * tilesize - half_w)))
+            } else if (x > (temp = (level_w - half_w))) {
                 offset.x = temp - half_w;
-            else {
+            } else {
                 offset.x = x - half_w;
                 moveavatar_x = false;
             }
 
-            offset.x = offset.x | 0;
+        } else {
+            offset.x = (c_offsetw / 2 - level_w / 2) * -1;
+        }
 
-        } else if(resize)
-            offset.x = ((c_offsetw / 2 - level_w * tilesize / 2) | 0) * -1;
+        offset.x = offset.x | 0;
 
+        if (level_h > c_offseth) { // The scene isn't narrower than the canvas
 
-        if(level_h * tilesize > c_offseth) { // The scene isn't narrower than the canvas
+            var half_h = c_offseth / 2;
 
-            var half_h = c_offseth / 2,
-                levH = level_h * tilesize;
-
-            if(y < half_h)
+            if (y < half_h) {
                 offset.y = 0;
-            else if(y > (temp = (levH - half_h)))
+            } else if (y > (temp = level_h - half_h)) {
                 offset.y = temp - half_h;
-            else {
+            } else {
                 offset.y = y - half_h;
                 moveavatar_y = false;
             }
 
-            offset.y = offset.y | 0;
+        } else {
+            offset.y = (c_offseth / 2 - level_h / 2) * -1;
+        }
 
-        } else if(resize)
-            offset.y = Math.floor(c_offseth / 2 - level_h * tilesize / 2) * -1;
+        offset.y = offset.y | 0;
 
         var n_x = offset.x * -1;
         var n_y = offset.y * -1;
 
         levelEvents.fire(
             'stateUpdated',
-            Math.max(offset.x, 0), Math.max(offset.y, 0),
+            offset.x, offset.y,
             Math.min(output_buffer.clientWidth, level_w), Math.min(output_buffer.clientHeight, level_h),
             Math.max(n_x, 0), Math.max(n_y, 0),
             Math.min(output_buffer.clientWidth, level_w), Math.min(output_buffer.clientHeight, level_h)

@@ -12,12 +12,12 @@ type Hitmap struct {
 
 func GetHitmap(entity *Entity, terrain *terrain.Terrain) *Hitmap {
 	fleft, ftop := (*entity).Position()
-	fleft = math.Max(math.Min(fleft, REGION_WIDTH), 0)
-	ftop = math.Max(math.Min(ftop, REGION_HEIGHT), 0)
+	fleft = math.Max(math.Min(fleft, float64(terrain.Width)), 0)
+	ftop = math.Max(math.Min(ftop, float64(terrain.Height)), 0)
 	left, top := int(fleft), int(ftop)
 
-	fright := math.Min(fleft+1, REGION_WIDTH)
-	fbottom := math.Min(ftop+1, REGION_HEIGHT)
+	fright := math.Min(fleft+1, float64(terrain.Width))
+	fbottom := math.Min(ftop+1, float64(terrain.Height))
 	right, bottom := int(fright), int(fbottom)
 
 	hitmap := terrain.Hitmap
@@ -29,7 +29,7 @@ func GetHitmap(entity *Entity, terrain *terrain.Terrain) *Hitmap {
 		}
 	}
 
-	for i := left + 1; i < REGION_WIDTH; i++ {
+	for i := left + 1; i < int(terrain.Width); i++ {
 		if hitmap[top][i] || hitmap[top+1][i] {
 			right = i
 			break
@@ -43,7 +43,7 @@ func GetHitmap(entity *Entity, terrain *terrain.Terrain) *Hitmap {
 		}
 	}
 
-	for i := top + 1; i < REGION_WIDTH; i++ {
+	for i := top + 1; i < int(terrain.Width); i++ {
 		if hitmap[i][left] || hitmap[i][left+1] {
 			bottom = i
 			break

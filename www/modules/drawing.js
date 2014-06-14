@@ -63,16 +63,6 @@ define('drawing',
 
             // Draw the avatars
             avatars.drawAll(output, state);
-
-            // // Draw everything else
-            // for(i = 0; i < order.length; i++) {
-            //     scale = settings.scales[order[i]];
-            //     output.drawImage(
-            //         canvases.getCanvas(order[i]),
-            //         state[0] * scale, state[1] * scale, state[2] * scale, state[3] * scale,
-            //         state[4], state[5], state[6], state[7]
-            //     );
-            // }
         }
         if(settings.show_fps) {
             output.fillStyle = 'white';

@@ -47,7 +47,7 @@ func startRegionGetter() {
 				reg.doTTL()
 
 				reg.entities = make([]*Entity, 0, 32)
-				reg.terrain = terrain.Get(reg, REGION_WIDTH, REGION_HEIGHT)
+				reg.terrain = terrain.Get(reg)
 
 				if reg.IsTown() {
 					terrain.ApplyTown(reg.terrain)
