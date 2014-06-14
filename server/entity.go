@@ -56,8 +56,9 @@ type SentientAnimat interface {
 func IsEntityCollidingWithPortal(portal terrain.Portal, entity Entity) bool {
     ex, ey := entity.Position() // TODO: Update this to use ApproximatePosition
     ew, eh := entity.Size()
-    return (uint(ex) + ew > portal.X * TILE_SIZE &&
-            uint(ex) - portal.W * TILE_SIZE > portal.X * TILE_SIZE &&
-            uint(ey) + eh > portal.Y * TILE_SIZE &&
-            uint(ey) - portal.H * TILE_SIZE > portal.Y * TILE_SIZE)
+    ewT, ehT := float64(ew / TILE_SIZE), float64(eh / TILE_SIZE)
+    return (ex + ewT >= float64(portal.X) &&
+    		float64(portal.X + portal.W) >= ex &&
+    		ey + ehT >= float64(portal.Y) &&
+    		float64(portal.Y + portal.H) >= ey)
 }

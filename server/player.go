@@ -90,14 +90,15 @@ func (self *Player) gameTick() {
 			for _, portal := range self.location.terrain.Portals {
 				if IsEntityCollidingWithPortal(portal, self) {
 					log.Println("Player in contact with portal")
-					parent, type_, x, y := GetRegionData(portal.Target)
-					if parent == ".." {
-						parent = self.location.ParentID
-					} else if parent == "." {
-						parent = self.location.ID()
+					var target string
+					if portal.Target == ".." {
+						target = self.location.ParentID
+					} else if portal.Target == "." {
+						target = self.location.ID()
 					} else {
-						parent = self.location.ID() + "," + parent
+						target = self.location.ID() + "," + portal.Target
 					}
+					parent, type_, x, y := GetRegionData(target)
 					self.sendToLocation(parent, type_, x, y)
 				}
 			}
