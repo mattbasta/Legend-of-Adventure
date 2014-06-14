@@ -78,6 +78,13 @@ func HandleCheat(message string, player *Player) bool {
         player.dirX = 0
         player.dirY = 0
 
+        player.outbound_raw <- (
+            "loclocal " +
+            strconv.Itoa(int(xPos)) + " " +
+            strconv.Itoa(int(yPos)) + " " +
+            "0 0 " + // Velocity
+            "0 1") // Direction
+
         // If the player is already in the region, don't run sendToLocation
         if telSplit[2] != player.location.ID() {
             parentID, type_, x, y := GetRegionData(telSplit[2])
@@ -86,13 +93,6 @@ func HandleCheat(message string, player *Player) bool {
             // TODO: make sure xPos and yPos are within the region
             // TODO: warn the user if those coords are hitmapped.
         }
-
-        player.outbound_raw <- (
-            "loclocal " +
-            strconv.Itoa(int(xPos)) + " " +
-            strconv.Itoa(int(yPos)) + " " +
-            "0 0 " + // Velocity
-            "0 1") // Direction
         return true
 
     }

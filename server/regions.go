@@ -53,6 +53,8 @@ func startRegionGetter() {
 					terrain.ApplyTown(reg.terrain)
 				} else if reg.IsDungeonEntrance() {
 					terrain.ApplyDungeonEntrance(reg.terrain)
+				} else if reg.Type == terrain.REGIONTYPE_DUNGEON {
+					terrain.ApplyDungeon(parent, reg.terrain)
 				}
 
 				regionCache[request.ID] = reg
@@ -211,8 +213,17 @@ func (self *Region) RemoveEntity(entity Entity) {
 
 }
 
-func (self Region) String() string {
-	return self.terrain.String() + ", \"tileset\": \"tileset_default\", \"can_slide\": true"
+func (self *Region) String() string {
+	tileset := terrain.GetTileset(self.GetRoot(), self.GetType())
+	return self.terrain.String() + ", \"tileset\": \"" + tileset + "\", \"can_slide\": true"
+}
+
+func (self Region) GetRoot() string {
+	parent := self.ParentID
+	for parent != terrain.WORLD_OVERWORLD && parent != terrain.WORLD_ETHER {
+		parent, _, _, _ = GetRegionData(parent)
+	}
+	return parent
 }
 
 func (self Region) GetParent() string {

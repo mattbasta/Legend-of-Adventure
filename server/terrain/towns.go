@@ -120,15 +120,6 @@ func smoothRoads(tiles [][]uint) {
     }
 }
 
-func fillRoad(terrain *Terrain, x, y, w, h uint) {
-    var i, j uint
-    for i = 0; i < h; i++ {
-        for j = 0; j < w; j++ {
-            terrain.Tiles[i + y][j + x] = roadMaterial
-        }
-    }
-}
-
 
 func ApplyTown(terrain *Terrain) {
     buildingEntities := make(map[string]*FeatureTiles)
@@ -270,11 +261,12 @@ func ApplyTown(terrain *Terrain) {
 
                 switch direction {
                 case 0:
-                    fillRoad(
+                    fillArea(
                         terrain,
                         oldBoundaries[1],
                         oldBoundaries[0],
                         roadWidth, y - oldBoundaries[0],
+                        roadMaterial,
                     )
                     if y < townBoundaries[2] {
                         townBoundaries[2] = y
@@ -282,7 +274,7 @@ func ApplyTown(terrain *Terrain) {
                     townBoundaries[1] = x + widestBuilding
                 case 1:
                     if iteration == 1 {
-                        fillRoad(
+                        fillArea(
                             terrain,
                             x - buildingEntity.Width,
                             oldBoundaries[2] - roadWidth,
@@ -291,29 +283,32 @@ func ApplyTown(terrain *Terrain) {
                                 centerEntity.Width + roadWidth,
                             ),
                             roadWidth,
+                            roadMaterial,
                         )
                     }
-                    fillRoad(
+                    fillArea(
                         terrain,
                         x - buildingEntity.Width,
                         y + widestBuilding,
                         oldBoundaries[1] - x + buildingEntity.Width,
                         roadWidth,
+                        roadMaterial,
                     )
                     if x < townBoundaries[3] {
                         townBoundaries[3] = x
                     }
                     townBoundaries[2] = y + widestBuilding + roadWidth
                     // Draw the extension of the road to the right.
-                    fillRoad(
+                    fillArea(
                         terrain,
                         oldBoundaries[1],
                         oldBoundaries[2],
                         roadWidth,
                         townBoundaries[2] - oldBoundaries[2],
+                        roadMaterial,
                     )
                 case 2:
-                    fillRoad(
+                    fillArea(
                         terrain,
                         x,
                         UintMin(y, oldBoundaries[0]),
@@ -322,13 +317,14 @@ func ApplyTown(terrain *Terrain) {
                             oldBoundaries[2] - y,
                             oldBoundaries[2] - oldBoundaries[0],
                         ),
+                        roadMaterial,
                     )
                     townBoundaries[3] = x - widestBuilding
                     if y > townBoundaries[0] {
                         townBoundaries[0] = y
                     }
                 case 3:
-                    fillRoad(
+                    fillArea(
                         terrain,
                         oldBoundaries[3],
                         y,
@@ -337,6 +333,7 @@ func ApplyTown(terrain *Terrain) {
                             townBoundaries[1] - oldBoundaries[3],
                         ),
                         roadWidth,
+                        roadMaterial,
                     )
                     if x > townBoundaries[1] {
                         townBoundaries[1] = x

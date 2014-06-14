@@ -14,16 +14,32 @@ const (
     BUILDINGS_MAX = 15
     TOWN_MIN_EDGE = 10
     TOWN_MAX_EDGE = 190
+
+    DUNGEON_MIN_SIZE = 3
+    DUNGEON_MAX_SIZE = 7
+
     WORLD_OVERWORLD = "overworld"
     WORLD_ETHER     = "ether"
 
     REGIONTYPE_FIELD   = "field"
     REGIONTYPE_DUNGEON = "dungeon"
     REGIONTYPE_SHOP = "shop"
+    REGIONTYPE_HOUSE = "house"
 )
 
 var regionSizes = map[string][2]uint {
-    REGIONTYPE_FIELD: [2]uint{150, 150},
-    REGIONTYPE_DUNGEON: [2]uint{30, 30},
-    REGIONTYPE_SHOP: [2]uint{20, 20},
+    REGIONTYPE_FIELD: [2]uint{100, 100},
+    REGIONTYPE_DUNGEON: [2]uint{28, 28},
+    // Building interiors
+    REGIONTYPE_SHOP: [2]uint{30, 30},
+    REGIONTYPE_HOUSE: [2]uint{30, 30},
+}
+
+
+type tilePair [2]string
+var regionTilesets = map[tilePair]string {
+    tilePair{WORLD_OVERWORLD, REGIONTYPE_FIELD}: "tileset_default",
+    tilePair{WORLD_OVERWORLD, REGIONTYPE_DUNGEON}: "tileset_dungeons",
+    tilePair{WORLD_OVERWORLD, REGIONTYPE_SHOP}: "tileset_interiors",
+    tilePair{WORLD_OVERWORLD, REGIONTYPE_HOUSE}: "tileset_interiors",
 }

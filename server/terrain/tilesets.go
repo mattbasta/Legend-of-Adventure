@@ -92,5 +92,10 @@ var FieldTileset = Tileset{
 }
 
 var AvailableTilesets = map[string]Tileset {
-    "field": FieldTileset,
+    REGIONTYPE_FIELD: FieldTileset,
+}
+
+
+func GetTileset(root, type_ string) string {
+    return regionTilesets[tilePair{root, type_}]
 }

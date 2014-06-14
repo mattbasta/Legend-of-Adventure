@@ -7,7 +7,7 @@ define('drawing',
     var tilesize = settings.tilesize;
     var tilesetTileSize = settings.tilesetTileSize;
     var terrainChunkSize = settings.terrainChunkSize;
-    var tbSize = tilesetTileSize * terrainChunkSize;
+    var tilesPerRow = settings.tilesPerRow;
 
     var requestAnimationFrame = window.requestAnimationFrame || function(cb) {setTimeout(cb, terrainChunkSize00 / 30);};
 
@@ -52,7 +52,7 @@ define('drawing',
                 for (j = leftmostTB; j <= rightmostTB; j++) {
                     output.drawImage(
                         terrainBuffers[i][j],
-                        0, 0, tbSize, tbSize,
+                        0, 0, terrainBuffers[i][j].width, terrainBuffers[i][j].height,
                         j * tilesize * terrainChunkSize - state[0],
                         i * tilesize * terrainChunkSize - state[1],
                         tilesize * terrainChunkSize,
@@ -80,15 +80,15 @@ define('drawing',
     }
 
     function redrawTerrain() {
-        var c = canvases.getContext('terrain');
-
         images.waitFor(level.getTileset()).done(function(tileset) {
+            var c = canvases.getContext('terrain');
+            var tileSize = tileset.width / tilesPerRow;
+            var bufferSize = tileSize * terrainChunkSize;
+
             var terrain = level.getTerrain();
             var hitmap = settings.show_hitmap ? level.getHitmap() : null;
             var terrainH = terrain.length;
             var terrainW = terrain[0].length;
-
-            var tilesetSize = tileset.width / tilesetTileSize;
 
             var spriteY;
             var spriteX;
@@ -100,8 +100,8 @@ define('drawing',
                 terrainBuffers[y] = [];
                 for (var x = 0; x < Math.ceil(terrainW / terrainChunkSize); x++) {
                     terrainBuffers[y][x] = buffer = document.createElement('canvas');
-                    buffer.height = tbSize;
-                    buffer.width = tbSize;
+                    buffer.height = bufferSize;
+                    buffer.width = bufferSize;
                     bufferCtx = canvases.prepareContext(buffer.getContext('2d'));
                     for (var i = 0; i < terrainChunkSize; i++) {
                         if (y * terrainChunkSize + i >= terrain.length) continue;
@@ -110,21 +110,21 @@ define('drawing',
                             var cell = terrain[y * terrainChunkSize + i][x * terrainChunkSize + j];
                             bufferCtx.drawImage(
                                 tileset,
-                                (cell % tilesetSize) * tilesetTileSize,
-                                Math.floor(cell / tilesetSize) * tilesetTileSize,
-                                tilesetTileSize,
-                                tilesetTileSize,
-                                j * tilesetTileSize,
-                                i * tilesetTileSize,
-                                tilesetTileSize,
-                                tilesetTileSize
+                                (cell % tilesPerRow) * tileSize,
+                                Math.floor(cell / tilesPerRow) * tileSize,
+                                tileSize,
+                                tileSize,
+                                j * tileSize,
+                                i * tileSize,
+                                tileSize,
+                                tileSize
                             );
                             if (settings.show_hitmap && hitmap[y * terrainChunkSize + i][x * terrainChunkSize + j]) {
                                 bufferCtx.strokeStyle = 'red';
-                                bufferCtx.moveTo(j * tilesetTileSize, i * tilesetTileSize);
-                                bufferCtx.lineTo((j + 1) * tilesetTileSize, (i + 1) * tilesetTileSize);
-                                bufferCtx.moveTo((j + 1) * tilesetTileSize, i * tilesetTileSize);
-                                bufferCtx.lineTo(j * tilesetTileSize, (i + 1) * tilesetTileSize);
+                                bufferCtx.moveTo(j * tileSize, i * tileSize);
+                                bufferCtx.lineTo((j + 1) * tileSize, (i + 1) * tileSize);
+                                bufferCtx.moveTo((j + 1) * tileSize, i * tileSize);
+                                bufferCtx.lineTo(j * tileSize, (i + 1) * tileSize);
                                 bufferCtx.stroke();
                             }
                         }

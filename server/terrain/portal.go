@@ -1,6 +1,7 @@
 package terrain
 
 
+// FIXME: Reverse h/w
 func NewPortal(x, y, h, w uint, destination string, destX, destY float64) Portal {
     portal := new(Portal)
     portal.X, portal.Y = x, y

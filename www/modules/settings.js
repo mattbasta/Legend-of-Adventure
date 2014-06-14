@@ -5,8 +5,9 @@ define('settings', [], function() {
         init_module: 'game',
         port: 80,
         fps: 30,
-        speed: 0.2,
+        speed: 0.3,
         tilesize: 50,
+        tilesPerRow: 5,
         tilesetTileSize: 16, // The size of a tile in the tileset
         terrainChunkSize: 15,
 
