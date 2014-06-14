@@ -150,9 +150,6 @@ def _build_dungeon_layout(location):
     offset_x, offset_y = get_offset(location)
     # Width: size of the dungeon grid.
     width_x, width_y = randint(2, 5) + offset_x, randint(2, 5) + offset_y
-    x, y = location.sublocations[-1][1]
-    x += offset_x
-    y += offset_y
 
     def default_dungeon_room():
         return {"passages": {(0, 1): False,
