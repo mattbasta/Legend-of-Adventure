@@ -165,33 +165,33 @@ func GetDungeonLayout(parent string) *DungeonLayout {
     terminalRooms := make([]*DungeonRoom, 0)
     for i := range layout.Grid {
         for _, room := range layout.Grid[i] {
-            if room.OutboundPassages != 0 {
+            if room.OutboundPassages == 0 {
                 terminalRooms = append(terminalRooms, room)
             }
         }
     }
-
-    // Generate boss room?
-    if rng.Intn(3) == 0 {
-        roomIndex := rng.Intn(len(terminalRooms))
-        terminalRooms[roomIndex].Type = "boss"
-        log.Println("Generating boss room")
-        terminalRooms = append(terminalRooms[:roomIndex], terminalRooms[roomIndex+1:]...)
-    }
-    // Generate angel room?
-    if rng.Intn(2) == 0 {
-        roomIndex := rng.Intn(len(terminalRooms))
-        terminalRooms[roomIndex].Type = "angel"
-        log.Println("Generating angel room")
-        terminalRooms = append(terminalRooms[:roomIndex], terminalRooms[roomIndex+1:]...)
-    }
-
 
     if rng.Intn(2) == 0 {
         room := terminalRooms[rng.Intn(len(terminalRooms))]
         log.Println("Generating stairwell down")
         room.Type = "stairwell"
     }
+
+    // Generate boss room?
+    if len(terminalRooms) > 0 && rng.Intn(3) == 0 {
+        roomIndex := rng.Intn(len(terminalRooms))
+        terminalRooms[roomIndex].Type = "boss"
+        log.Println("Generating boss room")
+        terminalRooms = append(terminalRooms[:roomIndex], terminalRooms[roomIndex+1:]...)
+    }
+    // Generate angel room?
+    if len(terminalRooms) > 0 && rng.Intn(2) == 0 {
+        roomIndex := rng.Intn(len(terminalRooms))
+        terminalRooms[roomIndex].Type = "angel"
+        log.Println("Generating angel room")
+        terminalRooms = append(terminalRooms[:roomIndex], terminalRooms[roomIndex+1:]...)
+    }
+
 
     dungeonCache[parent] = layout
     return layout

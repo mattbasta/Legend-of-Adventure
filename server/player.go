@@ -291,11 +291,16 @@ func (self *Player) handle(msg string) {
 }
 
 func (self *Player) sendToLocation(parentID, type_ string, x, y int) {
+    newLocation := regions.GetRegion(parentID, type_, x, y)
+
+    if newLocation == nil {
+        return
+    }
+
     if self.location != nil {
         self.location.RemoveEntity(self)
     }
 
-    newLocation := regions.GetRegion(parentID, type_, x, y)
     newLocation.KeepAlive <- true
     newLocation.AddEntity(self)
     self.location = newLocation

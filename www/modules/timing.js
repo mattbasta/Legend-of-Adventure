@@ -132,19 +132,20 @@ define('timing',
             // If the user can navigate to adjacent regions by walking off the
             // edge, perform those calculations now.
             // TODO: This should be moved to the server.
+            // TODO: This should also update location
             if (level.canSlide()) {
                 if(_y < 0 && avatar.y < 1.25) {
+                    avatar.y = level.getH() - 0.5;
                     level.load(level.getX(), level.getY() - 1);
-                    avatar.y = level.getH();
                 } else if(_y > 0 && avatar.y >= level.getH() - 0.5) {
+                    avatar.y = settings.entityPrototypes.avatar.height / settings.tilesize + 0.5;
                     level.load(level.getX(), level.getY() + 1);
-                    avatar.y = settings.entityPrototypes.avatar.h;
                 } else if(_x < 0 && avatar.x < 0.25) {
+                    avatar.x = level.getW() - settings.entityPrototypes.avatar.width / settings.tilesize - 0.5;
                     level.load(level.getX() - 1, level.getY());
-                    avatar.x = level.getW() - settings.entityPrototypes.avatar.w / settings.tilesize - 0.25;
                 } else if(_x > 0 && avatar.x >= level.getW() - 1.25) {
+                    avatar.x = 0.5;
                     level.load(level.getX() + 1, level.getY());
-                    avatar.x = 0.25;
                 }
             }
 
