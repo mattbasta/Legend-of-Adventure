@@ -124,16 +124,16 @@ define('timing',
             // edge, perform those calculations now.
             // TODO: This should be moved to the server.
             if (level.canSlide()) {
-                if(_y < 0 && avatar.y < settings.tilesize * 1.5) {
+                if(_y < 0 && avatar.y < settings.tilesize * 1.25) {
                     level.load(level.getX(), level.getY() - 1);
                     avatar.y = level.getH() * settings.tilesize;
-                } else if(_y > 0 && avatar.y >= (level.getH() - 1) * settings.tilesize) {
+                } else if(_y > 0 && avatar.y >= (level.getH() - 0.5) * settings.tilesize) {
                     level.load(level.getX(), level.getY() + 1);
                     avatar.y = settings.avatar.h;
-                } else if(_x < 0 && avatar.x < settings.tilesize / 2) {
+                } else if(_x < 0 && avatar.x < settings.tilesize * 0.25) {
                     level.load(level.getX() - 1, level.getY());
                     avatar.x = level.getW() * settings.tilesize - settings.avatar.w;
-                } else if(_x > 0 && avatar.x >= (level.getW() - 1) * settings.tilesize) {
+                } else if(_x > 0 && avatar.x >= (level.getW() - 1.25) * settings.tilesize) {
                     level.load(level.getX() + 1, level.getY());
                     avatar.x = 0;
                 }

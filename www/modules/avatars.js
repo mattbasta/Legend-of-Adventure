@@ -197,10 +197,10 @@ define('avatars',
             var avatar;
             for (avatar in registry) {
                 var a = registry[avatar];
-                if (a.x < state[0] - settings.tilesize ||
-                    a.x > state[0] + state[2] + settings.tilesize ||
-                    a.y < state[1] - settings.tilesize ||
-                    a.y > state[1] + state[3] + settings.tilesize) {
+                if (state[0] > 0 && (a.x < state[0] - settings.tilesize ||
+                                     a.x > state[0] + state[2] + settings.tilesize) ||
+                    state[1] > 0 && (a.y < state[1] - settings.tilesize ||
+                                     a.y > state[1] + state[3] + settings.tilesize)) {
                     continue
                 }
                 avatars.push(a);

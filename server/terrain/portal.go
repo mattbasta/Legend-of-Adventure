@@ -1,11 +1,10 @@
 package terrain
 
 
-// FIXME: Reverse h/w
-func NewPortal(x, y, h, w uint, destination string, destX, destY float64) Portal {
+func NewPortal(x, y, w, h uint, destination string, destX, destY float64) Portal {
     portal := new(Portal)
     portal.X, portal.Y = x, y
-    portal.H, portal.W = h, w
+    portal.W, portal.H = w, h
     portal.Target = destination
     portal.DestX, portal.DestY = destX, destY
     return *portal
