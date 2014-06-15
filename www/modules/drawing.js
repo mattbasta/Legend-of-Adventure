@@ -1,6 +1,6 @@
 define('drawing',
-    ['avatars', 'canvases', 'images', 'level', 'settings'],
-    function(avatars, canvases, images, level, settings) {
+    ['entities', 'canvases', 'images', 'level', 'settings'],
+    function(entities, canvases, images, level, settings) {
 
     'use strict';
 
@@ -70,8 +70,8 @@ define('drawing',
                 }
             }
 
-            // Draw the avatars
-            avatars.drawAll(output, state);
+            // Draw the entities
+            entities.drawAll(output, state);
         }
         if (settings.show_fps) {
             output.fillStyle = 'white';
@@ -82,7 +82,7 @@ define('drawing',
             lastDraw = now;
         }
         if (settings.show_hitmappings) {
-            avatars.drawHitmappings(output, state);
+            entities.drawHitmappings(output, state);
         }
     }
 

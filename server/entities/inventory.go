@@ -1,8 +1,9 @@
-package server
+package entities
 
 import (
 	"log"
 )
+
 
 type Inventory struct {
 	Owner    Entity
@@ -119,5 +120,20 @@ func (self *Inventory) Use(index uint, holder Animat) {
 		holder.IncrementHealth(FOOD_HEALTH_INCREASE)
 		self.inv[index] = ""
 	}
+
+}
+
+func (self *Inventory) Drop(dropper EntityThatCanThrow) {
+	if self.inv[0] == "" {
+		return
+	}
+
+	log.Println(dropper.ID() + " dropping " + self.inv[0])
+
+	reg := dropper.Location()
+	item := NewItemEntity(self.inv[0], dropper)
+	self.inv[0] = ""
+	reg.AddEntity(item)
+	self.Consolidate()
 
 }

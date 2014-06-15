@@ -1,4 +1,4 @@
-define('avatars',
+define('entities',
     ['canvases', 'comm', 'hitmapping', 'images', 'level', 'settings'],
     function(canvases, comm, hitmapping, images, level, settings) {
 
@@ -11,7 +11,7 @@ define('avatars',
     var avatarHeight = 32;
     var avatarWidth = 32;
     var avatarBodyOffset = 0;
-    var avatarScale = settings.scales.avatars;
+    var avatarScale = settings.scales.entities;
 
     // Add avatar
     comm.messages.on('add', function(body) {
@@ -191,9 +191,9 @@ define('avatars',
             return doRedrawAVS;
         },
         drawAll: function(context, state) {
-            var avatars = [];
+            var entities = [];
 
-            // Ignore avatars that are not onscreen.
+            // Ignore entities that are not onscreen.
             var avatar;
             for (avatar in registry) {
                 var a = registry[avatar];
@@ -203,19 +203,19 @@ define('avatars',
                                      a.y > state[1] + state[3] + settings.tilesize)) {
                     continue
                 }
-                avatars.push(a);
+                entities.push(a);
             }
 
-            // Sort such that avatars with a lower Y are further back.
-            if (avatars.length > 1) {
-                avatars.sort(function(a, b) {
+            // Sort such that entities with a lower Y are further back.
+            if (entities.length > 1) {
+                entities.sort(function(a, b) {
                     return a.y - b.y;
                 });
             }
 
             // Draw each avatar in turn.
-            for(var i = 0; i < avatars.length; i++) {
-                avatar = avatars[i];
+            for(var i = 0; i < entities.length; i++) {
+                avatar = entities[i];
                 context.drawImage(
                     avatar.canvas,
                     0, 0, avatarWidth, avatarHeight,

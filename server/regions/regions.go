@@ -1,4 +1,4 @@
-package server
+package regions
 
 import (
 	"log"
@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"legend-of-adventure/server/events"
 	"legend-of-adventure/server/terrain"
 )
 
@@ -21,6 +22,15 @@ import (
 //     overworld,field:123:456,dungeon:0:0
 //     overworld,field:123:456,dungeon:2:3,dungeon:1:1
 //     overworld,field:123:456,dungeon:2:3,dungeon:1:1
+
+
+type Entity interface {
+    Receive() chan<- *events.Event
+    ID() string
+    Killer(chan<- bool) // Used to notify entity it is being destroyed
+    GetIntroduction() string // Entity add command's body
+}
+
 
 type regionRequest struct {
 	ID       string
@@ -47,14 +57,14 @@ func startRegionGetter() {
 				reg.doTTL()
 
 				reg.entities = make([]*Entity, 0, 32)
-				reg.terrain = terrain.Get(reg)
+				reg.Terrain = terrain.Get(reg)
 
 				if reg.IsTown() {
-					terrain.ApplyTown(reg.terrain)
+					terrain.ApplyTown(reg.Terrain)
 				} else if reg.IsDungeonEntrance() {
-					terrain.ApplyDungeonEntrance(reg.terrain)
+					terrain.ApplyDungeonEntrance(reg.Terrain)
 				} else if reg.Type == terrain.REGIONTYPE_DUNGEON {
-					terrain.ApplyDungeon(parent, reg.terrain)
+					terrain.ApplyDungeon(parent, reg.Terrain)
 				}
 
 				regionCache[request.ID] = reg
@@ -118,11 +128,11 @@ type Region struct {
 	KeepAlive chan bool
 	killer    chan bool
 
-	terrain  *terrain.Terrain
+	Terrain  *terrain.Terrain
 	entities []*Entity
 }
 
-func (self *Region) Broadcast(evt *Event, except string) {
+func (self *Region) Broadcast(evt *events.Event, except string) {
 	for _, entity := range self.entities {
 		if (*entity).ID() == except {
 			continue
@@ -157,13 +167,13 @@ func (self Region) ID() string {
 	return getRegionID(self.ParentID, self.Type, self.X, self.Y)
 }
 
-func (self *Region) GetEvent(evt_type EventType, body string, origin Entity) *Event {
+func (self *Region) GetEvent(evt_type events.EventType, body string, origin Entity) *events.Event {
 	str_origin := ""
 	if origin != nil {
 		str_origin = origin.ID()
 	}
 
-	return &Event{self.ID(), evt_type, str_origin, GetOriginServerID(), body}
+	return &events.Event{self.ID(), evt_type, str_origin, events.GetOriginServerID(), body}
 }
 
 func (self *Region) AddEntity(entity Entity) {
@@ -171,13 +181,13 @@ func (self *Region) AddEntity(entity Entity) {
 
 	// Tell everyone else that the entity is here.
 	self.Broadcast(
-		self.GetEvent(REGION_ENTRANCE, entity.GetIntroduction(), entity),
+		self.GetEvent(events.REGION_ENTRANCE, entity.GetIntroduction(), entity),
 		entity.ID(),
 	)
 
 	// Tell the entity about everyone else.
 	for _, regEnt := range self.entities {
-		entity.Receive() <- self.GetEvent(REGION_ENTRANCE, (*regEnt).GetIntroduction(), *regEnt)
+		entity.Receive() <- self.GetEvent(events.REGION_ENTRANCE, (*regEnt).GetIntroduction(), *regEnt)
 	}
 
 	// Add the entity to the list of entities.
@@ -190,7 +200,7 @@ func (self *Region) RemoveEntity(entity Entity) {
 
 	// Tell everyone else that the entity is leaving.
 	self.Broadcast(
-		self.GetEvent(REGION_EXIT, entity.ID(), entity),
+		self.GetEvent(events.REGION_EXIT, entity.ID(), entity),
 		entity.ID(),
 	)
 
@@ -215,7 +225,7 @@ func (self *Region) RemoveEntity(entity Entity) {
 
 func (self *Region) String() string {
 	tileset := terrain.GetTileset(self.GetRoot(), self.GetType())
-	return self.terrain.String() + ", \"tileset\": \"" + tileset + "\", \"can_slide\": true"
+	return self.Terrain.String() + ", \"tileset\": \"" + tileset + "\", \"can_slide\": true"
 }
 
 func (self Region) GetRoot() string {

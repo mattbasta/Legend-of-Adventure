@@ -1,12 +1,11 @@
 package server
 
+
 const MAX_CONNECTED_PLAYERS = 256
 
 const SOCKET_BUFFER_SIZE = 150
 
 const PLAYER_INV_SIZE = 5
 const PLAYER_MAX_HEALTH = 100
-
-const FOOD_HEALTH_INCREASE = 30
 
 const TILE_SIZE = 50

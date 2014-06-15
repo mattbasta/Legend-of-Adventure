@@ -8,6 +8,9 @@ import (
     "strings"
     "time"
 
+    "legend-of-adventure/server/entities"
+    "legend-of-adventure/server/events"
+    "legend-of-adventure/server/regions"
     "legend-of-adventure/server/terrain"
 )
 
@@ -15,9 +18,9 @@ var playerCounter = 0
 
 type Player struct {
     connection *websocket.Conn
-    location   *Region
+    location   *regions.Region
 
-    outbound     chan *Event
+    outbound     chan *events.Event
     outbound_raw chan string
     closing      chan bool
 
@@ -28,7 +31,7 @@ type Player struct {
     isDead     bool
     health     uint
 
-    inventory *Inventory
+    inventory *entities.Inventory
 }
 
 func NewPlayer(conn *websocket.Conn) *Player {
@@ -36,19 +39,19 @@ func NewPlayer(conn *websocket.Conn) *Player {
         panic("WebSocket connection required")
     }
 
-    outbound := make(chan *Event, SOCKET_BUFFER_SIZE)
+    outbound := make(chan *events.Event, SOCKET_BUFFER_SIZE)
     outbound_raw := make(chan string, SOCKET_BUFFER_SIZE)
     closing := make(chan bool)
 
     // Get the region and make it active.
-    reg := GetRegion(terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0)
+    reg := regions.GetRegion(terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0)
     // Let the region know to stay alive.
     reg.KeepAlive <- true
 
     player := Player{conn, reg,
         outbound, outbound_raw, closing,
-        NextEntityID(),
-        float64(reg.terrain.Width) / 2, float64(reg.terrain.Height) / 2, 0, 0, 0, 1,
+        entities.NextEntityID(),
+        float64(reg.Terrain.Width) / 2, float64(reg.Terrain.Height) / 2, 0, 0, 0, 1,
         false,
         PLAYER_MAX_HEALTH,
         nil,
@@ -87,8 +90,8 @@ func (self *Player) gameTick() {
             if self.location == nil {
                 continue
             }
-            for _, portal := range self.location.terrain.Portals {
-                if IsEntityCollidingWithPortal(portal, self) {
+            for _, portal := range self.location.Terrain.Portals {
+                if entities.IsEntityCollidingWithPortal(portal, self) {
                     log.Println("Player in contact with portal")
                     var target string
                     if portal.Target == ".." {
@@ -103,7 +106,7 @@ func (self *Player) gameTick() {
                         strconv.Itoa(int(portal.DestX)) + " " + strconv.Itoa(int(portal.DestY)) +
                         " 0 0 0 1")
                     self.x, self.y = portal.DestX, portal.DestY
-                    parent, type_, x, y := GetRegionData(target)
+                    parent, type_, x, y := regions.GetRegionData(target)
                     self.sendToLocation(parent, type_, x, y)
                 }
             }
@@ -160,10 +163,10 @@ func (self *Player) Listen() {
 
 }
 
-func (self Player) Setup() {
+func (self *Player) Setup() {
     // TODO: Add inventory persistence
     // Set up the player's inventory
-    self.inventory = NewInventory(self, PLAYER_INV_SIZE)
+    self.inventory = entities.NewInventory(self, PLAYER_INV_SIZE)
     self.inventory.Give("wsw.sharp.12")
     self.inventory.Give("f5")
     self.updateInventory()
@@ -191,7 +194,7 @@ func (self *Player) handle(msg string) {
             return
         }
         self.location.Broadcast(
-            self.location.GetEvent(CHAT, body, self),
+            self.location.GetEvent(events.CHAT, body, self),
             self.ID(),
         )
 
@@ -210,8 +213,8 @@ func (self *Player) handle(msg string) {
         if err != nil {
             return
         }
-        if newX < 0 || newX > float64(self.location.terrain.Width) ||
-            newY < 0 || newY > float64(self.location.terrain.Height) {
+        if newX < 0 || newX > float64(self.location.Terrain.Width) ||
+            newY < 0 || newY > float64(self.location.Terrain.Height) {
             log.Println("User attempted to exceed bounds of the level")
             self.closing <- true
         }
@@ -249,7 +252,7 @@ func (self *Player) handle(msg string) {
         self.dirY = int(dirY)
 
         self.location.Broadcast(
-            self.location.GetEvent(LOCATION, self.String(), self),
+            self.location.GetEvent(events.LOCATION, self.String(), self),
             self.ID(),
         )
 
@@ -259,6 +262,10 @@ func (self *Player) handle(msg string) {
             return
         }
         self.inventory.Use(uint(index), self)
+        self.updateInventory()
+
+    case "dro":
+        self.inventory.Drop(self)
         self.updateInventory()
 
     case "lev":
@@ -287,7 +294,7 @@ func (self *Player) sendToLocation(parentID, type_ string, x, y int) {
         self.location.RemoveEntity(self)
     }
 
-    newLocation := GetRegion(parentID, type_, x, y)
+    newLocation := regions.GetRegion(parentID, type_, x, y)
     newLocation.KeepAlive <- true
     newLocation.AddEntity(self)
     self.location = newLocation
@@ -317,18 +324,18 @@ func (self *Player) updateInventory() {
 
 // Entity Implementation
 
-func (self Player) Receive() chan<- *Event {
-    return (chan<- *Event)(self.outbound)
+func (self Player) Receive() chan<- *events.Event {
+    return (chan<- *events.Event)(self.outbound)
 }
 
 func (self Player) Dead() bool                   { return self.isDead }
 func (self Player) Direction() (int, int)        { return self.dirX, self.dirY }
 func (self Player) GetHealth() uint              { return self.health }
 func (self Player) ID() string                   { return self.name }
-func (self Player) Inventory() *Inventory        { return self.inventory }
+func (self Player) Inventory() *entities.Inventory  { return self.inventory }
 func (self Player) IsAtMaxHealth() bool          { return self.health == PLAYER_MAX_HEALTH }
 func (self Player) Killer(in chan<- bool)        { return }
-func (self Player) Location() *Region            { return self.location }
+func (self Player) Location() *regions.Region    { return self.location }
 func (self Player) MovementEffect() string       { return "" }
 func (self Player) Position() (float64, float64) { return self.x, self.y }
 func (self Player) Size() (uint, uint)           { return 50, 50 }

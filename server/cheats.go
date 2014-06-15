@@ -4,11 +4,14 @@ import (
     "log"
     "strconv"
     "strings"
+
+    "legend-of-adventure/server/events"
+    "legend-of-adventure/server/regions"
 )
 
 
 func sayToPlayer(message string, player *Player) {
-    player.Receive() <- player.location.GetEvent(CHAT, "0 0\n" + message, nil)
+    player.Receive() <- player.location.GetEvent(events.CHAT, "0 0\n" + message, nil)
 }
 
 
@@ -87,7 +90,7 @@ func HandleCheat(message string, player *Player) bool {
 
         // If the player is already in the region, don't run sendToLocation
         if telSplit[2] != player.location.ID() {
-            parentID, type_, x, y := GetRegionData(telSplit[2])
+            parentID, type_, x, y := regions.GetRegionData(telSplit[2])
             player.sendToLocation(parentID, type_, x, y)
 
             // TODO: make sure xPos and yPos are within the region

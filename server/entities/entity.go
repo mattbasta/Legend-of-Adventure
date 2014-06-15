@@ -1,8 +1,10 @@
-package server
+package entities
 
 import (
     "strconv"
 
+    "legend-of-adventure/server/events"
+    "legend-of-adventure/server/regions"
     "legend-of-adventure/server/terrain"
 )
 
@@ -15,7 +17,7 @@ func NextEntityID() string {
 }
 
 type Entity interface {
-    Receive() chan<- *Event
+    Receive() chan<- *events.Event
     Setup()
     Killer(chan<- bool) // Used to notify entity it is being destroyed
 
@@ -25,7 +27,7 @@ type Entity interface {
 
     Dead() bool
 
-    Location() *Region
+    Location() *regions.Region
     Inventory() *Inventory // May return nil
 
     GetIntroduction() string // Entity add command's body

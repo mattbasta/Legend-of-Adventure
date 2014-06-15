@@ -30,7 +30,7 @@ define('level',
         if(offset.w > level_w)
             offset.x = ((offset.w / 2 - level_w / 2) | 0) * -1;
 
-        var avatar = require('avatars').getFollowing();
+        var avatar = require('entities').getFollowing();
         var x = avatar.x;
         var y = avatar.y;
 

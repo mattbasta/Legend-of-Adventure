@@ -1,6 +1,6 @@
 define('timing',
-    ['avatars', 'comm', 'drawing', 'hitmapping', 'keys', 'level', 'objects', 'settings'],
-    function(avatars, comm, drawing, hitmapping, keys, level, objects, settings) {
+    ['entities', 'comm', 'drawing', 'hitmapping', 'keys', 'level', 'objects', 'settings'],
+    function(entities, comm, drawing, hitmapping, keys, level, objects, settings) {
 
     'use strict';
 
@@ -13,6 +13,17 @@ define('timing',
 
     function beginSwapRegion(x, y) {
         level.load(x, y);
+    }
+
+    function updateLocation() {
+        var avatar = entities.getLocal();
+        comm.send(
+            "loc",
+            (avatar.x / tilesize).toFixed(2) + ":" +
+            (avatar.y / tilesize).toFixed(2) + ":" +
+            avatar.velocity[0] + ":" + avatar.velocity[1] + ":" +
+            avatar.direction[0] + ":" + avatar.direction[1]
+        );
     }
 
     function tick() {
@@ -29,20 +40,10 @@ define('timing',
         if(keys.upArrow) _y = -1;
         else if(keys.downArrow) _y = 1;
 
-        var avatar = avatars.getLocal();
+        var avatar = entities.getLocal();
         var doSetCenter = false;
 
         var playerMoving = _x || _y;
-
-        function updateLocation() {
-            comm.send(
-                "loc",
-                (avatar.x / tilesize).toFixed(2) + ":" +
-                (avatar.y / tilesize).toFixed(2) + ":" +
-                avatar.velocity[0] + ":" + avatar.velocity[1] + ":" +
-                avatar.direction[0] + ":" + avatar.direction[1]
-            );
-        }
 
         var adjustedX = _x * speed;
         var adjustedY = _y * speed;
@@ -110,11 +111,11 @@ define('timing',
                 avatar.velocity[1] = _y;
                 avatar.direction[0] = Math.round(_x);
                 avatar.direction[1] = Math.round(_y);
-                var spriteDirection = avatars.getSpriteDirection(avatar.direction[0], avatar.direction[1]);
+                var spriteDirection = entities.getSpriteDirection(avatar.direction[0], avatar.direction[1]);
                 avatar.position = spriteDirection[1].position;
                 avatar.cycle_position = 0;
                 avatar.sprite_cycle = 0;
-                avatars.draw('local');
+                entities.draw('local');
                 updateLocation();
             }
 
@@ -145,7 +146,7 @@ define('timing',
             avatar.velocity[1] = _y;
             // Set the avatar into the neutral standing position for the
             // direction it is facing.
-            avatar.position = avatars.getSpriteDirection(avatar.direction[0], avatar.direction[1])[0].position;
+            avatar.position = entities.getSpriteDirection(avatar.direction[0], avatar.direction[1])[0].position;
             // Reset the avatar to a downward facing rest position.
             // avatar.direction[0] = 0;
             // avatar.direction[1] = 0;
@@ -153,14 +154,14 @@ define('timing',
             avatar.sprite_cycle = 0;
             avatar.cycle_position = 0;
             // Have the avatar redrawn.
-            avatars.draw('local');
+            entities.draw('local');
             // Send one last position update to the server indicating where the
             // user stopped moving.
             updateLocation();
         }
 
         // Perform avatar processing
-        avatars.tick(speed);
+        entities.tick(speed);
 
         if (doSetCenter) level.setCenterPosition();
 

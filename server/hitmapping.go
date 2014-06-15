@@ -3,6 +3,7 @@ package server
 import (
 	"math"
 
+	"legend-of-adventure/server/entities"
 	"legend-of-adventure/server/terrain"
 )
 
@@ -10,7 +11,7 @@ type Hitmap struct {
 	Top, Right, Bottom, Left int
 }
 
-func GetHitmap(entity *Entity, terrain *terrain.Terrain) *Hitmap {
+func GetHitmap(entity *entities.Entity, terrain *terrain.Terrain) *Hitmap {
 	fleft, ftop := (*entity).Position()
 	fleft = math.Max(math.Min(fleft, float64(terrain.Width)), 0)
 	ftop = math.Max(math.Min(ftop, float64(terrain.Height)), 0)
