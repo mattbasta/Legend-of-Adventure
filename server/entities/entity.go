@@ -30,8 +30,6 @@ type Entity interface {
     Location() *regions.Region
     Inventory() *Inventory // May return nil
 
-    GetIntroduction() string // Entity add command's body
-
     String() string
 }
 

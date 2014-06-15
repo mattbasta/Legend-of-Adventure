@@ -31,8 +31,8 @@ define('level',
             offset.x = ((offset.w / 2 - level_w / 2) | 0) * -1;
 
         var avatar = require('entities').getFollowing();
-        var x = avatar.x;
-        var y = avatar.y;
+        var x = avatar.x * tilesize;
+        var y = avatar.y * tilesize;
 
         var c_offsetw = offset.w,
             c_offseth = offset.h;
@@ -111,7 +111,7 @@ define('level',
     function prepare(data) {
         levelData = data;
         canvases.setSizes(data.w * tilesize, data.h * tilesize);
-        levelEvents.fire('newLevel', data.w * tilesize, data.h * tilesize, data.hitmap);
+        levelEvents.fire('newLevel', data.w, data.h, data.hitmap);
 
         init();
     }
@@ -135,6 +135,9 @@ define('level',
         levelEvents.fire('pause');
         levelEvents.fire('unload');
     }
+
+    // Bind initial startup handlers.
+    registerLevel();
 
     return {
         load: function(x, y) {

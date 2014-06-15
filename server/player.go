@@ -101,11 +101,12 @@ func (self *Player) gameTick() {
                     } else {
                         target = self.location.ID() + "," + portal.Target
                     }
-                    self.outbound_raw <- (
-                        "loclocal " +
-                        strconv.Itoa(int(portal.DestX)) + " " + strconv.Itoa(int(portal.DestY)) +
-                        " 0 0 0 1")
+
                     self.x, self.y = portal.DestX, portal.DestY
+                    self.outbound_raw <- (
+                        "eup{\"id\":\"local\"," +
+                        fmt.Sprintf("\"x\":%d,\"y\":%d", int(portal.DestX), int(portal.DestY)) +
+                        "}")
                     parent, type_, x, y := regions.GetRegionData(target)
                     self.sendToLocation(parent, type_, x, y)
                 }
@@ -341,21 +342,30 @@ func (self Player) Position() (float64, float64) { return self.x, self.y }
 func (self Player) Size() (uint, uint)           { return 50, 50 }
 func (self Player) Velocity() (int, int)         { return self.velX, self.velY }
 
-func (self Player) GetIntroduction() string {
-    return "player " + self.String()
-}
-
-func (self Player) String() string {
-    return fmt.Sprintf(
-        "%s %f %f %d %d %d %d",
-        self.ID(),
-        self.x,
-        self.y,
-        self.velX,
-        self.velY,
-        self.dirX,
-        self.dirY,
-    )
+func (self *Player) String() string {
+    width, height := self.Size()
+    return (
+        "{\"proto\":\"avatar\"," +
+        "\"id\":\"" + self.ID() + "\"," +
+        fmt.Sprintf(
+            "\"x\":\"%f\"," +
+            "\"y\":\"%f\"," +
+            "\"width\":\"%d\"," +
+            "\"height\":\"%d\"," +
+            "\"velocity\":[%d, %d]," +
+            "\"direction\":[%d, %d],",
+            self.x,
+            self.y,
+            width,
+            height,
+            self.velX,
+            self.velY,
+            self.dirX,
+            self.dirY,
+        ) +
+        // "\"\":\"\"," +
+        "\"type\":\"person\"" +
+        "}")
 }
 
 func (self *Player) IncrementHealth(amount uint) {

@@ -5,7 +5,7 @@ define('settings', [], function() {
         init_module: 'game',
         port: 80,
         fps: 30,
-        speed: 0.3,
+        speed: 0.0075,
         tilesize: 50,
         tilesPerRow: 5,
         tilesetTileSize: 16, // The size of a tile in the tileset
@@ -22,31 +22,38 @@ define('settings', [], function() {
             objects: 1
         },
 
-        avatar: {
-            image: "avatar",
-            h: 65,
-            w: 65,
-            sprite: {
-                left: [
-                    {position:4, duration:5},
-                    {position:5, duration:5},
-                    {position:3, duration:5}
-                ],
-                right: [
-                    {position:7, duration:5},
-                    {position:8, duration:5},
-                    {position:6, duration:5}
-                ],
-                up: [
-                    {position:10, duration:5},
-                    {position:11, duration:5},
-                    {position:9, duration:5}
-                ],
-                down: [
-                    {position:1, duration:5},
-                    {position:2, duration:5},
-                    {position:0, duration:5}
-                ]
+        entityPrototypes: {
+            avatar: {
+                image: "avatar",
+                xOffset: 0,
+                width: 50,
+                height: 50,
+                sprite: {
+                    left: [
+                        {position:4, duration:5},
+                        {position:5, duration:5},
+                        {position:3, duration:5}
+                    ],
+                    right: [
+                        {position:7, duration:5},
+                        {position:8, duration:5},
+                        {position:6, duration:5}
+                    ],
+                    up: [
+                        {position:10, duration:5},
+                        {position:11, duration:5},
+                        {position:9, duration:5}
+                    ],
+                    down: [
+                        {position:1, duration:5},
+                        {position:2, duration:5},
+                        {position:0, duration:5}
+                    ]
+                }
+            },
+            item: {
+                image: "items",
+                xOffset: 0
             }
         },
 

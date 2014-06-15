@@ -1,6 +1,6 @@
 define('timing',
-    ['entities', 'comm', 'drawing', 'hitmapping', 'keys', 'level', 'objects', 'settings'],
-    function(entities, comm, drawing, hitmapping, keys, level, objects, settings) {
+    ['entities', 'comm', 'drawing', 'hitmapping', 'keys', 'level', 'settings'],
+    function(entities, comm, drawing, hitmapping, keys, level, settings) {
 
     'use strict';
 
@@ -19,8 +19,8 @@ define('timing',
         var avatar = entities.getLocal();
         comm.send(
             "loc",
-            (avatar.x / tilesize).toFixed(2) + ":" +
-            (avatar.y / tilesize).toFixed(2) + ":" +
+            (avatar.x).toFixed(2) + ":" +
+            (avatar.y).toFixed(2) + ":" +
             avatar.velocity[0] + ":" + avatar.velocity[1] + ":" +
             avatar.direction[0] + ":" + avatar.direction[1]
         );
@@ -53,6 +53,9 @@ define('timing',
             adjustedY *= Math.SQRT1_2;
         }
 
+        var genXHitmap = !!_x;
+        var genYHitmap = !!_y;
+
         // If the player is moving, perform hitmapping. Then reompute whether
         // the player is still moving.
         if (playerMoving) {
@@ -60,14 +63,18 @@ define('timing',
             var hitmap = avatar.hitmap;
             if (_x) {
                 // Are we hitting the right hitmap?
-                if (_x > 0 && avatar.x + adjustedX + settings.avatar.w > hitmap[1]) {
-                    adjustedX = hitmap[1] - avatar.x - settings.avatar.w;
+                if (_x > 0 && avatar.x + adjustedX + settings.entityPrototypes.avatar.width / tilesize >= hitmap[1]) {
+                    adjustedX = 0;
+                    avatar.x = hitmap[1] - settings.entityPrototypes.avatar.width / tilesize;
                     _x = 0;
+                    doSetCenter = true;
                 }
                 // What about the left hitmap?
-                else if (_x < 0 && avatar.x + adjustedX < hitmap[3]) {
-                    adjustedX = hitmap[3] - avatar.x;
+                else if (_x < 0 && avatar.x + adjustedX <= hitmap[3]) {
+                    adjustedX = 0;
+                    avatar.x = hitmap[3];
                     _x = 0;
+                    doSetCenter = true;
                 }
                 // If we aren't moving, adjust our Y speed to what it was.
                 if (!_x) {
@@ -77,14 +84,18 @@ define('timing',
 
             if (_y) {
                 // Are we hitting the bottom hitmap?
-                if(_y > 0 && avatar.y + adjustedY > hitmap[2]) {
-                    adjustedY = hitmap[2] - avatar.y;
+                if(_y > 0 && avatar.y + adjustedY >= hitmap[2]) {
+                    adjustedY = 0;
+                    avatar.y = hitmap[2];
                     _y = 0;
+                    doSetCenter = true;
                 }
                 // What about the top hitmap?
-                else if(_y < 0 && avatar.y + adjustedY - settings.avatar.h + 15 < hitmap[0]) {
-                    adjustedY = hitmap[0] - avatar.y + settings.avatar.h - 15;
+                else if(_y < 0 && avatar.y + adjustedY - (settings.entityPrototypes.avatar.height) / tilesize <= hitmap[0]) {
+                    avatar.y = hitmap[0] + (settings.entityPrototypes.avatar.height) / tilesize;
+                    adjustedY = 0;
                     _y = 0;
+                    doSetCenter = true;
                 }
                 if (!_y) {
                     adjustedX = _x * speed;
@@ -101,9 +112,6 @@ define('timing',
         if (playerMoving) {
             avatar.x += adjustedX;
             avatar.y += adjustedY;
-
-            if (_y) hitmapping.updateAvatarY(avatar);
-            if (_x) hitmapping.updateAvatarX(avatar);
 
             if(_x !== avatar.velocity[0] || _y !== avatar.velocity[1]) {
                 avatar.dirty = true;
@@ -125,18 +133,18 @@ define('timing',
             // edge, perform those calculations now.
             // TODO: This should be moved to the server.
             if (level.canSlide()) {
-                if(_y < 0 && avatar.y < settings.tilesize * 1.25) {
+                if(_y < 0 && avatar.y < 1.25) {
                     level.load(level.getX(), level.getY() - 1);
-                    avatar.y = level.getH() * settings.tilesize;
-                } else if(_y > 0 && avatar.y >= (level.getH() - 0.5) * settings.tilesize) {
+                    avatar.y = level.getH();
+                } else if(_y > 0 && avatar.y >= level.getH() - 0.5) {
                     level.load(level.getX(), level.getY() + 1);
-                    avatar.y = settings.avatar.h;
-                } else if(_x < 0 && avatar.x < settings.tilesize * 0.25) {
+                    avatar.y = settings.entityPrototypes.avatar.h;
+                } else if(_x < 0 && avatar.x < 0.25) {
                     level.load(level.getX() - 1, level.getY());
-                    avatar.x = level.getW() * settings.tilesize - settings.avatar.w;
-                } else if(_x > 0 && avatar.x >= (level.getW() - 1.25) * settings.tilesize) {
+                    avatar.x = level.getW() - settings.entityPrototypes.avatar.w / settings.tilesize - 0.25;
+                } else if(_x > 0 && avatar.x >= level.getW() - 1.25) {
                     level.load(level.getX() + 1, level.getY());
-                    avatar.x = 0;
+                    avatar.x = 0.25;
                 }
             }
 
@@ -160,12 +168,15 @@ define('timing',
             updateLocation();
         }
 
-        // Perform avatar processing
+        if (doSetCenter) {
+            if (genYHitmap) hitmapping.updateAvatarY(avatar);
+            if (genXHitmap) hitmapping.updateAvatarX(avatar);
+        }
+
+        // Perform entity processing
         entities.tick(speed);
 
         if (doSetCenter) level.setCenterPosition();
-
-        objects.tick(ticks, speed);
 
     }
 

@@ -28,7 +28,7 @@ type Entity interface {
     Receive() chan<- *events.Event
     ID() string
     Killer(chan<- bool) // Used to notify entity it is being destroyed
-    GetIntroduction() string // Entity add command's body
+    String() string
 }
 
 
@@ -181,13 +181,13 @@ func (self *Region) AddEntity(entity Entity) {
 
 	// Tell everyone else that the entity is here.
 	self.Broadcast(
-		self.GetEvent(events.REGION_ENTRANCE, entity.GetIntroduction(), entity),
+		self.GetEvent(events.REGION_ENTRANCE, entity.String(), entity),
 		entity.ID(),
 	)
 
 	// Tell the entity about everyone else.
 	for _, regEnt := range self.entities {
-		entity.Receive() <- self.GetEvent(events.REGION_ENTRANCE, (*regEnt).GetIntroduction(), *regEnt)
+		entity.Receive() <- self.GetEvent(events.REGION_ENTRANCE, (*regEnt).String(), *regEnt)
 	}
 
 	// Add the entity to the list of entities.

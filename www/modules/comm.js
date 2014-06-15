@@ -37,11 +37,12 @@ define('comm',
 
     // Play sound
     commMessages.on('snd', function(body) {
+        // TODO: move this to the sound module
         var data = body.split(':');
         var sX = parseFloat(data[1]);
         var sY = parseFloat(data[2]);
-        var follow_av = getFollowing();
-        var dist = Math.sqrt(Math.pow(s_x - follow_av.x, 2) + Math.pow(s_y - follow_av.y, 2));
+        var following = getFollowing();
+        var dist = Math.sqrt(Math.pow(s_x - following.x, 2) + Math.pow(s_y - following.y, 2));
         dist /= settings.tilesize;
         sound.playSound(data[0], dist);
     });

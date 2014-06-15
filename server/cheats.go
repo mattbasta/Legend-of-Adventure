@@ -1,6 +1,7 @@
 package server
 
 import (
+    "fmt"
     "log"
     "strconv"
     "strings"
@@ -82,11 +83,9 @@ func HandleCheat(message string, player *Player) bool {
         player.dirY = 0
 
         player.outbound_raw <- (
-            "loclocal " +
-            strconv.Itoa(int(xPos)) + " " +
-            strconv.Itoa(int(yPos)) + " " +
-            "0 0 " + // Velocity
-            "0 1") // Direction
+            "eup{\"id\":\"local\"," +
+            fmt.Sprintf("\"x\":%d,\"y\":%d", int(xPos), int(yPos)) +
+            "}")
 
         // If the player is already in the region, don't run sendToLocation
         if telSplit[2] != player.location.ID() {
