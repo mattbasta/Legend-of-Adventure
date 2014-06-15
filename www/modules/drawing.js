@@ -13,6 +13,7 @@ define('drawing',
 
     var lastDraw;
     var drawing = false;
+    var finishingDraw = false;
     var state;
 
     var terrainBuffers = [];
@@ -30,8 +31,16 @@ define('drawing',
     */
 
     function draw() {
+        if (drawing) {
+            requestAnimationFrame(draw);
+        } else {
+            finishingDraw = false;
+        }
+
+        if (!terrainBuffers.length || !terrainBuffers[0].length) return;
+
         var output = canvases.getContext('output');
-        if(state) {
+        if (state) {
             var scale;
             var i;
             var j;
@@ -64,7 +73,7 @@ define('drawing',
             // Draw the avatars
             avatars.drawAll(output, state);
         }
-        if(settings.show_fps) {
+        if (settings.show_fps) {
             output.fillStyle = 'white';
             output.fillRect(0, 0, 20, 20);
             output.fillStyle = 'red';
@@ -72,11 +81,9 @@ define('drawing',
             output.fillText(1000 / (now - lastDraw) | 0, 0, 10);
             lastDraw = now;
         }
-        if(settings.show_hitmappings) {
+        if (settings.show_hitmappings) {
             avatars.drawHitmappings(output, state);
         }
-        if(drawing)
-            requestAnimationFrame(draw);
     }
 
     function redrawTerrain() {
@@ -148,13 +155,22 @@ define('drawing',
     }
 
     function start() {
+        if (finishingDraw) {
+            drawing = true;
+            return;
+        }
         if (drawing) return;
-        document.body.className = '';
         drawing = true;
+        document.body.className = '';
         draw();
     }
     function stop() {
+        var output = canvases.getContext('output');
+        output.clearRect(0, 0, output.width, output.height);
         document.body.className = 'loading';
+        if (drawing) {
+            finishingDraw = true;
+        }
         drawing = false;
     }
 
