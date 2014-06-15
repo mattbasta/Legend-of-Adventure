@@ -59,6 +59,25 @@ define('playerStatsOverlay',
     keys.down.on(32, useDown);  // Space
     keys.up.on(32, useUp);
 
+    var weapon_prefixes = {
+        plain: ["Plain", 0],
+        forged: ["Forged", 1],
+        sharp: ["Sharp", 2],
+        broad: ["Broad", 3],
+        old: ["Old", 4],
+        leg: ["Legendary", 5],
+        fla: ["Flaming", 6],
+        agile: ["Agile", 7],
+        bane: ["Baneful", 8],
+        ench: ["Enchanted", 9],
+        evil: ["Evil", 10],
+        spite: ["Spiteful", 11],
+        ether: ["Ether", 12],
+        ancie: ["Ancient", 13]
+    };
+    var weapon_order = ["sw", "bo", "ma", "ax", "ha", "st"];
+    var weapon_prefixes_order = ["plain", "forged", "sharp", "broad", "old", "leg", "fla", "agile", "bane", "ench", "evil", "spite", "ether", "ancie"];
+
     function doRedraw(inventoryImg, itemsImg) {
         ctx.clearRect(0, 0, 374, 85);
 
@@ -66,8 +85,8 @@ define('playerStatsOverlay',
             var sy = 0, sx = 0;
             if (code[0] == "w") {  // Weapons have special codes to allow modifiers
                 var attributes = code.substr(1).split(".");
-                sx = jgassets.weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
-                sy = jgassets.weapon_order.indexOf(attributes[0]) * 24;
+                sx = weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
+                sy = weapon_order.indexOf(attributes[0]) * 24;
             } else {
                 var c = parseInt(code.substr(1), 10);
                 sx = c % 5 * 24;

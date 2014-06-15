@@ -1,6 +1,6 @@
 define('entities',
-    ['canvases', 'comm', 'hitmapping', 'images', 'level', 'settings'],
-    function(canvases, comm, hitmapping, images, level, settings) {
+    ['canvases', 'comm', 'entitymovement', 'hitmapping', 'images', 'level', 'settings'],
+    function(canvases, comm, entitymovement, hitmapping, images, level, settings) {
 
     'use strict';
 
@@ -71,6 +71,8 @@ define('entities',
                 props[k] = eP[k];
             }
         }
+        props.created = Date.now();
+
         props.position = props.position || settings.entityPrototypes.avatar.sprite.down[0].position;
         props.velocity = props.velocity || [0, 0];
         props.direction = props.direction || [0, 1];
@@ -208,6 +210,7 @@ define('entities',
             return doRedrawAVS;
         },
         drawAll: function(context, state) {
+            var now = Date.now();
             var entities = [];
 
             // Ignore entities that are not onscreen.
@@ -230,14 +233,25 @@ define('entities',
                 });
             }
 
+            var destX;
+            var destY;
+
             // Draw each entity in turn.
             for(var i = 0; i < entities.length; i++) {
                 entity = entities[i];
+
+                destX = entity.x * settings.tilesize + entity.xOffset - state[0];
+                destY = entity.y * settings.tilesize - entity.height - state[1];
+
+                if (entity.movement) {
+                    destX += entitymovement[entity.movement + '_x'](now - entity.created);
+                    destY += entitymovement[entity.movement + '_y'](now - entity.created);
+                }
+
                 context.drawImage(
                     entity.canvas,
                     0, 0, entity.canvas.width, entity.canvas.height,
-                    (entity.x * settings.tilesize) + entity.xOffset - state[0],
-                    (entity.y * settings.tilesize) - entity.height - state[1],
+                    destX, destY,
                     entity.width, entity.height
                 );
             }

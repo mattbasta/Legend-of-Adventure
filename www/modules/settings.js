@@ -53,7 +53,8 @@ define('settings', [], function() {
             },
             item: {
                 image: "items",
-                xOffset: 0
+                xOffset: 0,
+                movement: 'item_hover'
             }
         },
 
