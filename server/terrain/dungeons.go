@@ -244,9 +244,9 @@ func ApplyDungeon(parent string, terrain *Terrain) {
             terrain.Portals,
             NewPortal(
                 12, 9,
-                3, 3,
+                2, 2,
                 "..",
-                10, 10,  // TODO: figure out what to do with this
+                14, 14,  // TODO: figure out what to do with this
             ),
         )
     } else if room.Type == "stairwell" {
@@ -256,7 +256,7 @@ func ApplyDungeon(parent string, terrain *Terrain) {
             terrain.Portals,
             NewPortal(
                 12, 9,
-                3, 3,
+                2, 2,
                 "dungeon:0:0",
                 14, 14,
             ),

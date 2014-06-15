@@ -102,6 +102,7 @@ func (self *Player) gameTick() {
                         "loclocal " +
                         strconv.Itoa(int(portal.DestX)) + " " + strconv.Itoa(int(portal.DestY)) +
                         " 0 0 0 1")
+                    self.x, self.y = portal.DestX, portal.DestY
                     parent, type_, x, y := GetRegionData(target)
                     self.sendToLocation(parent, type_, x, y)
                 }
