@@ -11,8 +11,8 @@ define('hitmapping', ['level', 'settings'], function(level, settings) {
             var xLeft = avatar.x + HITMAP_BUFFER | 0;
             var xRight = avatar.x + (avatar.width / settings.tilesize) - HITMAP_BUFFER | 0;
 
-            var yMin = -1;
-            var yMax = hitmap.length + 1;
+            var yMin = 0.5;
+            var yMax = hitmap.length;
 
             var i;
             var maplen;
@@ -39,8 +39,8 @@ define('hitmapping', ['level', 'settings'], function(level, settings) {
 
             var x = avatar.x + HITMAP_BUFFER | 0;
 
-            var xMin = -1;
-            var xMax = hitmap[yBottom].length + 1;
+            var xMin = 0;
+            var xMax = hitmap[yBottom].length;
 
             var i;
             var rowlen;

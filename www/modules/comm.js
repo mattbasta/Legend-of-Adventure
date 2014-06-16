@@ -1,6 +1,6 @@
 define('comm',
-    ['defer', 'events', 'guid', 'load', 'settings', 'sound'],
-    function(defer, events, guid, load, settings, sound) {
+    ['defer', 'events', 'guid', 'settings', 'sound'],
+    function(defer, events, guid, settings, sound) {
 
     'use strict';
 
@@ -63,14 +63,8 @@ define('comm',
             promise.done(callback);
         }
         readyPromise.done(function() {
-            commEvents.one('level', function(levelData) {
-                load.completeTask('comm_reg');
-                promise.resolve(levelData);
-            });
-
+            commEvents.one('level', promise.resolve);
             if (position) send('lev', position);
-
-            load.completeTask('comm');
         });
         return promise.promise();
     };

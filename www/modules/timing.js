@@ -183,6 +183,7 @@ define('timing',
 
     function start() {
         if (timer) return;
+        last = Date.now() - 10;
         tick();
         timer = setInterval(tick, settings.fps);
     }

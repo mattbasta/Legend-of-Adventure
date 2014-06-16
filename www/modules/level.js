@@ -92,11 +92,14 @@ define('level',
         );
     }
 
+    var alreadyListening = false;
     function registerLevel(position) {
+        if (alreadyListening) return;
         unload();
+        alreadyListening = true;
         comm.ready.done(function() {
             comm.messages.one('lev', function(body) {
-                require('load').completeTask('comm_reg');
+                alreadyListening = false;
                 prepare(JSON.parse(body));
             });
             if (position) comm.send('lev', position);

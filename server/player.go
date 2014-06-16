@@ -285,6 +285,7 @@ func (self *Player) handle(msg string) {
             return
         }
 
+        log.Println("Player sliding to ", xPos, yPos)
         self.sendToLocation(self.location.ParentID, self.location.Type, int(xPos), int(yPos))
 
     }

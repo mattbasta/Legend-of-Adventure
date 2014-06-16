@@ -176,8 +176,6 @@ define('entities',
         register: register,
         draw: draw,
         tick: function(speed) {
-            var doRedrawAVS = false;
-
             var spriteDirection;
             var a;
             var a_x;
@@ -204,10 +202,7 @@ define('entities',
                     a.position = spriteDirection[a.cycle_position].position;
                     draw(entity);
                 }
-                doRedrawAVS = true;
             }
-
-            return doRedrawAVS;
         },
         drawAll: function(context, state) {
             var now = Date.now();
