@@ -11,7 +11,7 @@ define('hitmapping', ['level', 'settings'], function(level, settings) {
             var xLeft = avatar.x + HITMAP_BUFFER | 0;
             var xRight = avatar.x + (avatar.width / settings.tilesize) - HITMAP_BUFFER | 0;
 
-            var yMin = 0.5;
+            var yMin = 0;
             var yMax = hitmap.length;
 
             var i;
