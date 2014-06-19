@@ -1,0 +1,3 @@
+define('harmable', [], function() {
+    return {};
+});

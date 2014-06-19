@@ -1,0 +1,3 @@
+define('animat', [], function() {
+    return {};
+});

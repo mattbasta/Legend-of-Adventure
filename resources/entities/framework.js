@@ -2,6 +2,7 @@
 
 var type = self.type;
 
+var topModule = null;
 var defined = {};
 
 self.define = function define(name, inherits, body) {
@@ -9,9 +10,13 @@ self.define = function define(name, inherits, body) {
         body = inherits;
         inherits = [];
     }
+
+    for (var i = 0; i < inherits.length; i++) {
+        if (!defined[inherits[i]]) self.import(inherits[i]);
+    }
+
     defined[name] = [inherits, body(), name];
 };
-
 
 self.trigger = function trigger(event, args) {
     var didRun = false;
