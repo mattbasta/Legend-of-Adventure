@@ -29,6 +29,9 @@ type Entity interface {
     ID() string
     Killer(chan<- bool) // Used to notify entity it is being destroyed
     String() string
+
+    Position() (float64, float64)
+    Size() (uint, uint)
 }
 
 
@@ -173,7 +176,7 @@ func (self *Region) GetEvent(evt_type events.EventType, body string, origin Enti
 		str_origin = origin.ID()
 	}
 
-	return &events.Event{self.ID(), evt_type, str_origin, events.GetOriginServerID(), body}
+	return &events.Event{self.ID(), evt_type, str_origin, body}
 }
 
 func (self *Region) AddEntity(entity Entity) {
@@ -260,6 +263,18 @@ func (self Region) IsTown() bool {
 	}
 	return isTownPos(self.X, self.Y)
 }
+
+func (self Region) GetEntity(ID string) Entity {
+	for _, entity := range self.entities {
+		if (*entity).ID() == ID {
+			return *entity
+		}
+	}
+	return nil
+}
+
+
+// Helper Methods:
 
 func isTownPos(x, y int) bool {
 	// Always force spawn to be a town.

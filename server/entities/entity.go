@@ -5,7 +5,6 @@ import (
 
     "legend-of-adventure/server/events"
     "legend-of-adventure/server/regions"
-    "legend-of-adventure/server/terrain"
 )
 
 var entityNameCounter = 0
@@ -47,18 +46,4 @@ type Animat interface {
     GetHealth() uint
     IsAtMaxHealth() bool
     IncrementHealth(amount uint)
-}
-
-type SentientAnimat interface {
-    Animat
-}
-
-func IsEntityCollidingWithPortal(portal terrain.Portal, entity Entity) bool {
-    ex, ey := entity.Position() // TODO: Update this to use ApproximatePosition
-    ew, eh := entity.Size()
-    ewT, ehT := float64(ew / TILE_SIZE), float64(eh / TILE_SIZE)
-    return (ex + ewT >= float64(portal.X) &&
-            float64(portal.X + portal.W) >= ex &&
-            ey >= float64(portal.Y) &&
-            float64(portal.Y + portal.H) >= ey - ehT)
 }

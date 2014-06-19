@@ -49,11 +49,14 @@ func GetFeatureTiles(setName string) *FeatureTiles {
         log.Println("Could not open tileset '" + setName + "'")
         return nil
     }
+    defer tileFile.Close()
+
     hitmapFile, err := os.Open("resources/tilesets/" + setName + ".hitmap")
     if err != nil {
         log.Println("Could not open hitmap '" + setName + "'")
         return nil
     }
+    defer hitmapFile.Close()
 
     tileset := new(FeatureTiles)
 

@@ -59,7 +59,7 @@ func HandleCheat(message string, player *Player) bool {
             sayToPlayer("Item could not be given", player)
         } else {
             sayToPlayer("Item is in slot " + strconv.Itoa(slot), player)
-            player.updateInventory()
+            player.UpdateInventory()
         }
         return true
 

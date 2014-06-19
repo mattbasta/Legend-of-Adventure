@@ -2,7 +2,6 @@ package entities
 
 import (
     "fmt"
-    "log"
     "strconv"
     "strings"
 
@@ -57,6 +56,7 @@ func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
     item.id = NextEntityID()
     item.closing = make(chan bool)
     item.itemCode = code
+    item.location = from.Location()
 
     fromX, fromY := from.Position()
     fromDirX, fromDirY := from.Direction()
@@ -73,17 +73,38 @@ func (self *ItemEntity) Receive() chan<- *events.Event {
     go func() {
         for {
             select {
-            case event := <-receiver:
-                log.Println(event)
-                continue
             case <-self.closing:
                 self.closing <- true
                 return
+            case event := <-receiver:
+                self.handle(event)
             }
         }
     }()
     return receiver
 }
+
+func (self *ItemEntity) handle(event *events.Event) {
+    switch event.Type {
+    case events.LOCATION:
+        entity := self.location.GetEntity(event.Origin)
+        if entity == nil { return }
+
+        dist := Distance(self, entity)
+        if dist > ITEM_PICK_UP_DIST { return }
+
+        eInv := entity.(Entity).Inventory()
+        if eInv == nil { return }
+
+        given, _ := eInv.Give(self.itemCode)
+        if given {
+            self.location.RemoveEntity(self)
+            self.closing <- true
+            return
+        }
+    }
+}
+
 
 func (self *ItemEntity) Clipping() (uint, uint, uint, uint) {
     width, height := self.Size()

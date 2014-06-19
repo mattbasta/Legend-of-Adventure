@@ -170,7 +170,6 @@ func (self *Player) Setup() {
     self.inventory = entities.NewInventory(self, PLAYER_INV_SIZE)
     self.inventory.Give("wsw.sharp.12")
     self.inventory.Give("f5")
-    self.updateInventory()
 
     // TODO: Do lookup of player location here.
 
@@ -187,7 +186,6 @@ func (self *Player) handle(msg string) {
     switch split[0] {
     case "cyc": // cyc == cycle inventory
         self.inventory.Cycle(split[1])
-        self.updateInventory()
 
     case "cha": // cha == chat
         body := fmt.Sprintf("%f %f\n%s", self.x, self.y, split[1])
@@ -263,11 +261,9 @@ func (self *Player) handle(msg string) {
             return
         }
         self.inventory.Use(uint(index), self)
-        self.updateInventory()
 
     case "dro":
         self.inventory.Drop(self)
-        self.updateInventory()
 
     case "lev":
         pos := strings.Split(split[1], ":")
@@ -310,7 +306,8 @@ func (self *Player) sendToLocation(parentID, type_ string, x, y int) {
     self.outbound_raw <- "lev{" + newLocation.String() + "}"
 }
 
-func (self *Player) updateInventory() {
+func (self *Player) UpdateInventory() {
+    log.Println("Updating user inventory")
     out := "inv"
     first := true
     for i := 0; i < self.inventory.Capacity(); i++ {

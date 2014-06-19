@@ -5,13 +5,18 @@ import (
 )
 
 
+type InventoryOwner interface {
+	UpdateInventory()
+}
+
+
 type Inventory struct {
-	Owner    Entity
+	Owner    InventoryOwner
 	inv      []string
 	capacity int
 }
 
-func NewInventory(owner Entity, capacity int) *Inventory {
+func NewInventory(owner InventoryOwner, capacity int) *Inventory {
 	slots := make([]string, capacity)
 	return &Inventory{owner, slots, capacity}
 }
@@ -51,6 +56,7 @@ func (self *Inventory) Give(item string) (bool, int) { // Success, Slot
 	for i, v := range self.inv {
 		if v == "" {
 			self.inv[i] = item
+			self.Owner.UpdateInventory()
 			return true, i
 		}
 	}
@@ -102,6 +108,7 @@ func (self *Inventory) Cycle(command string) {
 		}
 		self.inv[0] = last
 	}
+	self.Owner.UpdateInventory()
 }
 
 func (self *Inventory) Use(index uint, holder Animat) {
@@ -119,6 +126,7 @@ func (self *Inventory) Use(index uint, holder Animat) {
 		}
 		holder.IncrementHealth(FOOD_HEALTH_INCREASE)
 		self.inv[index] = ""
+		self.Owner.UpdateInventory()
 	}
 
 }
@@ -135,5 +143,6 @@ func (self *Inventory) Drop(dropper EntityThatCanThrow) {
 	self.inv[0] = ""
 	reg.AddEntity(item)
 	self.Consolidate()
+	self.Owner.UpdateInventory()
 
 }

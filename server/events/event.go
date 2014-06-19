@@ -76,14 +76,14 @@ type Event struct {
 	Location     string    // The ID of the region
 	Type         EventType // A value from the above entity types
 	Origin       string    // The originating entity ID
-	OriginServer string    // The originating server ID
 
 	Body string
 }
 
 func (self *Event) String() string {
 	// XXX: This might someday need to include the location.
-	return (string(self.Type) + "evt:" +
-		self.OriginServer + "," + self.Origin + "\n" +
+	return (
+		string(self.Type) + "evt:" +
+		self.Origin + "\n" +
 		self.Body)
 }
