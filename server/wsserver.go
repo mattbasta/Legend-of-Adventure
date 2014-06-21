@@ -10,7 +10,6 @@ func handler(ws *websocket.Conn) {
 	log.Println("Client connected: " + addr)
 
 	player := NewPlayer(ws)
-	player.Setup()
 	player.Listen()
 }
 

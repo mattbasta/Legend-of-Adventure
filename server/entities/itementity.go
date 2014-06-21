@@ -2,6 +2,7 @@ package entities
 
 import (
     "fmt"
+    "log"
     "strconv"
     "strings"
 
@@ -66,7 +67,6 @@ func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
 
 
 func (self *ItemEntity) Receive() chan<- *events.Event {
-    // TODO: Perform pickup processing here
     receiver := make(chan *events.Event)
 
     go func() {
@@ -155,8 +155,21 @@ func (self *ItemEntity) String() string {
         "}")
 }
 
-func (self ItemEntity) Setup()                       { return }
-func (self ItemEntity) Killer(in chan<- bool)        { return }
+
+func (self *ItemEntity) Killer(in chan bool) {
+    go func() {
+        select {
+        case <- in:
+            log.Println("Destroying item entity " + self.ID())
+            self.closing <- true
+            in <- true
+        case <- self.closing:
+            log.Println("Closing item entity " + self.ID())
+            self.closing <- true
+        }
+    }()
+}
+
 func (self ItemEntity) ID() string                   { return self.id }
 func (self ItemEntity) Position() (float64, float64) { return self.x, self.y }
 func (self ItemEntity) Size() (uint, uint)           { return 24, 24 }

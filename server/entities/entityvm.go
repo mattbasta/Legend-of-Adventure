@@ -19,11 +19,11 @@ type EntityVM struct {
 func (self *EntityVM) Copy() *EntityVM {
     vm := new(EntityVM)
     vm.vm = self.vm.Copy()
-    vm.Setup()
+    vm.setup()
     return vm
 }
 
-func (self *EntityVM) Setup() {
+func (self *EntityVM) setup() {
     self.vm.Set("import", func(call otto.FunctionCall) otto.Value {
         toImport := call.Argument(0).String()
         entity, err := ioutil.ReadFile("resources/entities/" + toImport + ".js")

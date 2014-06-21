@@ -58,6 +58,11 @@ func NewPlayer(conn *websocket.Conn) *Player {
     }
     reg.AddEntity(&player)
 
+    // Set up the player's inventory
+    player.inventory = entities.NewInventory(player, PLAYER_INV_SIZE)
+    player.inventory.Give("wsw.sharp.12")
+    player.inventory.Give("f5")
+
     go player.startPinging()
     go player.gameTick()
 
@@ -161,17 +166,6 @@ func (self *Player) Listen() {
             }
         }
     }
-
-}
-
-func (self *Player) Setup() {
-    // TODO: Add inventory persistence
-    // Set up the player's inventory
-    self.inventory = entities.NewInventory(self, PLAYER_INV_SIZE)
-    self.inventory.Give("wsw.sharp.12")
-    self.inventory.Give("f5")
-
-    // TODO: Do lookup of player location here.
 
 }
 
@@ -338,7 +332,7 @@ func (self Player) GetHealth() uint              { return self.health }
 func (self Player) ID() string                   { return self.name }
 func (self Player) Inventory() *entities.Inventory  { return self.inventory }
 func (self Player) IsAtMaxHealth() bool          { return self.health == PLAYER_MAX_HEALTH }
-func (self Player) Killer(in chan<- bool)        { return }
+func (self Player) Killer(in chan bool)          { return }
 func (self Player) Location() entities.EntityRegion { return self.location }
 func (self Player) MovementEffect() string       { return "" }
 func (self Player) Position() (float64, float64) { return self.x, self.y }

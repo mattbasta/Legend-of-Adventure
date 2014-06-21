@@ -23,8 +23,7 @@ type EntityRegion interface {
 
 type Entity interface {
     Receive() chan<- *events.Event
-    Setup()
-    Killer(chan<- bool) // Used to notify entity it is being destroyed
+    Killer(chan bool) // Used to notify entity it is being destroyed
 
     ID() string
     Position() (float64, float64)
