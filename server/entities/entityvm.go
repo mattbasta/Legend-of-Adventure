@@ -2,6 +2,7 @@ package entities
 
 import (
     "io/ioutil"
+    "log"
 
     "github.com/robertkrimen/otto"
 )
@@ -32,6 +33,15 @@ func (self *EntityVM) Setup() {
         self.vm.Run(entity)
         return otto.Value {}
     })
+}
+
+func (self *EntityVM) Call(name string) string {
+    value, err := self.vm.Run("JSON.stringify(trigger('" + name + "'))");
+    if err != nil {
+        log.Println("Entity JS error: ", err)
+        return ""
+    }
+    return value.String()
 }
 
 

@@ -4,7 +4,6 @@ import (
     "strconv"
 
     "legend-of-adventure/server/events"
-    "legend-of-adventure/server/regions"
 )
 
 var entityNameCounter = 0
@@ -14,6 +13,13 @@ func NextEntityID() string {
     entityNameCounter++
     return name
 }
+
+type EntityRegion interface {
+    AddEntity(entity Entity)
+    RemoveEntity(entity Entity)
+    GetEntity(ID string) Entity
+}
+
 
 type Entity interface {
     Receive() chan<- *events.Event
@@ -26,7 +32,7 @@ type Entity interface {
 
     Dead() bool
 
-    Location() *regions.Region
+    Location() EntityRegion
     Inventory() *Inventory // May return nil
 
     String() string

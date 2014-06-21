@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"legend-of-adventure/server/entities"
 	"legend-of-adventure/server/events"
 	"legend-of-adventure/server/terrain"
 )
@@ -22,17 +23,6 @@ import (
 //     overworld,field:123:456,dungeon:0:0
 //     overworld,field:123:456,dungeon:2:3,dungeon:1:1
 //     overworld,field:123:456,dungeon:2:3,dungeon:1:1
-
-
-type Entity interface {
-    Receive() chan<- *events.Event
-    ID() string
-    Killer(chan<- bool) // Used to notify entity it is being destroyed
-    String() string
-
-    Position() (float64, float64)
-    Size() (uint, uint)
-}
 
 
 type regionRequest struct {
@@ -59,7 +49,7 @@ func startRegionGetter() {
 				reg.killer = make(chan bool)
 				reg.doTTL()
 
-				reg.entities = make([]*Entity, 0, 32)
+				reg.entities = make([]*entities.Entity, 0, 32)
 				reg.Terrain = terrain.Get(reg)
 
 				if reg.IsTown() {
@@ -132,7 +122,7 @@ type Region struct {
 	killer    chan bool
 
 	Terrain  *terrain.Terrain
-	entities []*Entity
+	entities []*entities.Entity
 }
 
 func (self *Region) Broadcast(evt *events.Event, except string) {
@@ -170,7 +160,7 @@ func (self Region) ID() string {
 	return getRegionID(self.ParentID, self.Type, self.X, self.Y)
 }
 
-func (self *Region) GetEvent(evt_type events.EventType, body string, origin Entity) *events.Event {
+func (self *Region) GetEvent(evt_type events.EventType, body string, origin entities.Entity) *events.Event {
 	str_origin := ""
 	if origin != nil {
 		str_origin = origin.ID()
@@ -179,7 +169,7 @@ func (self *Region) GetEvent(evt_type events.EventType, body string, origin Enti
 	return &events.Event{self.ID(), evt_type, str_origin, body}
 }
 
-func (self *Region) AddEntity(entity Entity) {
+func (self *Region) AddEntity(entity entities.Entity) {
 	entity.Killer(self.killer)
 
 	// Tell everyone else that the entity is here.
@@ -198,7 +188,7 @@ func (self *Region) AddEntity(entity Entity) {
 
 }
 
-func (self *Region) RemoveEntity(entity Entity) {
+func (self *Region) RemoveEntity(entity entities.Entity) {
 	entity.Killer(self.killer)
 
 	// Tell everyone else that the entity is leaving.
@@ -264,7 +254,7 @@ func (self Region) IsTown() bool {
 	return isTownPos(self.X, self.Y)
 }
 
-func (self Region) GetEntity(ID string) Entity {
+func (self Region) GetEntity(ID string) entities.Entity {
 	for _, entity := range self.entities {
 		if (*entity).ID() == ID {
 			return *entity

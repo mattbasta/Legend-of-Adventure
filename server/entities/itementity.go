@@ -6,7 +6,6 @@ import (
     "strings"
 
     "legend-of-adventure/server/events"
-    "legend-of-adventure/server/regions"
 )
 
 var WEAPONS = map[string]uint {
@@ -41,12 +40,12 @@ type ItemEntity struct {
 
     itemCode   string
     x, y       float64
-    location   *regions.Region
+    location   EntityRegion
 }
 
 type EntityThatCanThrow interface {
     ID() string
-    Location() *regions.Region
+    Location() EntityRegion
     Position() (float64, float64)
     Direction() (int, int)
 }
@@ -162,5 +161,5 @@ func (self ItemEntity) ID() string                   { return self.id }
 func (self ItemEntity) Position() (float64, float64) { return self.x, self.y }
 func (self ItemEntity) Size() (uint, uint)           { return 24, 24 }
 func (self ItemEntity) Dead() bool                   { return false }
-func (self ItemEntity) Location() *regions.Region    { return self.location }
+func (self ItemEntity) Location() EntityRegion       { return self.location }
 func (self ItemEntity) Inventory() *Inventory        { return nil }
