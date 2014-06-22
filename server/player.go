@@ -59,7 +59,7 @@ func NewPlayer(conn *websocket.Conn) *Player {
     reg.AddEntity(&player)
 
     // Set up the player's inventory
-    player.inventory = entities.NewInventory(player, PLAYER_INV_SIZE)
+    player.inventory = entities.NewInventory(&player, PLAYER_INV_SIZE)
     player.inventory.Give("wsw.sharp.12")
     player.inventory.Give("f5")
 
@@ -109,7 +109,7 @@ func (self *Player) gameTick() {
 
                     self.x, self.y = portal.DestX, portal.DestY
                     self.outbound_raw <- (
-                        "eup{\"id\":\"local\"," +
+                        "epuevt:local\n{" +
                         fmt.Sprintf("\"x\":%d,\"y\":%d", int(portal.DestX), int(portal.DestY)) +
                         "}")
                     parent, type_, x, y := regions.GetRegionData(target)
@@ -245,7 +245,11 @@ func (self *Player) handle(msg string) {
         self.dirY = int(dirY)
 
         self.location.Broadcast(
-            self.location.GetEvent(events.LOCATION, self.String(), self),
+            self.location.GetEvent(
+                events.ENTITY_UPDATE,
+                "{" + self.PositionString() + "}",
+                self,
+            ),
             self.ID(),
         )
 
@@ -339,26 +343,32 @@ func (self Player) Position() (float64, float64) { return self.x, self.y }
 func (self Player) Size() (uint, uint)           { return 50, 50 }
 func (self Player) Velocity() (int, int)         { return self.velX, self.velY }
 
+func (self *Player) PositionString() string {
+    return fmt.Sprintf(
+        "\"x\":%f," +
+        "\"y\":%f," +
+        "\"velocity\":[%d, %d]," +
+        "\"direction\":[%d, %d]",
+        self.x,
+        self.y,
+        self.velX,
+        self.velY,
+        self.dirX,
+        self.dirY,
+    )
+}
+
 func (self *Player) String() string {
     width, height := self.Size()
     return (
         "{\"proto\":\"avatar\"," +
         "\"id\":\"" + self.ID() + "\"," +
+        self.PositionString() + "," +
         fmt.Sprintf(
-            "\"x\":\"%f\"," +
-            "\"y\":\"%f\"," +
             "\"width\":\"%d\"," +
-            "\"height\":\"%d\"," +
-            "\"velocity\":[%d, %d]," +
-            "\"direction\":[%d, %d],",
-            self.x,
-            self.y,
+            "\"height\":\"%d\",",
             width,
             height,
-            self.velX,
-            self.velY,
-            self.dirX,
-            self.dirY,
         ) +
         // "\"\":\"\"," +
         "\"type\":\"person\"" +

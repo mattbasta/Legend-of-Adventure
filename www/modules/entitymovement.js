@@ -10,5 +10,9 @@ define('entitymovement', [], function() {
         item_hover_y: function(ticks) {
             return (Math.sin(ticks / 1000 * 2 * Math.PI) + 1) * -5;
         },
+        sheep_bounce_x: noop,
+        sheep_bounce_y: function(ticks) {
+            return Math.abs(Math.sin(ticks / 500 * 2 * Math.PI)) * -5;
+        }
     }
 });

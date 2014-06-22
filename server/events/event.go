@@ -39,11 +39,7 @@ const (
 	// implemented by the client. This event extends `REGION_EXIT`.
 	//   Body: empty
 	DEATH EventType = "ded"
-	// A location and velocity update for an entity.
-	//   Body: x y vx vy
-	LOCATION EventType = "loc"
 	// A property update for an entity.
-	//   Body: prop=<json> [\n prop=<json>] ...
 	ENTITY_UPDATE EventType = "epu"
 	// A communication between two entities. If the Origin is nil, the message
 	// is a console message.

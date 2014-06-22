@@ -3,6 +3,7 @@ package entities
 import (
     "io/ioutil"
     "log"
+    "strings"
 
     "github.com/robertkrimen/otto"
 )
@@ -16,21 +17,22 @@ type EntityVM struct {
     vm *otto.Otto
 }
 
-func (self *EntityVM) Copy() *EntityVM {
-    vm := new(EntityVM)
-    vm.vm = self.vm.Copy()
-    vm.setup()
-    return vm
-}
-
 func (self *EntityVM) setup() {
-    self.vm.Set("import", func(call otto.FunctionCall) otto.Value {
+    self.vm.Set("load", func(call otto.FunctionCall) otto.Value {
         toImport := call.Argument(0).String()
         entity, err := ioutil.ReadFile("resources/entities/" + toImport + ".js")
         if err != nil {
             panic("Could not open entity '" + toImport + "'")
         }
         self.vm.Run(entity)
+        return otto.Value {}
+    })
+    self.vm.Set("log", func(call otto.FunctionCall) otto.Value {
+        str := make([]string, len(call.ArgumentList))
+        for i, arg := range call.ArgumentList {
+            str[i] = arg.String()
+        }
+        log.Println(strings.Join(str, " "))
         return otto.Value {}
     })
 }
@@ -44,6 +46,13 @@ func (self *EntityVM) Call(name string) string {
     return value.String()
 }
 
+func (self *EntityVM) Pass(name, args string) {
+    _, err := self.vm.Run("JSON.stringify(trigger('" + name + "', " + args + "))");
+    if err != nil {
+        log.Println("Entity error: ", err)
+    }
+}
+
 
 // TODO: convert this to use channels to prevent race conditions
 func GetFreshEntityVM() *EntityVM {
@@ -54,7 +63,10 @@ func GetFreshEntityVM() *EntityVM {
             panic("Could not open entity framework file")
         }
 
-        defaultVM.Run(framework)
+        _, entErr := defaultVM.Run(framework)
+        if entErr != nil {
+            log.Println(entErr)
+        }
     }
 
     return &EntityVM {
@@ -63,24 +75,20 @@ func GetFreshEntityVM() *EntityVM {
 }
 
 
-var defaultEntityCache = map[string]*EntityVM {}
-
 // TODO: convert this to use channels to prevent race conditions
 func GetEntityVM(entityName string) *EntityVM {
-    if entity, ok := defaultEntityCache[entityName]; ok {
-        return entity.Copy()
-    }
-
     entity, err := ioutil.ReadFile("resources/entities/all/" + entityName + ".js")
     if err != nil {
         panic("Could not open entity '" + entityName + "'")
     }
 
     vm := GetFreshEntityVM()
-    vm.vm.Run(entity)
+    vm.setup();
+    vm.vm.Set("type", entityName);
+    _, entErr := vm.vm.Run(entity)
+    if entErr != nil {
+        log.Println(entErr)
+    }
 
-    defaultEntityCache[entityName] = vm
-
-    // Return a copy so the default one doesn't get tainted.
-    return vm.Copy()
+    return vm
 }

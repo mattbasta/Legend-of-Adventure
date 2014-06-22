@@ -23,10 +23,10 @@ define('entities',
     });
 
     // Change entity properties
-    comm.messages.on('eup', function(body) {
+    comm.messages.on('epu', function(body, origin) {
+        if (!origin || !(origin in registry)) return;
         var data = JSON.parse(body);
-        if (!data.id || !(data.id in registry)) return;
-        var entity = registry[data.id];
+        var entity = registry[origin];
         if ('x' in data) {
             entity.x = data.x;
         }
@@ -59,7 +59,7 @@ define('entities',
             entity.sprite_cycle = 0;
         }
 
-        draw(data.id);
+        draw(origin);
     });
 
 
@@ -73,6 +73,7 @@ define('entities',
         }
         props.created = Date.now();
 
+        props.xOffset = props.xOffset || 0;
         props.position = props.position || settings.entityPrototypes.avatar.sprite.down[0].position;
         props.velocity = props.velocity || [0, 0];
         props.direction = props.direction || [0, 1];
@@ -215,7 +216,7 @@ define('entities',
                 if (state[0] > 0 && (a.x < (state[0] - 1) / settings.tilesize ||
                                      a.x > (state[0] + state[2] + 1) / settings.tilesize) ||
                     state[1] > 0 && (a.y < (state[1] - 1) / settings.tilesize ||
-                                     a.y > (state[1] + state[3] + 1) / settings.tilesize)) {
+                                     a.y - a.height > (state[1] + state[3] + 1) / settings.tilesize)) {
                     continue
                 }
                 entities.push(a);

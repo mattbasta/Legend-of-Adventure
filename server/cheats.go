@@ -83,7 +83,7 @@ func HandleCheat(message string, player *Player) bool {
         player.dirY = 0
 
         player.outbound_raw <- (
-            "eup{\"id\":\"local\"," +
+            "epuevt:local\n{" +
             fmt.Sprintf("\"x\":%d,\"y\":%d", int(xPos), int(yPos)) +
             "}")
 

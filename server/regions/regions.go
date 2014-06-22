@@ -60,6 +60,8 @@ func startRegionGetter() {
 					terrain.ApplyDungeon(parent, reg.Terrain)
 				}
 
+				reg.PopulateEntities();
+
 				regionCache[request.ID] = reg
 
 				request.Receiver <- reg
@@ -261,6 +263,23 @@ func (self Region) GetEntity(ID string) entities.Entity {
 		}
 	}
 	return nil
+}
+
+func (self *Region) PopulateEntities() {
+
+	switch self.Type {
+	case terrain.REGIONTYPE_FIELD:
+		for i := 0; i < 1; i++ {
+			ent := entities.NewVirtualEntity("sheep")
+			ent.SetLocation(self)
+			ent.SetPosition(
+				// TODO: Randomize all of this
+				float64(self.Terrain.Width / 2),
+				float64(self.Terrain.Height / 2),
+			)
+			self.AddEntity(ent)
+		}
+	}
 }
 
 

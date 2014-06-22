@@ -22,17 +22,16 @@ define('comm',
         var header = message.data.substr(0, 3);
         var subheader = message.data.substr(3, 3);
         var body;
+        var origin;
         if (subheader === 'evt') {
-            body = message.data.substr(message.data.indexOf('\n') + 1);
+            var linebreak = message.data.indexOf('\n');
+            origin = message.data.substr(7, message.data.indexOf('\n') - 7);
+            body = message.data.substr(linebreak + 1);
         } else {
             body = message.data.substr(3);
         }
 
-        if (header !== 'epu' || settings.show_epu) {
-            // console.log('Server message: ' +  message.data);
-        }
-
-        commMessages.fire(header, body);
+        commMessages.fire(header, body, origin);
     };
 
     // Play sound

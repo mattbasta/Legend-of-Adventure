@@ -85,7 +85,7 @@ func (self *ItemEntity) Receive() chan<- *events.Event {
 
 func (self *ItemEntity) handle(event *events.Event) {
     switch event.Type {
-    case events.LOCATION:
+    case events.ENTITY_UPDATE:
         entity := self.location.GetEntity(event.Origin)
         if entity == nil { return }
 
