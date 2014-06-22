@@ -83,3 +83,8 @@ func (self *Event) String() string {
 		self.Origin + "\n" +
 		self.Body)
 }
+
+
+func GetType(event string) EventType {
+	return EventType(event)
+}

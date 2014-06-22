@@ -1,6 +1,6 @@
 define('comm',
-    ['defer', 'events', 'guid', 'settings', 'sound'],
-    function(defer, events, guid, settings, sound) {
+    ['defer', 'events', 'guid', 'settings'],
+    function(defer, events, guid, settings) {
 
     'use strict';
 
@@ -33,18 +33,6 @@ define('comm',
 
         commMessages.fire(header, body, origin);
     };
-
-    // Play sound
-    commMessages.on('snd', function(body) {
-        // TODO: move this to the sound module
-        var data = body.split(':');
-        var sX = parseFloat(data[1]);
-        var sY = parseFloat(data[2]);
-        var following = getFollowing();
-        var dist = Math.sqrt(Math.pow(s_x - following.x, 2) + Math.pow(s_y - following.y, 2));
-        dist /= settings.tilesize;
-        sound.playSound(data[0], dist);
-    });
 
     // Error
     commMessages.on('err', function(body) {

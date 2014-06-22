@@ -4,6 +4,9 @@ import (
     "fmt"
     "log"
     "strconv"
+    "time"
+
+    "github.com/robertkrimen/otto"
 
     "legend-of-adventure/server/events"
 )
@@ -16,6 +19,8 @@ type VirtualEntity struct {
     location   EntityRegion
 
     vm         *EntityVM
+
+    lastTick   int64
 }
 
 func NewVirtualEntity(entityName string) *VirtualEntity {
@@ -24,6 +29,24 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
     ent.closing = make(chan bool)
 
     ent.vm = GetEntityVM(entityName)
+
+    ent.vm.vm.Set("sendEvent", func(call otto.FunctionCall) otto.Value {
+        if ent.location == nil {
+            return otto.Value {}
+        }
+        ent.location.Broadcast(
+            ent.location.GetEvent(
+                events.GetType(call.Argument(0).String()),
+                call.Argument(1).String(),
+                ent,
+            ),
+        )
+        return otto.Value {}
+    })
+
+    ent.vm.Pass("setup", "null")
+
+    go ent.gameTick()
 
     return ent
 }
@@ -34,6 +57,23 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
 
 func (self *VirtualEntity) SetPosition(x, y float64) {
     self.vm.Pass("setPosition", fmt.Sprintf("%f, %f", x, y))
+}
+
+func (self *VirtualEntity) gameTick() {
+    ticker := time.NewTicker(250 * time.Millisecond)
+    self.lastTick = time.Now().UnixNano() / 1e6
+    defer ticker.Stop()
+    for {
+        select {
+        case <-ticker.C:
+            now := time.Now().UnixNano() / 1e6
+            self.vm.Pass("tick", fmt.Sprintf("%d, %d", now, now - self.lastTick))
+            self.lastTick = now
+        case <-self.closing:
+            self.closing <- true
+            return
+        }
+    }
 }
 
 

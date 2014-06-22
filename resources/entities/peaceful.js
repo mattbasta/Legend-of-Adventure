@@ -1,3 +1,8 @@
 define('peaceful', ['sentient'], function() {
-    return {};
+    return {
+        getPreferredBehavior: function() {
+            return 'flee';
+        },
+        attacked: function(sup) {}
+    };
 });

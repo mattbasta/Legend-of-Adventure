@@ -1,4 +1,4 @@
-define('sound', ['buzz'], function(buzz) {
+define('sound', ['buzz', 'comm', 'entities'], function(buzz, comm, entities) {
     'use strict';
 
     var sounds = {};
@@ -18,6 +18,16 @@ define('sound', ['buzz'], function(buzz) {
         );
     }
 
+    // Play sound
+    comm.messages.on('snd', function(body) {
+        var data = body.split(':');
+        var sX = parseFloat(data[1]);
+        var sY = parseFloat(data[2]);
+        var following = entities.getFollowing();
+        var dist = Math.sqrt(Math.pow(sX - following.x, 2) + Math.pow(sY - following.y, 2));
+        playSound(data[0], dist);
+    });
+
     loadSound('bleat', 'static/sounds/bleat');
     loadSound('zombie_groan', 'static/sounds/zombie_groan');
     loadSound('zombie_attack', 'static/sounds/zombie_attack');
@@ -33,6 +43,21 @@ define('sound', ['buzz'], function(buzz) {
                 loop: true
             }
         );
+    }
+
+    function playSound(name, distance) {
+        if(!(name in sounds))
+            return;
+        if(distance > 25)
+            return;
+        var sound = sounds[name];
+        var sc = sound.getStateCode();
+        if(sc >= 2) {
+            distance /= 2.5;
+            // TODO: Make this a constant somewhere.
+            sound.setVolume(100 - distance * distance);
+            sound.play();
+        }
     }
 
     // loadLoop('daylight', 'static/music/daylight');
@@ -57,19 +82,6 @@ define('sound', ['buzz'], function(buzz) {
                 loops[name].play().setVolume(0).fadeTo(20, 2000);
             });
         },
-        playSound: function(name, distance) {
-            if(!(name in sounds))
-                return;
-            if(distance > 25)
-                return;
-            var sound = sounds[name];
-            var sc = sound.getStateCode();
-            if(sc >= 2) {
-                distance /= 2.5;
-                // TODO: Make this a constant somewhere.
-                sound.setVolume(100 - distance * distance);
-                sound.play();
-            }
-        }
+        playSound: playSound
     };
 });
