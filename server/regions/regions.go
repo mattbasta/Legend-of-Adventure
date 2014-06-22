@@ -127,9 +127,9 @@ type Region struct {
 	entities []*entities.Entity
 }
 
-func (self *Region) Broadcast(evt *events.Event, except string) {
+func (self *Region) Broadcast(evt *events.Event) {
 	for _, entity := range self.entities {
-		if (*entity).ID() == except {
+		if (*entity).ID() == evt.Origin {
 			continue
 		}
 		(*entity).Receive() <- evt
@@ -175,10 +175,7 @@ func (self *Region) AddEntity(entity entities.Entity) {
 	entity.Killer(self.killer)
 
 	// Tell everyone else that the entity is here.
-	self.Broadcast(
-		self.GetEvent(events.REGION_ENTRANCE, entity.String(), entity),
-		entity.ID(),
-	)
+	self.Broadcast(self.GetEvent(events.REGION_ENTRANCE, entity.String(), entity))
 
 	// Tell the entity about everyone else.
 	for _, regEnt := range self.entities {
@@ -194,10 +191,7 @@ func (self *Region) RemoveEntity(entity entities.Entity) {
 	entity.Killer(self.killer)
 
 	// Tell everyone else that the entity is leaving.
-	self.Broadcast(
-		self.GetEvent(events.REGION_EXIT, entity.ID(), entity),
-		entity.ID(),
-	)
+	self.Broadcast(self.GetEvent(events.REGION_EXIT, entity.ID(), entity))
 
 	// Find the entity
 	location := -1

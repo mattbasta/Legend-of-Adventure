@@ -18,6 +18,9 @@ type EntityRegion interface {
     AddEntity(entity Entity)
     RemoveEntity(entity Entity)
     GetEntity(ID string) Entity
+
+    Broadcast(event *events.Event)
+    GetEvent(type_ events.EventType, body string, origin Entity) *events.Event
 }
 
 

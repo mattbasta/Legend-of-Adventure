@@ -59,6 +59,10 @@ define('entities',
             entity.sprite_cycle = 0;
         }
 
+        if ('nametag' in data) {
+            entity.nametag = data.nametag;
+        }
+
         draw(origin);
     });
 
@@ -231,6 +235,7 @@ define('entities',
 
             var destX;
             var destY;
+            var temp;
 
             // Draw each entity in turn.
             for(var i = 0; i < entities.length; i++) {
@@ -250,6 +255,24 @@ define('entities',
                     destX, destY,
                     entity.width, entity.height
                 );
+
+                if (entity.nametag) {
+                    context.font = '30px VT323';
+                    temp = context.measureText(entity.nametag);
+                    context.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                    context.fillRect(
+                        (entity.width / 2 + destX) - (temp.width + 20) / 2,
+                        (destY - 10) - 15 - 20,
+                        temp.width + 20,
+                        15 + 20
+                    );
+                    context.fillStyle = '#fff';
+                    context.fillText(
+                        entity.nametag,
+                        (entity.width / 2 + destX) - temp.width / 2,
+                        (destY - 10) - 10
+                    );
+                }
             }
         },
         drawHitmappings: function(context, state) {

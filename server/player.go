@@ -31,6 +31,8 @@ type Player struct {
     isDead     bool
     health     uint
 
+    nametag    string
+
     inventory *entities.Inventory
 }
 
@@ -54,6 +56,7 @@ func NewPlayer(conn *websocket.Conn) *Player {
         float64(reg.Terrain.Width) / 2, float64(reg.Terrain.Height) / 2, 0, 0, 0, 1,
         false,
         PLAYER_MAX_HEALTH,
+        "",
         nil,
     }
     reg.AddEntity(&player)
@@ -186,10 +189,7 @@ func (self *Player) handle(msg string) {
         if HandleCheat(split[1], self) {
             return
         }
-        self.location.Broadcast(
-            self.location.GetEvent(events.CHAT, body, self),
-            self.ID(),
-        )
+        self.location.Broadcast(self.location.GetEvent(events.CHAT, body, self))
 
     case "loc": // loc == location
         posdata := strings.Split(split[1], ":")
@@ -250,7 +250,6 @@ func (self *Player) handle(msg string) {
                 "{" + self.PositionString() + "}",
                 self,
             ),
-            self.ID(),
         )
 
     case "use":
@@ -360,8 +359,15 @@ func (self *Player) PositionString() string {
 
 func (self *Player) String() string {
     width, height := self.Size()
+
+    nametagData := ""
+    if self.nametag != "" {
+        nametagData = "\"nametag\":\"" + self.nametag + "\","
+    }
+
     return (
         "{\"proto\":\"avatar\"," +
+        nametagData +
         "\"id\":\"" + self.ID() + "\"," +
         self.PositionString() + "," +
         fmt.Sprintf(

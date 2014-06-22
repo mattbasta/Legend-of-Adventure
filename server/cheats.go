@@ -3,6 +3,7 @@ package server
 import (
     "fmt"
     "log"
+    "regexp"
     "strconv"
     "strings"
 
@@ -17,7 +18,10 @@ func sayToPlayer(message string, player *Player) {
 
 
 func HandleCheat(message string, player *Player) bool {
-    spl := strings.SplitN(message, " ", 2)
+    if len(message) == 0 || message[0] != '/' {
+        return false
+    }
+    spl := strings.SplitN(message[1:], " ", 2)
     // All command have at least two components.
     if len(spl) < 2 {
         return false
@@ -95,6 +99,19 @@ func HandleCheat(message string, player *Player) bool {
             // TODO: make sure xPos and yPos are within the region
             // TODO: warn the user if those coords are hitmapped.
         }
+        return true
+
+    case "nam":
+        if safe, _ := regexp.MatchString("^[a-zA-Z0-9 ]+$", spl[1]); !safe {
+            sayToPlayer("Invalid name", player)
+            return true
+        }
+        player.nametag = spl[1]
+        player.location.Broadcast(
+            player.location.GetEvent(events.ENTITY_UPDATE, player.String(), player),
+        )
+
+        player.outbound_raw <- "epuevt:local\n{\"nametag\":\"" + spl[1] + "\"}"
         return true
 
     }
