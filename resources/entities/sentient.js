@@ -17,6 +17,10 @@ define('sentient', ['harmable', 'animat'], function() {
     var levWidth;
     var levHeight;
 
+    var DIRECTIONS = [
+        [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]
+    ];
+
     function getBestDirection(weighted) {
         function testDirection(pos) {
             return !(pos[0] < 0 ||

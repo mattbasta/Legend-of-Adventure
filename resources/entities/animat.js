@@ -8,10 +8,6 @@ define('animat', [], function() {
 
     var speed = 0.2;
 
-    var DIRECTIONS = [
-        [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]
-    ];
-
     var lastCalculation = Date.now();
     function calculateLocation() {
         var now = Date.now();
@@ -106,10 +102,16 @@ define('animat', [], function() {
         },
         tick: function(sup, now, delta) {
             sup();
-            for (var i = schedule.length; i > 0; i--) {
+            for (var i = schedule.length - 1; i >= 0; i--) {
                 if (schedule[i][1] < now) {
-                    schedule[i][0]();
-                    schedule.splice(i, 1);
+                    try {
+                        schedule[i][0]();
+                        schedule.splice(i, 1);
+                    } catch (e) {
+                        log('Error running scheduled entity event');
+                        log(schedule[i][0].toString());
+                        log(e);
+                    }
                 }
             }
         }

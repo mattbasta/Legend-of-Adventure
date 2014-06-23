@@ -7,9 +7,22 @@ define('sheep', ['animat', 'peaceful'], function() {
         return 50;
     }
 
-    var scheduledEvent;
+    function scheduleBleat() {
+        trigger('schedule', function() {
+            sendEvent('snd', 'bleat:' + trigger('getX') + ':' + trigger('getY'));
+            scheduleBleat();
+        }, (Math.random() * (MAX_BLEAT - MIN_BLEAT) + MIN_BLEAT) * 1000);
+    }
 
     return {
+        setup: function(sup) {
+            sup();
+            scheduleBleat();
+            trigger('schedule', function() {
+                trigger('wander');
+            }, 100);
+        },
+
         getData: function(sup) {
             var data = sup();
             data.proto = 'animal';
@@ -27,18 +40,6 @@ define('sheep', ['animat', 'peaceful'], function() {
             return ['f5'];
         },
         getWidth: getSize,
-        getHeight: getSize,
-
-        tick: function(sup, now, delta) {
-            sup();
-            if (!scheduledEvent) {
-                // Schedule an event!
-                scheduledEvent = now + (Math.random() * (MAX_BLEAT - MIN_BLEAT) + MIN_BLEAT) * 1000;
-            } else if (scheduledEvent <= now) {
-                // Run a previously scheduled event!
-                sendEvent('snd', 'bleat:' + trigger('getX') + ':' + trigger('getY'));
-                scheduledEvent = null;
-            }
-        }
+        getHeight: getSize
     };
 });
