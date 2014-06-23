@@ -44,15 +44,44 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         return otto.Value {}
     })
 
-    ent.vm.Pass("setup", "null")
+    ent.vm.vm.Set("getDistance", func(call otto.FunctionCall) otto.Value {
+        entity := ent.location.GetEntity(call.Argument(0).String())
+        // TODO: This might be really costly if it has to look up the
+        // position form the VM
+        dist := Distance(ent, entity)
+        result, _ := ent.vm.vm.ToValue(dist)
+        return result
+    })
 
-    go ent.gameTick()
+    ent.vm.vm.Set("getDistanceFrom", func(call otto.FunctionCall) otto.Value {
+        entity := ent.location.GetEntity(call.Argument(0).String())
+
+        x, _ := call.Argument(1).ToFloat()
+        y, _ := call.Argument(2).ToFloat()
+        dist := DistanceFrom(entity, x, y)
+        result, _ := ent.vm.vm.ToValue(dist)
+        return result
+    })
 
     return ent
 }
 
 func (self *VirtualEntity) SetLocation(location EntityRegion) {
     self.location = location
+
+    self.vm.vm.Set("getLevWidth", func(call otto.FunctionCall) otto.Value {
+        result, _ := self.vm.vm.ToValue(self.location.GetTerrain().Width)
+        return result
+    })
+
+    self.vm.vm.Set("getLevHeight", func(call otto.FunctionCall) otto.Value {
+        result, _ := self.vm.vm.ToValue(self.location.GetTerrain().Height)
+        return result
+    })
+
+    self.vm.Pass("setup", "null")
+
+    go self.gameTick()
 }
 
 func (self *VirtualEntity) SetPosition(x, y float64) {

@@ -4,6 +4,7 @@ import (
     "strconv"
 
     "legend-of-adventure/server/events"
+    "legend-of-adventure/server/terrain"
 )
 
 var entityNameCounter = 0
@@ -21,6 +22,8 @@ type EntityRegion interface {
 
     Broadcast(event *events.Event)
     GetEvent(type_ events.EventType, body string, origin Entity) *events.Event
+
+    GetTerrain() *terrain.Terrain
 }
 
 

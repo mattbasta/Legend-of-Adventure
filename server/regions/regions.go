@@ -225,6 +225,10 @@ func (self Region) GetRoot() string {
 	return parent
 }
 
+func (self Region) GetTerrain() *terrain.Terrain {
+	return self.Terrain
+}
+
 func (self Region) GetParent() string {
 	return self.ParentID
 }

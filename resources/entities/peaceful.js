@@ -3,6 +3,9 @@ define('peaceful', ['sentient'], function() {
         getPreferredBehavior: function() {
             return 'flee';
         },
-        attacked: function(sup) {}
+        attacked: function(sup, from) {
+            // TODO: Is this necessary?
+            trigger('flee', from);
+        }
     };
 });

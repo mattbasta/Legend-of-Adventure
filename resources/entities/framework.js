@@ -45,7 +45,12 @@ this.trigger = function trigger(event) {
         if (!chain[depth]) return;
         var method = chain[depth];
         depth++;
-        return method.apply(null, args);
+        try {
+            return method.apply(null, args);
+        } catch(e) {
+            log("Error while executing '" + event + "' at depth ", depth);
+            log(e);
+        }
     }
     args.unshift(run);
     return run();

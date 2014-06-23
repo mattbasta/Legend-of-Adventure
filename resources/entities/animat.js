@@ -7,12 +7,16 @@ define('animat', [], function() {
     var dirY = 1;
 
     var speed = 0.2;
-    var targetRate = 250 / (1000 / 30);
+
+    var DIRECTIONS = [
+        [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]
+    ];
 
     var lastCalculation = Date.now();
     function calculateLocation() {
         var now = Date.now();
         var delta = now - lastCalculation;
+        var targetRate = delta / (1000 / 30);
 
         if (!velX && !velY) return;
 
@@ -28,6 +32,8 @@ define('animat', [], function() {
         lastCalculation = now;
     }
 
+    var schedule = [];
+
     return {
         setup: function(sup) {
             sup();
@@ -35,7 +41,6 @@ define('animat', [], function() {
             if (!data) return;
             speed = data.speed || speed;
         },
-
 
         setPosition: function(sup, newX, newY) {
             x = newX;
@@ -68,10 +73,46 @@ define('animat', [], function() {
             sup();
             velX = dirX = newDirX;
             velY = dirY = newDirY;
-            sendEvent(
-                'epu',
-                trigger('getLocationUpdate')
-            );
+            sendEvent('epu', trigger('getLocationUpdate'));
+        },
+        stopMoving: function(sup) {
+            sup();
+            velX = dirX = 0;
+            velY = dirY = 0;
+            sendEvent('epu', trigger('getLocationUpdate'));
+        },
+
+        _updatedPosition: function(sup, velocity) {
+            var now = Date.now();
+            var delta = now - lastCalculation;
+            var targetRate = delta / (1000 / 30);
+
+            if (!velocity[0] && !velocity[1]) return [x, y];
+
+            var vX = velocity[0];
+            var vY = velocity[1];
+            if (vX && vY) {
+                vX *= Math.SQRT1_2;
+                vY *= Math.SQRT1_2;
+            }
+            return [
+                x + vX * speed * targetRate,
+                y + vY * speed * targetRate
+            ];
+        },
+
+        schedule: function(sup, callback, when) {
+            schedule.push([callback, Date.now() + when]);
+        },
+        tick: function(sup, now, delta) {
+            sup();
+            for (var i = schedule.length; i > 0; i--) {
+                if (schedule[i][1] < now) {
+                    schedule[i][0]();
+                    schedule.splice(i, 1);
+                }
+            }
         }
+
     };
 });

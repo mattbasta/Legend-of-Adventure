@@ -266,6 +266,12 @@ define('entities',
                         temp.width + 20,
                         15 + 20
                     );
+                    context.fillStyle = '#000';
+                    context.fillText(
+                        entity.nametag,
+                        (entity.width / 2 + destX) - temp.width / 2 + 2,
+                        (destY - 10) - 10 + 2
+                    );
                     context.fillStyle = '#fff';
                     context.fillText(
                         entity.nametag,
