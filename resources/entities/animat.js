@@ -6,13 +6,13 @@ define('animat', [], function() {
     var dirX = 0;
     var dirY = 1;
 
-    var speed = 0.2;
+    var speed = 0.0075;  // This is player speed.
 
     var lastCalculation = Date.now();
     function calculateLocation() {
         var now = Date.now();
         var delta = now - lastCalculation;
-        var targetRate = delta / (1000 / 30);
+        lastCalculation = now;
 
         if (!velX && !velY) return;
 
@@ -22,10 +22,9 @@ define('animat', [], function() {
             vX *= Math.SQRT1_2;
             vY *= Math.SQRT1_2;
         }
-        x += vX * speed * targetRate;
-        y += vY * speed * targetRate;
+        x += vX * speed * delta;
+        y += vY * speed * delta;
 
-        lastCalculation = now;
     }
 
     var schedule = [];
@@ -57,6 +56,7 @@ define('animat', [], function() {
         },
 
         getLocationUpdate: function() {
+            calculateLocation();
             var trimmedData = {
                 x: x,
                 y: y,

@@ -175,7 +175,7 @@ define('timing',
         }
 
         // Perform entity processing
-        entities.tick(speed);
+        entities.tick(ms);
 
         if (doSetCenter) level.setCenterPosition();
 

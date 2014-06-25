@@ -147,7 +147,8 @@ define('entities',
         proto: "avatar",
         x: 0,
         y: 0,
-        direction: [0, 0]
+        direction: [0, 0],
+        speed: 0.0075
     });
 
     var firstLevel = true;
@@ -180,7 +181,7 @@ define('entities',
         getSpriteDirection: getSpriteDirection,
         register: register,
         draw: draw,
-        tick: function(speed) {
+        tick: function(ms) {
             var spriteDirection;
             var a;
             var a_x;
@@ -196,8 +197,8 @@ define('entities',
                         a_x *= Math.SQRT1_2;
                         a_y *= Math.SQRT1_2;
                     }
-                    a.x += a_x * speed;
-                    a.y += a_y * speed;
+                    a.x += a_x * a.speed * ms;
+                    a.y += a_y * a.speed * ms;
                 }
 
                 spriteDirection = getSpriteDirection(a.direction[0], a.direction[1]);

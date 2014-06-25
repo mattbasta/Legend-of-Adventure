@@ -49,7 +49,7 @@ this.trigger = function trigger(event) {
             return method.apply(null, args);
         } catch(e) {
             log("Error while executing '" + event + "' at depth ", depth);
-            log(method.toString());
+            // log(method.toString());
             log(e);
         }
     }
