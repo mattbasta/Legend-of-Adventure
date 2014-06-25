@@ -109,6 +109,7 @@ define('level',
     // Location change notification
     comm.messages.on('flv', function() {
         registerLevel(); // We want to strip the args.
+        unload();
     });
 
     function prepare(data) {

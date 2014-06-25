@@ -166,7 +166,7 @@ define('drawing',
     }
     function stop() {
         var output = canvases.getContext('output');
-        output.clearRect(0, 0, output.width, output.height);
+        output.clearRect(0, 0, output.canvas.width, output.canvas.height);
         document.body.className = 'loading';
         if (drawing) {
             finishingDraw = true;
