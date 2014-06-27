@@ -22,39 +22,10 @@ define('sentient', ['harmable', 'animat'], function() {
     ];
 
     function getBestDirection(weighted) {
-        function testDirection(pos) {
-            return !(pos[0] < 0 ||
-                     pos[1] > levHeight ||
-                     pos[0] > levWidth - trigger('getWidth') ||
-                     pos[1] < trigger('getHeight'));
-        }
-        var usableDirections = DIRECTIONS.filter(function(dir) {
-            var updatedPosition = trigger('_updatedPosition', dir);
-            return testDirection(updatedPosition);
-        });
-
-        if (!usableDirections.length) {
-            trigger('say', 'I am stuck!');
-            return;
-        }
-        if (usableDirections.length === 1) return usableDirections[0];
-
-        if (weighted) {
-            var weights = usableDirections.map(getDirectionWeight);
-            var bestWeight = weights[0];
-            var bestWeightIndex = 0;
-            for (var i = 1; i < weights.length; i++) {
-                if (weights[i] > bestWeight) {
-                    bestWeight = weights[i];
-                    bestWeightIndex = i;
-                }
-            }
-
-            // TODO: Randomize this if multiple directions have the same weight
-            return usableDirections[bestWeightIndex];
-        }
-
-        return usableDirections[Math.random() * usableDirections.length | 0];
+        // TODO: Set real values
+        stageAvailableTiles(1, trigger('getX'), trigger('getY'), 1, 1)
+        calculateBestDirection();
+        return DIRECTIONS[getDirectionToBestTile()];
     }
     function behaviorChanged() {
         if (!velX && !velY) {

@@ -3,6 +3,7 @@ package entities
 import (
     "fmt"
     "log"
+    "math/rand"
     "strconv"
     "time"
 
@@ -10,6 +11,23 @@ import (
 
     "legend-of-adventure/server/events"
 )
+
+
+var ventRng = rand.New(rand.NewSource(8675309))
+
+type ventDirection [2]int8
+
+// This corresponds to /resources/entities/sentient.js
+var ventDirections = map[ventDirection]int {
+    ventDirection{1, 0}: 0,
+    ventDirection{1, 1}: 1,
+    ventDirection{0, 1}: 2,
+    ventDirection{-1, 1}: 3,
+    ventDirection{-1, 0}: 4,
+    ventDirection{-1, -1}: 5,
+    ventDirection{0, -1}: 6,
+    ventDirection{1, -1}: 7,
+}
 
 
 type VirtualEntity struct {
@@ -21,6 +39,9 @@ type VirtualEntity struct {
     vm         *EntityVM
 
     lastTick   int64
+
+    directionStage []ventDirection
+    bestDirection  ventDirection
 }
 
 func NewVirtualEntity(entityName string) *VirtualEntity {
@@ -63,8 +84,54 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         return result
     })
 
+    ent.directionStage = make([]ventDirection, 0, 8)
+
+    ent.vm.vm.Set("stageAvailableTiles", func(call otto.FunctionCall) otto.Value {
+        // maxDist, _ := call.Argument(0).ToFloat()
+        x, _ := call.Argument(1).ToFloat()
+        y, _ := call.Argument(2).ToFloat()
+        // TODO: Consider width
+        // w, _ := call.Argument(3).ToInteger()
+        h, _ := call.Argument(4).ToInteger()
+
+        terrain := ent.location.GetTerrain()
+        levH, levW := int(terrain.Height), int(terrain.Width)
+
+        minY, maxY := int(y - 1), int(y + 1)
+        if minY - int(h) < 0 { minY = 0 }
+        if maxY >= levH { minY = levH }
+        minX, maxX := int(x - 1), int(x + 1)
+        if minX < 0 { minX = 0 }
+        if maxX >= levW { minX = levW }
+
+        dirStage := make([]ventDirection, 0, 8)
+
+        for i := minY; i <= maxY; i++ {
+            for j := minX; j <= maxX; j++ {
+                if int(y) == i || int(x) == j { continue }
+                dirStage = append(dirStage, ventDirection{int8(j), int8(i)})
+            }
+        }
+
+        // TODO: filter staged directions by hitmap
+
+        ent.directionStage = dirStage
+        return otto.Value {}
+    })
+    ent.vm.vm.Set("calculateBestDirection", func(call otto.FunctionCall) otto.Value {
+        // TODO: Make this actually calculate something
+        ent.bestDirection = ent.directionStage[ventRng.Intn(len(ent.directionStage))]
+        return otto.Value {}
+    })
+    ent.vm.vm.Set("getDirectionToBestTile", func(call otto.FunctionCall) otto.Value {
+        result, _ := ent.vm.vm.ToValue(ventDirections[ent.bestDirection])
+        return result
+    })
+
     return ent
 }
+
+
 
 func (self *VirtualEntity) SetLocation(location EntityRegion) {
     self.location = location
