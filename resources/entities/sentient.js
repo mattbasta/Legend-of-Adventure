@@ -23,7 +23,7 @@ define('sentient', ['harmable', 'animat'], function() {
 
     function getBestDirection(weighted) {
         // TODO: Set real values
-        stageAvailableTiles(1, trigger('getX'), trigger('getY'), 1, 1)
+        stageAvailableTiles(trigger('getX'), trigger('getY'), 1, 1)
         calculateBestDirection();
         return DIRECTIONS[getDirectionToBestTile()];
     }
@@ -175,8 +175,6 @@ define('sentient', ['harmable', 'animat'], function() {
                 trigger('wander');
             }, Math.random() * 2000 + 1000);
         },
-
-        attacked: function(sup, from, distance, weapon) {},
 
         attack: function(sup, id) {}
     };

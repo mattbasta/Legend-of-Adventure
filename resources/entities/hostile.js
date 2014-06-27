@@ -1,11 +1,11 @@
-define('peaceful', ['sentient'], function() {
+define('hostile', ['sentient'], function() {
     return {
         getPreferredBehavior: function() {
-            return 'flee';
+            return 'chase';
         },
         attacked: function(sup, from) {
             sup();
-            trigger('flee', from);
+            trigger('chase', from);
         }
     };
 });

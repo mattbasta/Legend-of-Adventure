@@ -91,13 +91,13 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         x, _ := call.Argument(1).ToFloat()
         y, _ := call.Argument(2).ToFloat()
         // TODO: Consider width
-        // w, _ := call.Argument(3).ToInteger()
+        w, _ := call.Argument(3).ToInteger()
         h, _ := call.Argument(4).ToInteger()
 
         terrain := ent.location.GetTerrain()
         levH, levW := int(terrain.Height), int(terrain.Width)
 
-        minY, maxY := int(y - 1), int(y + 1)
+        minY, maxY := int(y - 1), int(y + 1 + w)
         if minY - int(h) < 0 { minY = 0 }
         if maxY >= levH { minY = levH }
         minX, maxX := int(x - 1), int(x + 1)
@@ -108,6 +108,7 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 
         for i := minY; i <= maxY; i++ {
             for j := minX; j <= maxX; j++ {
+                // Skip the tile that the player is on.
                 if int(y) == i || int(x) == j { continue }
                 dirStage = append(dirStage, ventDirection{int8(j), int8(i)})
             }
