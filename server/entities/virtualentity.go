@@ -87,17 +87,16 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
     ent.directionStage = make([]ventDirection, 0, 8)
 
     ent.vm.vm.Set("stageAvailableTiles", func(call otto.FunctionCall) otto.Value {
-        // maxDist, _ := call.Argument(0).ToFloat()
-        x, _ := call.Argument(1).ToFloat()
-        y, _ := call.Argument(2).ToFloat()
+        x, _ := call.Argument(0).ToFloat()
+        y, _ := call.Argument(1).ToFloat()
         // TODO: Consider width
-        w, _ := call.Argument(3).ToInteger()
-        h, _ := call.Argument(4).ToInteger()
+        w, _ := call.Argument(2).ToInteger()
+        h, _ := call.Argument(3).ToInteger()
 
         terrain := ent.location.GetTerrain()
         levH, levW := int(terrain.Height), int(terrain.Width)
 
-        minY, maxY := int(y - 1), int(y + 1 + w)
+        minY, maxY := int(y - 1), int(y + 1) + int(w)
         if minY - int(h) < 0 { minY = 0 }
         if maxY >= levH { minY = levH }
         minX, maxX := int(x - 1), int(x + 1)
