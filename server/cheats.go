@@ -114,6 +114,27 @@ func HandleCheat(message string, player *Player) bool {
         player.outbound_raw <- "epuevt:local\n{\"nametag\":\"" + spl[1] + "\"}"
         return true
 
+    case "epu":
+        epuSplit := strings.SplitN(spl[1], " ", 2)
+        if safe, _ := regexp.MatchString("^[a-zA-Z0-9\\.]+$", epuSplit[0]); !safe {
+            sayToPlayer("Invalid entity key", player)
+            return true
+        }
+        if safe, _ := regexp.MatchString("^[a-zA-Z0-9\\._\\-]+$", epuSplit[1]); !safe {
+            sayToPlayer("Invalid entity value", player)
+            return true
+        }
+        player.location.Broadcast(
+            player.location.GetEvent(
+                events.ENTITY_UPDATE,
+                "{\"" + epuSplit[0] + "\":\"" + epuSplit[1] + "\"}",
+                player,
+            ),
+        )
+
+        player.outbound_raw <- "epuevt:local\n{\"" + epuSplit[0] + "\":\"" + epuSplit[1] + "\"}"
+        return true
+
     }
 
     return false

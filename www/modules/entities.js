@@ -29,14 +29,17 @@ define('entities',
         var entity = registry[origin];
         if ('x' in data) {
             entity.x = data.x;
+            delete data.x;
         }
         if ('y' in data) {
             entity.y = data.y;
+            delete data.y;
         }
 
         if (data.direction) {
             entity.direction[0] = data.direction[0] | 0;
             entity.direction[1] = data.direction[1] | 0;
+            delete data.direction;
         }
 
         if (data.velocity) {
@@ -57,10 +60,17 @@ define('entities',
             }
             entity.cycle_position = 0;
             entity.sprite_cycle = 0;
+            delete data.velocity;
         }
 
         if ('nametag' in data) {
             entity.nametag = data.nametag;
+            delete data.nametag;
+        }
+
+        for (var key in data) {
+            if (!data.hasOwnProperty(key)) continue;
+            entity[key] = data[key];
         }
 
         draw(origin);
