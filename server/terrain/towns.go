@@ -124,7 +124,7 @@ func smoothRoads(tiles [][]uint) {
 func ApplyTown(terrain *Terrain) {
     buildingEntities := make(map[string]*FeatureTiles)
     for _, buildingType := range buildings {
-        buildingEntities[buildingType] = GetFeatureTiles(buildingType)
+        buildingEntities[buildingType] = GetFeatureTiles("tilesets/" + buildingType)
     }
 
     availableBuildings := make([]string, len(buildings))

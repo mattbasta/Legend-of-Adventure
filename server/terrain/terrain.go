@@ -36,7 +36,12 @@ func Get(region Region) *Terrain {
 
     regType := region.GetType()
     if regType == REGIONTYPE_FIELD {
-        perlin.FillGrid(&terrain.Tiles, TERRAIN_PERLIN_MAX)
+        perlin.FillGrid(
+            terrain.X * int(width),
+            terrain.Y * int(height),
+            &terrain.Tiles,
+            TERRAIN_PERLIN_MAX,
+        )
     }
     TerrainRounding(terrain.Tiles, FieldTileset)
 

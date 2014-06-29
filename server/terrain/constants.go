@@ -7,6 +7,7 @@ const (
     DEFAULT_SEED = 125
     TERRAIN_PERLIN_PERIOD = 256
     TERRAIN_PERLIN_MAX = 6
+    PERLIN_BIOME_FREQUENCY = 0.0075
     PERLIN_FREQUENCY = 0.1
     PERLIN_DILATION = 3
     PERLIN_UPLIFT = 5
@@ -32,8 +33,8 @@ var regionSizes = map[string][2]uint {
     REGIONTYPE_FIELD: [2]uint{100, 100},
     REGIONTYPE_DUNGEON: [2]uint{28, 28},
     // Building interiors
-    REGIONTYPE_SHOP: [2]uint{30, 30},
-    REGIONTYPE_HOUSE: [2]uint{30, 30},
+    REGIONTYPE_SHOP: [2]uint{10, 11},
+    REGIONTYPE_HOUSE: [2]uint{10, 25},
 }
 
 

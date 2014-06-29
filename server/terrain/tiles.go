@@ -44,14 +44,14 @@ func GetFeatureTiles(setName string) *FeatureTiles {
         return tileset
     }
 
-    tileFile, err := os.Open("resources/tilesets/" + setName + ".tiles")
+    tileFile, err := os.Open("resources/" + setName + ".tiles")
     if err != nil {
         log.Println("Could not open tileset '" + setName + "'")
         return nil
     }
     defer tileFile.Close()
 
-    hitmapFile, err := os.Open("resources/tilesets/" + setName + ".hitmap")
+    hitmapFile, err := os.Open("resources/" + setName + ".hitmap")
     if err != nil {
         log.Println("Could not open hitmap '" + setName + "'")
         return nil
@@ -81,23 +81,41 @@ func GetFeatureTiles(setName string) *FeatureTiles {
     tileset.Height = uint(len(tiles))
     tileset.Width = uint(len(tiles[0]))
 
-    portalsFile, err := os.Open("resources/tilesets/" + setName + ".portals")
+    portalsFile, err := os.Open("resources/" + setName + ".portals")
     if err == nil {
         portalScan := bufio.NewScanner(portalsFile)
         for portalScan.Scan() {
             pVals := strings.Split(portalScan.Text(), " ")
             x, err := strconv.ParseUint(pVals[0], 10, 0)
-            if err != nil { break }
+            if err != nil {
+                log.Println(err)
+                break
+            }
             y, err := strconv.ParseUint(pVals[1], 10, 0)
-            if err != nil { break }
+            if err != nil {
+                log.Println(err)
+                break
+            }
             width, err := strconv.ParseUint(pVals[2], 10, 0)
-            if err != nil { break }
+            if err != nil {
+                log.Println(err)
+                break
+            }
             height, err := strconv.ParseUint(pVals[3], 10, 0)
-            if err != nil { break }
+            if err != nil {
+                log.Println(err)
+                break
+            }
             destX, err := strconv.ParseFloat(pVals[5], 32)
-            if err != nil { break }
+            if err != nil {
+                log.Println(err)
+                break
+            }
             destY, err := strconv.ParseFloat(pVals[6], 32)
-            if err != nil { break }
+            if err != nil {
+                log.Println(err)
+                break
+            }
             portal := NewPortal(
                 uint(x), uint(y),
                 uint(width), uint(height),
@@ -106,6 +124,8 @@ func GetFeatureTiles(setName string) *FeatureTiles {
             )
             portals = append(portals, portal)
         }
+    } else {
+        log.Println("Error reading '" + setName + "' portals")
     }
     tileset.Portals = portals
 

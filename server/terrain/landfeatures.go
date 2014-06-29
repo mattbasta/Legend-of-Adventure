@@ -7,7 +7,7 @@ import (
 
 func ApplyDungeonEntrance(terrain *Terrain) {
     rng := rand.New(rand.NewSource(int64(terrain.X * terrain.Y)))
-    tiles := GetFeatureTiles("dungeon_portal")
+    tiles := GetFeatureTiles("tilesets/dungeon_portal")
     tiles.Apply(
         terrain,
         rng.Intn(int(terrain.Width - tiles.Width - 1)),

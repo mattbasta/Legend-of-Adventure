@@ -4,6 +4,7 @@
 package terrain
 
 import (
+    "log"
     "math"
     "math/rand"
 )
@@ -93,18 +94,28 @@ func (self *NoiseGenerator) Get2D(x, y float64) float64 {
     return lerp(vx0, vx1, fy)
 }
 
-func (self *NoiseGenerator) Get2DInt(x, y int, max uint) uint {
+func (self *NoiseGenerator) Get2DInt(x, y int, max uint) int {
     v := self.Get2D(float64(x) * PERLIN_FREQUENCY, float64(y) * PERLIN_FREQUENCY)
     v = v * 0.5 + 0.5
     v = math.Pow(v, PERLIN_DILATION)
-    return uint(v * float64(max))
+    return int(v * float64(max))
 }
 
-func (self *NoiseGenerator) FillGrid(grid *[][]uint, max uint) {
+func (self *NoiseGenerator) GetCentered2DInt(x, y int, freq float64, bounds uint) int {
+    v := self.Get2D(float64(x) * freq, float64(y) * freq)
+    // v = math.Pow(v, PERLIN_DILATION)
+    return int(v * float64(bounds))
+}
+
+func (self *NoiseGenerator) FillGrid(x, y int, grid *[][]uint, max uint) {
+    log.Println("Perlin for ", x, y)
     for i := 0; i < len(*grid); i++ {
         row := (*grid)[i]
         for j := 0; j < len(row); j++ {
-            row[j] = self.Get2DInt(i, j, max - 1) + PERLIN_UPLIFT
+            row[j] = uint(
+                // self.Get2DInt(x + j, y + i, max - 1) +
+                self.GetCentered2DInt(x + j, y + i, PERLIN_BIOME_FREQUENCY, max - 1) +
+                PERLIN_UPLIFT)
         }
     }
 }

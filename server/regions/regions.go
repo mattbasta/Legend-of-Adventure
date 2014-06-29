@@ -58,6 +58,10 @@ func startRegionGetter() {
 					terrain.ApplyDungeonEntrance(reg.Terrain)
 				} else if reg.Type == terrain.REGIONTYPE_DUNGEON {
 					terrain.ApplyDungeon(parent, reg.Terrain)
+				} else if reg.Type == terrain.REGIONTYPE_SHOP {
+					terrain.ApplyInteriorShop(reg.Terrain)
+				} else if reg.Type == terrain.REGIONTYPE_HOUSE {
+					terrain.ApplyInteriorHouse(reg.Terrain)
 				}
 
 				reg.PopulateEntities();
