@@ -73,8 +73,8 @@ define('animat', [], function() {
         },
         stopMoving: function(sup) {
             sup();
-            velX = dirX = 0;
-            velY = dirY = 0;
+            velX = 0;
+            velY = 0;
             sendEvent('epu', trigger('getLocationUpdate'));
         },
 

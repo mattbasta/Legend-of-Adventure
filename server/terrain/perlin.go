@@ -4,7 +4,7 @@
 package terrain
 
 import (
-    "log"
+    // "log"
     "math"
     "math/rand"
 )
@@ -108,7 +108,9 @@ func (self *NoiseGenerator) GetCentered2DInt(x, y int, freq float64, bounds uint
 }
 
 func (self *NoiseGenerator) FillGrid(x, y int, grid *[][]uint, max uint) {
-    log.Println("Perlin for ", x, y)
+    // log.Println("Perlin for ", x, y)
+    // log.Println(self.Get2D(0 * PERLIN_FREQUENCY, 0 * PERLIN_FREQUENCY) * 100)
+    // log.Println(self.Get2D(float64(x) * PERLIN_FREQUENCY, float64(y) * PERLIN_FREQUENCY) * 100)
     for i := 0; i < len(*grid); i++ {
         for j := 0; j < len((*grid)[i]); j++ {
             (*grid)[j][i] = uint(

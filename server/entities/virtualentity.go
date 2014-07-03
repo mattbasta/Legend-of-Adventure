@@ -15,7 +15,7 @@ import (
 
 var ventRng = rand.New(rand.NewSource(8675309))
 
-type ventDirection [2]int8
+type ventDirection [2]int
 
 // This corresponds to /resources/entities/sentient.js
 var ventDirections = map[ventDirection]int {
@@ -96,20 +96,22 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         terrain := ent.location.GetTerrain()
         levH, levW := int(terrain.Height), int(terrain.Width)
 
-        minY, maxY := int(y - 1), int(y + 1) + int(w)
+        intX, intY := int(x), int(y)
+
+        minY, maxY := intY - 1, intY + 1
         if minY - int(h) < 0 { minY = 0 }
         if maxY >= levH { minY = levH }
-        minX, maxX := int(x - 1), int(x + 1)
+        minX, maxX := intX - 1, intX + 1
         if minX < 0 { minX = 0 }
-        if maxX >= levW { minX = levW }
+        if maxX + int(w) >= levW { minX = levW }
 
         dirStage := make([]ventDirection, 0, 8)
 
         for i := minY; i <= maxY; i++ {
             for j := minX; j <= maxX; j++ {
                 // Skip the tile that the player is on.
-                if int(y) == i || int(x) == j { continue }
-                dirStage = append(dirStage, ventDirection{int8(j), int8(i)})
+                if intY == i || intX == j { continue }
+                dirStage = append(dirStage, ventDirection{j - intX, i - intY})
             }
         }
 

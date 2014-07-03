@@ -3,6 +3,8 @@ define('sheep', ['animat', 'peaceful'], function() {
     var MIN_BLEAT = 8;
     var MAX_BLEAT = 20;
 
+    var moving = false;
+
     function getSize() {
         return 50;
     }
@@ -28,11 +30,11 @@ define('sheep', ['animat', 'peaceful'], function() {
             data.proto = 'animal';
             data.type = 'sheep';
             data.image = 'sheep';
-            data.movement = 'sheep_bounce';
             data.width = data.height = getSize();
             data.maxHealth = 8;
             data.speed = 0.00075;
             data.nametag = 'Innocent Sheep';
+            if (moving) data.movement = 'sheep_bounce';
             return data;
         },
         getDrops: function() {
@@ -40,6 +42,14 @@ define('sheep', ['animat', 'peaceful'], function() {
             return ['f5'];
         },
         getWidth: getSize,
-        getHeight: getSize
+        getHeight: getSize,
+        startMoving: function(sup) {
+            moving = true;
+            return sup();
+        },
+        stopMoving: function(sup) {
+            moving = false;
+            return sup();
+        }
     };
 });
