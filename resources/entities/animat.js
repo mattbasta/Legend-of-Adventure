@@ -66,13 +66,17 @@ define('animat', [], function() {
             return JSON.stringify(trimmedData);
         },
         startMoving: function(sup, newDirX, newDirY) {
-            sup();
+            if (newDirX === velX && newDirY === velY) {
+                return;
+            }
             velX = dirX = newDirX;
             velY = dirY = newDirY;
             sendEvent('epu', trigger('getLocationUpdate'));
         },
         stopMoving: function(sup) {
-            sup();
+            if (!velX && !velY) {
+                return;
+            }
             velX = 0;
             velY = 0;
             sendEvent('epu', trigger('getLocationUpdate'));
@@ -101,7 +105,7 @@ define('animat', [], function() {
             schedule.push([callback, Date.now() + when]);
         },
         tick: function(sup, now, delta) {
-            sup();
+            // sup(now, delta);
             for (var i = schedule.length - 1; i >= 0; i--) {
                 if (schedule[i][1] < now) {
                     try {

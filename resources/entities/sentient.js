@@ -4,8 +4,6 @@ define('sentient', ['harmable', 'animat'], function() {
     var fleeingFrom = [];
     var chasing = null;
 
-    var doesAttack = false;
-    var lastAttack = 0;
     var wandering = false;
 
     var bestDirX;
@@ -22,22 +20,32 @@ define('sentient', ['harmable', 'animat'], function() {
     ];
 
     function getBestDirection(weighted) {
-        // TODO: Set real values
-        stageAvailableTiles(trigger('getX'), trigger('getY'), 1, 1)
-        calculateBestDirection();
-        return DIRECTIONS[getDirectionToBestTile()];
+        // TODO: Set real values for size
+        stageAvailableTiles(trigger('getX'), trigger('getY'), 1, 1);
+        if (chasing) {
+            stageAttractor(chasing);
+        }
+        if (fleeingFrom.length) {
+            for (var i = 0; i < fleeingFrom.length; i++) {
+                stageRepeller(fleeingFrom[i]);
+            }
+        }
+        var bestDirection = getDirectionToBestTile();
+        if (bestDirection === null) return null;
+        return DIRECTIONS[bestDirection];
     }
     function behaviorChanged() {
         if (!velX && !velY) {
             var bestDirection = getBestDirection();
             if (!bestDirection) {
                 trigger('stopMoving');
-                trigger('wander');
+                if (wandering) {
+                    trigger('stopWandering');
+                }
                 return;
             }
             trigger('startMoving', bestDirection[0], bestDirection[1]);
         }
-        scheduleReevaluate();
     }
     function reevaluateBehavior() {
         var stillMustFlee = false;
@@ -76,49 +84,13 @@ define('sentient', ['harmable', 'animat'], function() {
                     trigger('wander');
                 }, 3000);
                 return;
-            } else if (bestDirection[0] !== velX || bestDirection[1] !== velY) {
+            } else {
                 trigger('startMoving', bestDirection[0], bestDirection[1]);
             }
         }
 
         scheduleReevaluate();
     }
-
-    function scheduleReevaluate() {
-        trigger('schedule', function() {
-            reevaluateBehavior();
-        }, (Math.random() * 2 + 5) / 11 * 1000 + 675);
-        // This crazy formula comes from the legacy server. I don't remember
-        // why it's so crazy.
-    }
-
-    function getDirectionWeight(direction) {
-        var updatedPosition = trigger('_updatedPosition', direction);
-        function fleeDelta() {
-            var delta = 0;
-            for (var id in fleeingFrom) {
-                delta += getDistanceFrom(id, updatedPosition[0], updatedPosition[1]) - getDistance(id);
-            }
-            return delta;
-        }
-        function chaseDelta() {
-            return -1 * Math.abs(getDistanceFrom(chasing, updatedPosition[0], updatedPosition[1]) - getDistance(chasing));
-        }
-
-        if (chasing && fleeingFrom.length) {
-            if (defaultBehavior === 'flee') {
-                return fleeDelta();
-            } else {
-                return chaseDelta();
-            }
-        } else if (fleeingFrom.length) {
-            return fleeDelta();
-        } else if (chasing) {
-            return chaseDelta();
-        }
-        return 0;
-    }
-
 
     return {
         setup: function(sup) {
@@ -164,18 +136,23 @@ define('sentient', ['harmable', 'animat'], function() {
 
         },
         stopWandering: function(sup) {
-            if (chasing || fleeingFrom.length) {
-                reevaluateBehavior();
-                return;
-            }
-            trigger('stopMoving');
             wandering = false;
 
             trigger('schedule', function() {
                 trigger('wander');
             }, Math.random() * 2000 + 1000);
-        },
 
-        attack: function(sup, id) {}
+            if (chasing || fleeingFrom.length) {
+                reevaluateBehavior();
+                return;
+            }
+            trigger('stopMoving');
+        },
+        tick: function(sup, now, delta) {
+            sup(now, delta);
+            if (wandering || chasing || fleeingFrom.length) {
+                reevaluateBehavior();
+            }
+        }
     };
 });
