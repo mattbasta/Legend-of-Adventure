@@ -184,7 +184,7 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
             return otto.Value {}
         }
 
-        var tempDirs []ventDirection = nil
+        var tempDirs []ventDirection = ent.directionStage
 
         // If there are any repellers, try removing them from the list
         // of available directions.

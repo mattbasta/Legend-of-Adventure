@@ -121,10 +121,7 @@ define('sentient', ['harmable', 'animat'], function() {
         },
         wander: function(sup) {
             // If we're chasing or fleeing, don't start wandering.
-            if (chasing || fleeingFrom.length) {
-                return;
-            }
-
+            if (chasing || fleeingFrom.length) return;
             if (wandering) return;
 
             var bestDirection = getBestDirection();
