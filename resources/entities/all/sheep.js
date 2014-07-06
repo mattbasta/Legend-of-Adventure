@@ -55,13 +55,6 @@ define('sheep', ['peaceful'], function() {
         getLocationUpdate: function(sup) {
             var data = sup();
             return '{"movement":' + (moving ? '"sheep_bounce"' : 'null') + ',' + data.substr(1);
-        },
-
-        entered: function(sup, entity) {
-            var dist = getDistance(entity.id);
-            if (dist < 15) {
-                trigger('flee', entity.id);
-            }
         }
     };
 });

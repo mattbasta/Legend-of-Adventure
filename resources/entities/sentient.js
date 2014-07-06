@@ -6,14 +6,13 @@ define('sentient', ['harmable', 'animat'], function() {
 
     var wandering = false;
 
-    var bestDirX;
-    var bestDirY;
-
     var FLEE_DISTANCE = 15;
     var HURT_DISTANCE = 1;
 
     var levWidth;
     var levHeight;
+
+    var wanderDir;
 
     var DIRECTIONS = [
         [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]
@@ -112,6 +111,8 @@ define('sentient', ['harmable', 'animat'], function() {
 
             var bestDirection = getBestDirection();
             if (!bestDirection) return;
+            wanderDir = bestDirection;
+            wandering = true;
             trigger('startMoving', bestDirection[0], bestDirection[1]);
             trigger('schedule', function() {
                 trigger('stopWandering');
@@ -132,10 +133,25 @@ define('sentient', ['harmable', 'animat'], function() {
             trigger('stopMoving');
         },
         tick: function(sup, now, delta) {
-            if (wandering || chasing || fleeingFrom.length) {
-                reevaluateBehavior();
-            }
             sup(now, delta);
+            if (chasing || fleeingFrom.length) {
+                reevaluateBehavior();
+            } else if (wandering) {
+                var dirOk = isDirectionOk(
+                    trigger('getX'), trigger('getY'),
+                    1, 1, // TODO: Make these use legit values.
+                    wanderDir[0], wanderDir[1]
+                );
+                if (!dirOk) {
+                    var bestDirection = getBestDirection();
+                    if (!bestDirection) {
+                        trigger('stopMoving');
+                        return;
+                    }
+                    wanderDir = bestDirection;
+                    trigger('startMoving', bestDirection[0], bestDirection[1]);
+                }
+            }
         }
     };
 });

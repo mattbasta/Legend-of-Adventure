@@ -100,6 +100,7 @@ define('animat', [], function() {
                     }
                 }
             }
+            calculateLocation();
         }
 
     };

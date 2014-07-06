@@ -90,6 +90,38 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 
     ent.directionStage = make([]ventDirection, 0, 8)
 
+    ent.vm.vm.Set("isDirectionOk", func(call otto.FunctionCall) otto.Value {
+        x, _ := call.Argument(0).ToFloat()
+        y, _ := call.Argument(1).ToFloat()
+
+        w, _ := call.Argument(2).ToInteger()
+        h, _ := call.Argument(3).ToInteger()
+
+        dirX, _ := call.Argument(4).ToInteger()
+        dirY, _ := call.Argument(5).ToInteger()
+
+        terrain := ent.location.GetTerrain()
+        levH, levW := int64(terrain.Height), int64(terrain.Width)
+
+        intX, intY := int64(x), int64(y)
+
+        // If we're off the edge of the map, it's a bad direction.
+        if intX + dirX < 1 || intX + dirX + w > levW - 1 ||
+           intY + dirY - h < 1 || intY + dirY > levH - 1 {
+            result, _ := ent.vm.vm.ToValue(false)
+            return result
+        }
+
+        hitmap := ent.location.GetTerrain().Hitmap
+
+        if dirY < 0 { intY = intY - h }
+        if dirX > 0 { intX = intX + w }
+
+        result, _ := ent.vm.vm.ToValue(!hitmap[intY + dirY][intX + dirX])
+        return result
+
+    })
+
     ent.vm.vm.Set("stageAvailableTiles", func(call otto.FunctionCall) otto.Value {
         x, _ := call.Argument(0).ToFloat()
         y, _ := call.Argument(1).ToFloat()

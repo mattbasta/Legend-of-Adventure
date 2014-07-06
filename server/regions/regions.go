@@ -272,8 +272,14 @@ func (self *Region) PopulateEntities() {
 
 	switch self.Type {
 	case terrain.REGIONTYPE_FIELD:
-		for i := 0; i < 1; i++ {
-			ent := entities.NewVirtualEntity("sheep")
+		for i := 0; i < 3; i++ {
+			var entType string
+			if i % 2 == 0 {
+				entType = "sheep"
+			} else {
+				entType = "wolf"
+			}
+			ent := entities.NewVirtualEntity(entType)
 			ent.SetLocation(self)
 			ent.SetPosition(
 				// TODO: Randomize all of this
