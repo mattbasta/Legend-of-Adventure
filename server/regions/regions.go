@@ -313,6 +313,10 @@ func (self *Region) PopulateEntities() {
 		placeEntity("homely")
 		placeEntity("homely")
 		placeEntity("homely")
+
+	case terrain.REGIONTYPE_HOUSE:
+		placeEntity("homely")
+		placeEntity("homely")
 	}
 }
 

@@ -111,12 +111,8 @@ func (self *Player) gameTick() {
                     }
 
                     self.x, self.y = portal.DestX, portal.DestY
-                    self.outbound_raw <- (
-                        "epuevt:local\n{" +
-                        fmt.Sprintf("\"x\":%d,\"y\":%d", int(portal.DestX), int(portal.DestY)) +
-                        "}")
                     parent, type_, x, y := regions.GetRegionData(target)
-                    self.sendToLocation(parent, type_, x, y)
+                    self.sendToLocation(parent, type_, x, y, portal.DestX, portal.DestY)
                 }
             }
         case <-self.closing:
@@ -130,8 +126,7 @@ func (self *Player) listenOutbound() {
     for {
         select {
         case msg := <-self.outbound:
-            // `msg` gets cast to a string
-            websocket.Message.Send(self.connection, msg.String())
+            self.outbound_raw <- msg.String()
         case msg := <-self.outbound_raw:
             websocket.Message.Send(self.connection, msg)
         case <-self.closing:
@@ -279,12 +274,17 @@ func (self *Player) handle(msg string) {
         }
 
         log.Println("Player sliding to ", xPos, yPos)
-        self.sendToLocation(self.location.ParentID, self.location.Type, int(xPos), int(yPos))
+        self.sendToLocation(
+            self.location.ParentID,
+            self.location.Type,
+            int(xPos), int(yPos),
+            self.x, self.y,
+        )
 
     }
 }
 
-func (self *Player) sendToLocation(parentID, type_ string, x, y int) {
+func (self *Player) sendToLocation(parentID, type_ string, x, y int, newX, newY float64) {
     newLocation := regions.GetRegion(parentID, type_, x, y)
 
     if newLocation == nil {
@@ -296,10 +296,14 @@ func (self *Player) sendToLocation(parentID, type_ string, x, y int) {
     }
 
     newLocation.KeepAlive <- true
-    newLocation.AddEntity(self)
     self.location = newLocation
     // Send the player the initial level
     self.outbound_raw <- "flv"
+    self.outbound_raw <- (
+        "epuevt:local\n{" +
+        fmt.Sprintf("\"x\":%f,\"y\":%f", newX, newY) +
+        "}")
+    newLocation.AddEntity(self)
     self.outbound_raw <- "lev{" + newLocation.String() + "}"
 }
 

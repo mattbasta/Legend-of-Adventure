@@ -1,7 +1,6 @@
 package server
 
 import (
-    "fmt"
     "log"
     "regexp"
     "strconv"
@@ -86,15 +85,10 @@ func HandleCheat(message string, player *Player) bool {
         player.dirX = 0
         player.dirY = 0
 
-        player.outbound_raw <- (
-            "epuevt:local\n{" +
-            fmt.Sprintf("\"x\":%d,\"y\":%d", int(xPos), int(yPos)) +
-            "}")
-
         // If the player is already in the region, don't run sendToLocation
         if telSplit[2] != player.location.ID() {
             parentID, type_, x, y := regions.GetRegionData(telSplit[2])
-            player.sendToLocation(parentID, type_, x, y)
+            player.sendToLocation(parentID, type_, x, y, float64(xPos), float64(yPos))
 
             // TODO: make sure xPos and yPos are within the region
             // TODO: warn the user if those coords are hitmapped.
