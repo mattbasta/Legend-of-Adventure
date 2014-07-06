@@ -315,18 +315,17 @@ func (self *Region) PopulateEntities() {
 
 	case terrain.REGIONTYPE_SHOP:
 		placeEntity("homely")
-		placeEntity("homely")
-		placeEntity("homely")
 
+		fallthrough
 	case terrain.REGIONTYPE_HOUSE:
 		placeEntity("homely")
 		placeEntity("homely")
+
+		if rng.Intn(SOLDIER_IN_HOUSE_ODDS) == 0 {
+			placeEntity("soldier")
+		}
 	}
 
-	if (self.Type == terrain.REGIONTYPE_HOUSE || self.Type == terrain.REGIONTYPE_SHOP) &&
-	   rng.Intn(SOLDIER_IN_HOUSE_ODDS) == 0 {
-	   	placeEntity("soldier")
-	}
 }
 
 
