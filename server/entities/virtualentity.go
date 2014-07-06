@@ -96,35 +96,34 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 
         ent.stageX, ent.stageY = x, y
 
-        // TODO: Consider width
         w, _ := call.Argument(2).ToInteger()
         h, _ := call.Argument(3).ToInteger()
 
         terrain := ent.location.GetTerrain()
-        levH, levW := int(terrain.Height), int(terrain.Width)
+        levH, levW := int64(terrain.Height), int64(terrain.Width)
 
-        intX, intY := int(x), int(y)
+        intX, intY := int64(x), int64(y)
 
         minY, maxY := intY - 1, intY + 1
-        if minY - int(h) < 0 { minY = 0 }
-        if maxY >= levH { minY = levH }
+        if minY - h < 1 { minY = 1 }
+        if maxY >= levH - 1 { minY = levH - 1 }
         minX, maxX := intX - 1, intX + 1
         if minX < 0 { minX = 0 }
-        if maxX + int(w) >= levW { minX = levW }
+        if maxX + w >= levW { minX = levW }
 
         dirStage := make([]ventDirection, 0, 8)
 
+        hitmap := ent.location.GetTerrain().Hitmap
+
         for i := minY; i <= maxY; i++ {
             for j := minX; j <= maxX; j++ {
-                // Skip the tile that the player is on.
+                // Skip the tile that the entity is on.
                 if intY == i && intX == j { continue }
-                dirStage = append(dirStage, ventDirection{j - intX, i - intY})
+                if hitmap[i][j] || hitmap[i - h][j] { continue }
+                if hitmap[i][j + w] || hitmap[i - h][j + w] { continue }
+                dirStage = append(dirStage, ventDirection{int(j - intX), int(i - intY)})
             }
         }
-
-        // TODO: filter staged directions by hitmap
-
-        // log.Println("Available tiles: ", len(dirStage))
 
         ent.directionStage = dirStage
         ent.repulseDirections = make([]ventDirection, 0)
