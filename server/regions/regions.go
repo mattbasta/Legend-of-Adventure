@@ -311,6 +311,12 @@ func (self *Region) PopulateEntities() {
 			for i := 0; i < soldierCount; i++ {
 				placeEntity("soldier")
 			}
+
+			placeEntity("bully")
+			placeEntity("child")
+			placeEntity("child")
+			placeEntity("child")
+			placeEntity("child")
 		}
 
 	case terrain.REGIONTYPE_SHOP:

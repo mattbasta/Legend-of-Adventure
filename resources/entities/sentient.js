@@ -92,6 +92,7 @@ define('sentient', ['harmable', 'animat'], function() {
             }
         },
         flee: function(sup, id) {
+            if (getDistance(id) > FLEE_DISTANCE) return;
             var idx = fleeingFrom.indexOf(id);
             if (idx === -1) {
                 fleeingFrom.push(id);

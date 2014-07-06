@@ -1,6 +1,7 @@
 package entities
 
 import (
+    // "log"
     "math"
     "math/rand"
 
@@ -88,10 +89,10 @@ func setUpPathing(ent *VirtualEntity) {
 
         minY, maxY := intY - 1, intY + 1
         if minY - h < 1 { minY = 1 + h }
-        if maxY >= levH - 1 { minY = levH - 1 }
+        if maxY >= levH - 1 { maxY = levH - 1 }
         minX, maxX := intX - 1, intX + 1
-        if minX < 0 { minX = 0 }
-        if maxX + w >= levW { minX = levW }
+        if minX < 1 { minX = 1 }
+        if maxX + w >= levW - 1 { maxX = levW - w - 1 }
 
         dirStage := make([]ventDirection, 0, 8)
 
@@ -101,6 +102,7 @@ func setUpPathing(ent *VirtualEntity) {
             for j := minX; j <= maxX; j++ {
                 // Skip the tile that the entity is on.
                 if intY == i && intX == j { continue }
+                // log.Println(i, j, h)
                 if hitmap[i][j] || hitmap[i - h][j] { continue }
                 if hitmap[i][j + w] || hitmap[i - h][j + w] { continue }
                 dirStage = append(dirStage, ventDirection{int(j - intX), int(i - intY)})
