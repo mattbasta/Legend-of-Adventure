@@ -14,14 +14,13 @@ import (
 
 type VirtualEntity struct {
     PathingHelper
+    EntityVM
 
     id         string
     closing    chan bool
     receiver   chan *events.Event
 
     location   EntityRegion
-
-    vm         *EntityVM
 
     lastTick   int64
 }
@@ -45,9 +44,9 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         }
     }()
 
-    ent.vm = GetEntityVM(entityName)
+    ent.EntityVM = *GetEntityVM(entityName)
 
-    ent.vm.vm.Set("sendEvent", func(call otto.FunctionCall) otto.Value {
+    ent.vm.Set("sendEvent", func(call otto.FunctionCall) otto.Value {
         if ent.location == nil {
             return otto.Value {}
         }
@@ -61,22 +60,22 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         return otto.Value {}
     })
 
-    ent.vm.vm.Set("getDistance", func(call otto.FunctionCall) otto.Value {
+    ent.vm.Set("getDistance", func(call otto.FunctionCall) otto.Value {
         entity := ent.location.GetEntity(call.Argument(0).String())
         // TODO: This might be really costly if it has to look up the
         // position form the VM
         dist := Distance(ent, entity)
-        result, _ := ent.vm.vm.ToValue(dist)
+        result, _ := ent.vm.ToValue(dist)
         return result
     })
 
-    ent.vm.vm.Set("getDistanceFrom", func(call otto.FunctionCall) otto.Value {
+    ent.vm.Set("getDistanceFrom", func(call otto.FunctionCall) otto.Value {
         entity := ent.location.GetEntity(call.Argument(0).String())
 
         x, _ := call.Argument(1).ToFloat()
         y, _ := call.Argument(2).ToFloat()
         dist := DistanceFrom(entity, x, y)
-        result, _ := ent.vm.vm.ToValue(dist)
+        result, _ := ent.vm.ToValue(dist)
         return result
     })
 
@@ -90,23 +89,23 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 func (self *VirtualEntity) SetLocation(location EntityRegion) {
     self.location = location
 
-    self.vm.vm.Set("getLevWidth", func(call otto.FunctionCall) otto.Value {
-        result, _ := self.vm.vm.ToValue(self.location.GetTerrain().Width)
+    self.vm.Set("getLevWidth", func(call otto.FunctionCall) otto.Value {
+        result, _ := self.vm.ToValue(self.location.GetTerrain().Width)
         return result
     })
 
-    self.vm.vm.Set("getLevHeight", func(call otto.FunctionCall) otto.Value {
-        result, _ := self.vm.vm.ToValue(self.location.GetTerrain().Height)
+    self.vm.Set("getLevHeight", func(call otto.FunctionCall) otto.Value {
+        result, _ := self.vm.ToValue(self.location.GetTerrain().Height)
         return result
     })
 
-    self.vm.Pass("setup", "null")
+    self.Pass("setup", "null")
 
     self.gameTick()
 }
 
 func (self *VirtualEntity) SetPosition(x, y float64) {
-    self.vm.Pass("setPosition", fmt.Sprintf("%f, %f", x, y))
+    self.Pass("setPosition", fmt.Sprintf("%f, %f", x, y))
 }
 
 func (self *VirtualEntity) gameTick() {
@@ -119,7 +118,7 @@ func (self *VirtualEntity) gameTick() {
             select {
             case <-ticker.C:
                 now := time.Now().UnixNano() / 1e6
-                self.vm.Pass("tick", fmt.Sprintf("%d, %d", now, now - self.lastTick))
+                self.Pass("tick", fmt.Sprintf("%d, %d", now, now - self.lastTick))
                 self.lastTick = now
             case <-self.closing:
                 self.closing <- true
@@ -138,24 +137,24 @@ func (self *VirtualEntity) handle(event *events.Event) {
     switch event.Type {
     case events.SPAWN:
     case events.REGION_ENTRANCE:
-        self.vm.Pass("entered", event.Body)
+        self.Pass("entered", event.Body)
         fallthrough
     case events.ENTITY_UPDATE:
         ent := self.location.GetEntity(event.Origin)
         dist := Distance(ent, self)
         if dist > ENTITY_VISION { return }
-        self.vm.Pass("seenEntity", fmt.Sprintf("'%s', %s, %f", event.Origin, event.Body, dist))
+        self.Pass("seenEntity", fmt.Sprintf("'%s', %s, %f", event.Origin, event.Body, dist))
 
     case events.DEATH:
         fallthrough
     case events.REGION_EXIT:
-        self.vm.Pass("forget", event.Origin)
+        self.Pass("forget", event.Origin)
     }
 }
 
 
 func (self *VirtualEntity) String() string {
-    data := self.vm.Call("getData")
+    data := self.Call("getData")
 
     return (
         "{\"id\":\"" + self.ID() + "\"," +
@@ -178,13 +177,13 @@ func (self *VirtualEntity) Killer(in chan bool) {
 
 
 func (self VirtualEntity) Position() (float64, float64) {
-    x, y := self.vm.Call("getX"), self.vm.Call("getY")
+    x, y := self.Call("getX"), self.Call("getY")
     xF, _ := strconv.ParseFloat(x, 64)
     yF, _ := strconv.ParseFloat(y, 64)
     return xF, yF
 }
 func (self VirtualEntity) Size() (uint, uint) {
-    width, height := self.vm.Call("getWidth"), self.vm.Call("getHeight")
+    width, height := self.Call("getWidth"), self.Call("getHeight")
     widthUint, _ := strconv.ParseUint(width, 10, 0)
     heightUint, _ := strconv.ParseUint(height, 10, 0)
     return uint(widthUint), uint(heightUint)

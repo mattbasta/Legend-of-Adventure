@@ -40,7 +40,7 @@ func setUpPathing(ent *VirtualEntity) {
 
     ent.directionStage = make([]ventDirection, 0, 8)
 
-    ent.vm.vm.Set("isDirectionOk", func(call otto.FunctionCall) otto.Value {
+    ent.vm.Set("isDirectionOk", func(call otto.FunctionCall) otto.Value {
         x, _ := call.Argument(0).ToFloat()
         y, _ := call.Argument(1).ToFloat()
 
@@ -58,7 +58,7 @@ func setUpPathing(ent *VirtualEntity) {
         // If we're off the edge of the map, it's a bad direction.
         if intX + dirX < 1 || intX + dirX + w > levW - 1 ||
            intY + dirY - h < 1 || intY + dirY > levH - 1 {
-            result, _ := ent.vm.vm.ToValue(false)
+            result, _ := ent.vm.ToValue(false)
             return result
         }
 
@@ -67,12 +67,12 @@ func setUpPathing(ent *VirtualEntity) {
         if dirY < 0 { intY = intY - h }
         if dirX > 0 { intX = intX + w }
 
-        result, _ := ent.vm.vm.ToValue(!hitmap[intY + dirY][intX + dirX])
+        result, _ := ent.vm.ToValue(!hitmap[intY + dirY][intX + dirX])
         return result
 
     })
 
-    ent.vm.vm.Set("stageAvailableTiles", func(call otto.FunctionCall) otto.Value {
+    ent.vm.Set("stageAvailableTiles", func(call otto.FunctionCall) otto.Value {
         x, _ := call.Argument(0).ToFloat()
         y, _ := call.Argument(1).ToFloat()
 
@@ -135,7 +135,7 @@ func setUpPathing(ent *VirtualEntity) {
 
     }
 
-    ent.vm.vm.Set("stageRepeller", func(call otto.FunctionCall) otto.Value {
+    ent.vm.Set("stageRepeller", func(call otto.FunctionCall) otto.Value {
         eid, _ := call.Argument(0).ToString()
         eX, eY := ent.location.GetEntity(eid).Position()
 
@@ -145,7 +145,7 @@ func setUpPathing(ent *VirtualEntity) {
         )
         return otto.Value {}
     })
-    ent.vm.vm.Set("stageAttractor", func(call otto.FunctionCall) otto.Value {
+    ent.vm.Set("stageAttractor", func(call otto.FunctionCall) otto.Value {
         eid, _ := call.Argument(0).ToString()
         eX, eY := ent.location.GetEntity(eid).Position()
 
@@ -155,7 +155,7 @@ func setUpPathing(ent *VirtualEntity) {
         )
         return otto.Value {}
     })
-    ent.vm.vm.Set("getDirectionToBestTile", func(call otto.FunctionCall) otto.Value {
+    ent.vm.Set("getDirectionToBestTile", func(call otto.FunctionCall) otto.Value {
         if len(ent.directionStage) == 0 {
             ent.bestDirection = nil
             return otto.Value {}
@@ -189,11 +189,11 @@ func setUpPathing(ent *VirtualEntity) {
         dirLen := len(tempDirs)
 
         if dirLen == 0 {
-            result, _ := ent.vm.vm.ToValue(nil)
+            result, _ := ent.vm.ToValue(nil)
             return result
 
         } else if dirLen == 1 {
-            result, _ := ent.vm.vm.ToValue(ventDirections[tempDirs[0]])
+            result, _ := ent.vm.ToValue(ventDirections[tempDirs[0]])
             return result
 
         } else {
@@ -215,7 +215,7 @@ func setUpPathing(ent *VirtualEntity) {
 
             for _, dir := range tempDirs {
                 if dir[0] == xSum && dir[1] == ySum {
-                    result, _ := ent.vm.vm.ToValue(ventDirections[dir])
+                    result, _ := ent.vm.ToValue(ventDirections[dir])
                     return result
                 }
             }
@@ -223,7 +223,7 @@ func setUpPathing(ent *VirtualEntity) {
 
 
         bestDir = &tempDirs[ventRng.Intn(len(tempDirs))]
-        result, _ := ent.vm.vm.ToValue(ventDirections[*bestDir])
+        result, _ := ent.vm.ToValue(ventDirections[*bestDir])
         return result
     })
 }
