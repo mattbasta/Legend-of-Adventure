@@ -32,7 +32,7 @@ define('sheep', ['peaceful'], function() {
             data.image = 'sheep';
             data.width = data.height = getSize();
             data.maxHealth = 8;
-            data.speed = 0.00275;
+            data.speed = 0.00075;
             data.nametag = 'Innocent Sheep';
             if (moving) data.movement = 'sheep_bounce';
             return data;
