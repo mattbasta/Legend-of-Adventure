@@ -152,7 +152,7 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         intX, intY := int64(x), int64(y)
 
         minY, maxY := intY - 1, intY + 1
-        if minY - h < 1 { minY = 1 }
+        if minY - h < 1 { minY = 1 + h }
         if maxY >= levH - 1 { minY = levH - 1 }
         minX, maxX := intX - 1, intX + 1
         if minX < 0 { minX = 0 }
@@ -346,8 +346,20 @@ func (self *VirtualEntity) Receive() chan<- *events.Event {
 
 func (self *VirtualEntity) handle(event *events.Event) {
     switch event.Type {
+    case events.SPAWN:
     case events.REGION_ENTRANCE:
         self.vm.Pass("entered", event.Body)
+        fallthrough
+    case events.ENTITY_UPDATE:
+        ent := self.location.GetEntity(event.Origin)
+        dist := Distance(ent, self)
+        if dist > ENTITY_VISION { return }
+        self.vm.Pass("seenEntity", fmt.Sprintf("'%s', %s, %f", event.Origin, event.Body, dist))
+
+    case events.DEATH:
+        fallthrough
+    case events.REGION_EXIT:
+        self.vm.Pass("forget", event.Origin)
     }
 }
 

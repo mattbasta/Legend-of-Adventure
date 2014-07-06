@@ -309,6 +309,13 @@ func (self *Region) PopulateEntities() {
 			placeEntity(entType)
 		}
 
+		if self.IsTown() {
+			soldierCount := rng.Intn(MAX_SOLDIERS_PER_TOWN - MIN_SOLDIERS_PER_TOWN) + MIN_SOLDIERS_PER_TOWN
+			for i := 0; i < soldierCount; i++ {
+				placeEntity("soldier")
+			}
+		}
+
 	case terrain.REGIONTYPE_SHOP:
 		placeEntity("homely")
 		placeEntity("homely")
@@ -317,6 +324,11 @@ func (self *Region) PopulateEntities() {
 	case terrain.REGIONTYPE_HOUSE:
 		placeEntity("homely")
 		placeEntity("homely")
+	}
+
+	if (self.Type == terrain.REGIONTYPE_HOUSE || self.Type == terrain.REGIONTYPE_SHOP) &&
+	   rng.Intn(SOLDIER_IN_HOUSE_ODDS) == 0 {
+	   	placeEntity("soldier")
 	}
 }
 

@@ -56,11 +56,11 @@ define('sentient', ['harmable', 'animat'], function() {
             if (chasing) {
                 // Try tossing out an attack.
                 var dist = getDistance(chasing);
-                if (trigger('doesAttack') && dist <= 1.5 * HURT_DISTANCE) {
+                if (trigger('doesAttack') && dist <= HURT_DISTANCE) {
                     trigger('attack', chasing);
                 }
                 // If what we're chasing is in range, stop to try to attack it.
-                if (dist < HURT_DISTANCE * 2) {
+                if (dist < HURT_DISTANCE) {
                     trigger('stopMoving');
                     return;
                 }
@@ -86,7 +86,7 @@ define('sentient', ['harmable', 'animat'], function() {
         },
 
         forget: function(sup, id) {
-            if (chasing === id) chasing = null;
+            if (chasing === id) trigger('stopChasing');
             var idx = fleeingFrom.indexOf(id);
             if (idx) {
                 fleeingFrom.splice(idx, 1);
@@ -103,6 +103,9 @@ define('sentient', ['harmable', 'animat'], function() {
             if (chasing === id) return;
             chasing = id;
             log('Chasing ' + id);
+        },
+        stopChasing: function(sup) {
+            chasing = null;
         },
         wander: function(sup) {
             // If we're chasing or fleeing, don't start wandering.
