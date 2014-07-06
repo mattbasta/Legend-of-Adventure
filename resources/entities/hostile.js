@@ -1,4 +1,5 @@
 define('hostile', ['sentient'], function() {
+
     return {
         getPreferredBehavior: function() {
             return 'chase';

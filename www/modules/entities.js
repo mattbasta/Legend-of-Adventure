@@ -81,7 +81,7 @@ define('entities',
         if (props.proto) {
             var eP = settings.entityPrototypes[props.proto]
             for (var k in eP) {
-                if (!eP.hasOwnProperty(k)) continue;
+                if (!eP.hasOwnProperty(k) || props[k]) continue;
                 props[k] = eP[k];
             }
         }

@@ -34,6 +34,7 @@ var ventDirections = map[ventDirection]int {
 type VirtualEntity struct {
     id         string
     closing    chan bool
+    receiver   chan *events.Event
 
     location   EntityRegion
 
@@ -52,6 +53,20 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
     ent := new(VirtualEntity)
     ent.id = NextEntityID()
     ent.closing = make(chan bool)
+
+    ent.receiver = make(chan *events.Event)
+
+    go func() {
+        for {
+            select {
+            case <-ent.closing:
+                ent.closing <- true
+                return
+            case event := <-ent.receiver:
+                ent.handle(event)
+            }
+        }
+    }()
 
     ent.vm = GetEntityVM(entityName)
 
@@ -297,7 +312,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
 
     self.vm.Pass("setup", "null")
 
-    go self.gameTick()
+    self.gameTick()
 }
 
 func (self *VirtualEntity) SetPosition(x, y float64) {
@@ -305,38 +320,28 @@ func (self *VirtualEntity) SetPosition(x, y float64) {
 }
 
 func (self *VirtualEntity) gameTick() {
-    ticker := time.NewTicker(250 * time.Millisecond)
-    self.lastTick = time.Now().UnixNano() / 1e6
-    defer ticker.Stop()
-    for {
-        select {
-        case <-ticker.C:
-            now := time.Now().UnixNano() / 1e6
-            self.vm.Pass("tick", fmt.Sprintf("%d, %d", now, now - self.lastTick))
-            self.lastTick = now
-        case <-self.closing:
-            self.closing <- true
-            return
+    if self.lastTick != 0 { return }
+    go func() {
+        ticker := time.NewTicker(250 * time.Millisecond)
+        self.lastTick = time.Now().UnixNano() / 1e6
+        defer ticker.Stop()
+        for {
+            select {
+            case <-ticker.C:
+                now := time.Now().UnixNano() / 1e6
+                self.vm.Pass("tick", fmt.Sprintf("%d, %d", now, now - self.lastTick))
+                self.lastTick = now
+            case <-self.closing:
+                self.closing <- true
+                return
+            }
         }
-    }
+    }()
 }
 
 
 func (self *VirtualEntity) Receive() chan<- *events.Event {
-    receiver := make(chan *events.Event)
-
-    go func() {
-        for {
-            select {
-            case <-self.closing:
-                self.closing <- true
-                return
-            case event := <-receiver:
-                self.handle(event)
-            }
-        }
-    }()
-    return receiver
+    return self.receiver
 }
 
 func (self *VirtualEntity) handle(event *events.Event) {

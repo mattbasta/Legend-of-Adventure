@@ -2,6 +2,7 @@ package regions
 
 import (
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -269,25 +270,49 @@ func (self Region) GetEntity(ID string) entities.Entity {
 }
 
 func (self *Region) PopulateEntities() {
+	// TODO: make this more random
+	rng := rand.New(rand.NewSource(int64(self.X * self.Y)))
+
+	placeEntity := func(entType string) {
+		ent := entities.NewVirtualEntity(entType)
+		// entW, entH := ent.Size()
+		entW, entH := 1, 1
+		ent.SetLocation(self)
+		for {
+			x := rng.Intn(int(self.Terrain.Width) - 2 - int(entW)) + 1
+			y := rng.Intn(int(self.Terrain.Height) - 2 - int(entH)) + 1 + int(entH)
+			if (self.Terrain.Hitmap[y][x] ||
+				self.Terrain.Hitmap[y - int(entH)][x + int(entW)] ||
+				self.Terrain.Hitmap[y - int(entH)][x] ||
+				self.Terrain.Hitmap[y][x + int(entW)]) {
+				continue
+			}
+			ent.SetPosition(
+				float64(x),
+				float64(y),
+			)
+			break
+		}
+		self.AddEntity(ent)
+	}
 
 	switch self.Type {
 	case terrain.REGIONTYPE_FIELD:
-		for i := 0; i < 3; i++ {
+		entCount := rng.Intn(MAX_ENTITIES_PER_FIELD)
+		for i := 0; i < entCount; i++ {
 			var entType string
-			if i % 2 == 0 {
-				entType = "sheep"
-			} else {
+			if i % WOLF_ODDS == 0 {
 				entType = "wolf"
+			} else {
+				entType = "sheep"
 			}
-			ent := entities.NewVirtualEntity(entType)
-			ent.SetLocation(self)
-			ent.SetPosition(
-				// TODO: Randomize all of this
-				float64(self.Terrain.Width / 2),
-				float64(self.Terrain.Height / 2),
-			)
-			self.AddEntity(ent)
+			placeEntity(entType)
 		}
+
+	case terrain.REGIONTYPE_SHOP:
+		placeEntity("homely")
+		placeEntity("homely")
+		placeEntity("homely")
 	}
 }
 

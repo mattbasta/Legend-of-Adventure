@@ -42,6 +42,8 @@ type ItemEntity struct {
     itemCode   string
     x, y       float64
     location   EntityRegion
+
+    receiver   chan *events.Event
 }
 
 type EntityThatCanThrow interface {
@@ -62,25 +64,26 @@ func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
     fromDirX, fromDirY := from.Direction()
     item.x, item.y = fromX + float64(fromDirX), fromY + float64(fromDirY)
 
+    item.receiver = make(chan *events.Event)
+
+    go func() {
+        for {
+            select {
+            case <-item.closing:
+                item.closing <- true
+                return
+            case event := <-item.receiver:
+                item.handle(event)
+            }
+        }
+    }()
+
     return item
 }
 
 
 func (self *ItemEntity) Receive() chan<- *events.Event {
-    receiver := make(chan *events.Event)
-
-    go func() {
-        for {
-            select {
-            case <-self.closing:
-                self.closing <- true
-                return
-            case event := <-receiver:
-                self.handle(event)
-            }
-        }
-    }()
-    return receiver
+    return self.receiver
 }
 
 func (self *ItemEntity) handle(event *events.Event) {
