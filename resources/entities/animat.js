@@ -56,7 +56,6 @@ define('animat', [], function() {
         },
 
         getLocationUpdate: function() {
-            calculateLocation();
             var trimmedData = {
                 x: x,
                 y: y,
@@ -66,6 +65,7 @@ define('animat', [], function() {
             return JSON.stringify(trimmedData);
         },
         startMoving: function(sup, newDirX, newDirY) {
+            calculateLocation();
             if (newDirX === velX && newDirY === velY) {
                 return;
             }
@@ -74,6 +74,7 @@ define('animat', [], function() {
             sendEvent('epu', trigger('getLocationUpdate'));
         },
         stopMoving: function(sup) {
+            calculateLocation();
             if (!velX && !velY) {
                 return;
             }
@@ -82,30 +83,11 @@ define('animat', [], function() {
             sendEvent('epu', trigger('getLocationUpdate'));
         },
 
-        _updatedPosition: function(sup, velocity) {
-            var now = Date.now();
-            var delta = now - lastCalculation;
-            var targetRate = delta / (1000 / 30);
-
-            if (!velocity[0] && !velocity[1]) return [x, y];
-
-            var vX = velocity[0];
-            var vY = velocity[1];
-            if (vX && vY) {
-                vX *= Math.SQRT1_2;
-                vY *= Math.SQRT1_2;
-            }
-            return [
-                x + vX * speed * targetRate,
-                y + vY * speed * targetRate
-            ];
-        },
-
         schedule: function(sup, callback, when) {
             schedule.push([callback, Date.now() + when]);
         },
         tick: function(sup, now, delta) {
-            // sup(now, delta);
+            sup(now, delta);
             for (var i = schedule.length - 1; i >= 0; i--) {
                 if (schedule[i][1] < now) {
                     try {

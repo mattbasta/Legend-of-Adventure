@@ -93,6 +93,9 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
     ent.vm.vm.Set("stageAvailableTiles", func(call otto.FunctionCall) otto.Value {
         x, _ := call.Argument(0).ToFloat()
         y, _ := call.Argument(1).ToFloat()
+
+        ent.stageX, ent.stageY = x, y
+
         // TODO: Consider width
         w, _ := call.Argument(2).ToInteger()
         h, _ := call.Argument(3).ToInteger()
@@ -114,12 +117,14 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         for i := minY; i <= maxY; i++ {
             for j := minX; j <= maxX; j++ {
                 // Skip the tile that the player is on.
-                if intY == i || intX == j { continue }
+                if intY == i && intX == j { continue }
                 dirStage = append(dirStage, ventDirection{j - intX, i - intY})
             }
         }
 
         // TODO: filter staged directions by hitmap
+
+        // log.Println("Available tiles: ", len(dirStage))
 
         ent.directionStage = dirStage
         ent.repulseDirections = make([]ventDirection, 0)
@@ -131,26 +136,17 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         // Calculate the angle of the point to the entity
         angle := math.Atan2(y - ent.stageY, x - ent.stageX) * (-180 / math.Pi)
 
-        // TODO: The below algorithms might be a bit wonky. Instead of choosing
-        // the proper angle based on 45-degree markers, the angle should be
-        // chosen based on the efficiency of each direction. For instance, if
-        // the target is slightly more than 45 degrees away, the algorithm may
-        // choose to move vertically or horizontally, even though the most
-        // efficient direciton is at an angle.
-        // Remedying this may be as simple as adjusting the angles to be based
-        // on 30-degree increments rather than 45-degree increments.
-
         xDir := 0
-        if math.Abs(angle) > 135 {
+        if math.Abs(angle) > 90 + 45 / 2 {
             xDir = -1
-        } else if math.Abs(angle) < 45 {
+        } else if math.Abs(angle) < 90 - 45 / 2 {
             xDir = 1
         }
 
         yDir := 0
-        if angle > 45 && angle < 135 {
+        if angle > 45 / 2 && angle < 180 - 45 / 2 {
             yDir = -1
-        } else if angle < -45 && angle > -135 {
+        } else if angle < -45 / 2 / 2 && angle > -180 + 45 / 2 {
             yDir = 1
         }
 
@@ -203,6 +199,7 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
                 }
             }
             if len(tempDirs) == 0 {
+                // log.Println("Fleeing results in no usable directions")
                 tempDirs = ent.directionStage
             }
         }
@@ -224,6 +221,10 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
             for _, dir := range ent.attractDirections {
                 xSum += dir[0]
                 ySum += dir[1]
+            }
+            for _, dir := range ent.repulseDirections {
+                xSum -= dir[0]
+                ySum -= dir[1]
             }
             // Since there's no integer min/max :(
             if xSum < -1 { xSum = -1 }
@@ -309,8 +310,8 @@ func (self *VirtualEntity) Receive() chan<- *events.Event {
 
 func (self *VirtualEntity) handle(event *events.Event) {
     switch event.Type {
-    case events.ENTITY_UPDATE:
-        //
+    case events.REGION_ENTRANCE:
+        self.vm.Pass("entered", event.Body)
     }
 }
 

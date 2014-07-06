@@ -124,8 +124,6 @@ func GetFeatureTiles(setName string) *FeatureTiles {
             )
             portals = append(portals, portal)
         }
-    } else {
-        log.Println("Error reading '" + setName + "' portals")
     }
     tileset.Portals = portals
 

@@ -1,4 +1,4 @@
-define('sheep', ['animat', 'peaceful'], function() {
+define('sheep', ['peaceful'], function() {
 
     var MIN_BLEAT = 8;
     var MAX_BLEAT = 20;
@@ -50,6 +50,18 @@ define('sheep', ['animat', 'peaceful'], function() {
         stopMoving: function(sup) {
             moving = false;
             return sup();
+        },
+
+        getLocationUpdate: function(sup) {
+            var data = sup();
+            return '{"movement":' + (moving ? '"sheep_bounce"' : 'null') + ',' + data.substr(1);
+        },
+
+        entered: function(sup, entity) {
+            var dist = getDistance(entity.id);
+            if (dist < 15) {
+                trigger('flee', entity.id);
+            }
         }
     };
 });

@@ -31,40 +31,29 @@ define('sentient', ['harmable', 'animat'], function() {
             }
         }
         var bestDirection = getDirectionToBestTile();
+        // log(bestDirection);
         if (bestDirection === null) return null;
         return DIRECTIONS[bestDirection];
-    }
-    function behaviorChanged() {
-        if (!velX && !velY) {
-            var bestDirection = getBestDirection();
-            if (!bestDirection) {
-                trigger('stopMoving');
-                if (wandering) {
-                    trigger('stopWandering');
-                }
-                return;
-            }
-            trigger('startMoving', bestDirection[0], bestDirection[1]);
-        }
     }
     function reevaluateBehavior() {
         var stillMustFlee = false;
         if (fleeingFrom.length) {
+            var dist;
             for (var i = 0; i < fleeingFrom.length; i++) {
-                if (getDistance(fleeingFrom[i]) > FLEE_DISTANCE) {
+                dist = getDistance(fleeingFrom[i]);
+                if (dist < FLEE_DISTANCE) {
                     stillMustFlee = true;
+                    // log('must flee');
                     break;
                 }
             }
         }
 
         if (!chasing && !stillMustFlee) {
-            trigger('stopMoving');
-            trigger('schedule', function() {
-                trigger('wander');
-            }, 2000);
-            return;
+            if (fleeingFrom.length) fleeingFrom = [];
+            trigger('wander');
         } else {
+            // log('Need to take action.');
             if (chasing) {
                 // Try tossing out an attack.
                 var dist = getDistance(chasing);
@@ -74,22 +63,19 @@ define('sentient', ['harmable', 'animat'], function() {
                 // If what we're chasing is in range, stop to try to attack it.
                 if (dist < HURT_DISTANCE * 2) {
                     trigger('stopMoving');
+                    return;
                 }
             }
 
             var bestDirection = getBestDirection();
+            // log(bestDirection);
             if (!bestDirection) {
+                // The best direction is to not move.
                 trigger('stopMoving');
-                trigger('schedule', function() {
-                    trigger('wander');
-                }, 3000);
-                return;
             } else {
                 trigger('startMoving', bestDirection[0], bestDirection[1]);
             }
         }
-
-        scheduleReevaluate();
     }
 
     return {
@@ -112,12 +98,12 @@ define('sentient', ['harmable', 'animat'], function() {
             if (idx === -1) {
                 fleeingFrom.push(id);
             }
-            behaviorChanged();
+            log('Fleeing ' + id);
         },
         chase: function(sup, id) {
             if (chasing === id) return;
             chasing = id;
-            behaviorChanged();
+            log('Chasing ' + id);
         },
         wander: function(sup) {
             // If we're chasing or fleeing, don't start wandering.
@@ -146,10 +132,10 @@ define('sentient', ['harmable', 'animat'], function() {
             trigger('stopMoving');
         },
         tick: function(sup, now, delta) {
-            sup(now, delta);
             if (wandering || chasing || fleeingFrom.length) {
                 reevaluateBehavior();
             }
+            sup(now, delta);
         }
     };
 });

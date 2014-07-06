@@ -178,16 +178,17 @@ func (self *Region) GetEvent(evt_type events.EventType, body string, origin enti
 func (self *Region) AddEntity(entity entities.Entity) {
 	entity.Killer(self.killer)
 
+	// Add the entity to the list of entities.
+	self.entities = append(self.entities, &entity)
+
 	// Tell everyone else that the entity is here.
 	self.Broadcast(self.GetEvent(events.REGION_ENTRANCE, entity.String(), entity))
 
 	// Tell the entity about everyone else.
 	for _, regEnt := range self.entities {
+		if regEnt == &entity { continue }
 		entity.Receive() <- self.GetEvent(events.REGION_ENTRANCE, (*regEnt).String(), *regEnt)
 	}
-
-	// Add the entity to the list of entities.
-	self.entities = append(self.entities, &entity)
 
 }
 

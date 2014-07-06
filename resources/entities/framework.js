@@ -21,12 +21,12 @@ this.define = function define(name, inherits, body) {
 
     var main = body();
     for (var method in main) {
-        if (!main.hasOwnProperty(method)) continue;
+        // log('Adding ' + method + ' to ' + name);
         addMethod(method, main);
     }
 
     if (!defining) {
-        log('Initializing entity ' + name);
+        // log('Initializing entity ' + name);
         defining = true;
         while (defineQueue.length) {
             load(defineQueue.shift());
@@ -42,7 +42,10 @@ this.trigger = function trigger(event) {
     var chain = methods[event];
     var depth = 0;
     function run() {
-        if (!chain[depth]) return;
+        if (!chain[depth]) {
+            // log('No method at depth', depth, 'for', event);
+            return;
+        }
         var method = chain[depth];
         depth++;
         try {

@@ -24,7 +24,10 @@ func (self *EntityVM) setup() {
         if err != nil {
             panic("Could not open entity '" + toImport + "'")
         }
-        self.vm.Run(entity)
+        _, err = self.vm.Run(entity)
+        if err != nil {
+            log.Println("Error loading " + toImport + ":", err)
+        }
         return otto.Value {}
     })
     self.vm.Set("log", func(call otto.FunctionCall) otto.Value {
@@ -47,7 +50,7 @@ func (self *EntityVM) Call(name string) string {
 }
 
 func (self *EntityVM) Pass(name, args string) {
-    _, err := self.vm.Run("JSON.stringify(trigger('" + name + "', " + args + "))");
+    _, err := self.vm.Run("trigger('" + name + "', " + args + ")");
     if err != nil {
         log.Println("Entity error: ", err)
     }
