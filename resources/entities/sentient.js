@@ -30,7 +30,6 @@ define('sentient', ['harmable', 'animat'], function() {
             }
         }
         var bestDirection = getDirectionToBestTile();
-        // log(bestDirection);
         if (bestDirection === null) return null;
         return DIRECTIONS[bestDirection];
     }

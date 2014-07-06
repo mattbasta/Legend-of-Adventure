@@ -287,10 +287,7 @@ func (self *Region) PopulateEntities() {
 				self.Terrain.Hitmap[y][x + int(entW)]) {
 				continue
 			}
-			ent.SetPosition(
-				float64(x),
-				float64(y),
-			)
+			ent.SetPosition(float64(x), float64(y))
 			break
 		}
 		self.AddEntity(ent)
