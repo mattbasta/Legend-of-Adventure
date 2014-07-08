@@ -28,6 +28,7 @@ define('settings', [], function() {
                 xOffset: 0,
                 width: 50,
                 height: 50,
+                speed: 0.0075,
                 sprite: {
                     left: [
                         {position:4, duration:5},
