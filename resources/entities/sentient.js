@@ -35,6 +35,7 @@ define('sentient', ['harmable', 'animat'], function() {
             var dist;
             for (var i = 0; i < fleeingFrom.length; i++) {
                 dist = getDistance(fleeingFrom[i]);
+                if (dist === null) continue;
                 if (dist < FLEE_DISTANCE) {
                     stillMustFlee = true;
                     break;
@@ -50,6 +51,11 @@ define('sentient', ['harmable', 'animat'], function() {
             if (chasing) {
                 // Try tossing out an attack.
                 var dist = getDistance(chasing);
+                if (dist === null) {
+                    trigger('stopChasing');
+                    reevaluateBehavior();
+                    return;
+                }
                 if (trigger('doesAttack') && dist <= HURT_DISTANCE) {
                     trigger('attack', chasing);
                 }
@@ -87,15 +93,19 @@ define('sentient', ['harmable', 'animat'], function() {
             }
         },
         flee: function(sup, id) {
-            if (getDistance(id) > FLEE_DISTANCE) return;
+            var dist = getDistance(id);
+            if (dist === null) return;
+            if (dist > FLEE_DISTANCE) return;
             var idx = fleeingFrom.indexOf(id);
             if (idx === -1) {
                 fleeingFrom.push(id);
             }
+            // log('Fleeing ' + id);
         },
         chase: function(sup, id) {
             if (chasing === id) return;
             chasing = id;
+            // log('Chasing ' + id);
         },
         stopChasing: function(sup) {
             chasing = null;
@@ -159,12 +169,6 @@ define('sentient', ['harmable', 'animat'], function() {
                     stageRepeller(fleeingFrom[i]);
                 }
             }
-        },
-
-        attacked: function(sup) {
-            sup();
-            log("ouch");
-            say("ouch!");
         }
     };
 });

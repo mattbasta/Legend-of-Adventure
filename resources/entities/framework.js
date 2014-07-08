@@ -47,6 +47,7 @@ this.trigger = function trigger(event) {
             return;
         }
         var method = chain[depth];
+        // log(event, depth);
         depth++;
         try {
             return method.apply(null, args);

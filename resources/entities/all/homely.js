@@ -24,6 +24,10 @@ define('homely', ['sentient'], function() {
 
     var name = names[Math.random() * names.length | 0];
 
+    function getHealth() {
+        return 75;
+    }
+
     function getSize() {
         return 50;
     }
@@ -42,12 +46,13 @@ define('homely', ['sentient'], function() {
             data.type = 'homely';
             data.image = image;
             data.width = data.height = getSize();
-            data.maxHealth = 75;
+            data.maxHealth = getHealth();
             data.speed = 0.00075;
             data.nametag = name;
             return data;
         },
         getWidth: getSize,
-        getHeight: getSize
+        getHeight: getSize,
+        getHealth: getHealth
     };
 });

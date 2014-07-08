@@ -96,7 +96,7 @@ define('animat', [], function() {
             schedule.push([callback, Date.now() + when]);
         },
         tick: function(sup, now, delta) {
-            sup(now, delta);
+            sup();
             for (var i = schedule.length - 1; i >= 0; i--) {
                 if (schedule[i][1] < now) {
                     try {

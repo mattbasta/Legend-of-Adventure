@@ -4,6 +4,10 @@ define('wolf', ['hostile'], function() {
         return 50;
     }
 
+    function getHealth() {
+        return 10;
+    }
+
     return {
         setup: function(sup) {
             sup();
@@ -18,7 +22,7 @@ define('wolf', ['hostile'], function() {
             data.type = 'wolf';
             data.image = 'wolf';
             data.width = data.height = getSize();
-            data.maxHealth = 5;
+            data.maxHealth = getHealth();
             data.speed = 0.003;
             data.nametag = 'Big Bad Wolf';
             return data;
@@ -28,6 +32,7 @@ define('wolf', ['hostile'], function() {
             return ['f5'];
         },
         getWidth: getSize,
-        getHeight: getSize
+        getHeight: getSize,
+        getHealth: getHealth
     };
 });

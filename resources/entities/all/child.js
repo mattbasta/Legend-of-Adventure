@@ -16,6 +16,10 @@ define('bully', ['peaceful'], function() {
         return 50;
     }
 
+    function getHealth() {
+        return 100;
+    }
+
     var halfLevWidth;
     var halfLevHeight;
 
@@ -49,6 +53,7 @@ define('bully', ['peaceful'], function() {
         },
         getWidth: getSize,
         getHeight: getSize,
+        getHealth: getHealth,
 
         seenEntity: function(sup, id, body, dist) {
             sup();

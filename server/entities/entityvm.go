@@ -43,7 +43,7 @@ func (self *EntityVM) setup() {
 func (self *EntityVM) Call(name string) string {
     value, err := self.vm.Run("JSON.stringify(trigger('" + name + "'))");
     if err != nil {
-        log.Println("Entity JS error: ", err)
+        log.Println("Entity error when calling " + name + "(): ", err)
         return ""
     }
     return value.String()

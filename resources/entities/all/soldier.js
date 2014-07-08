@@ -1,9 +1,13 @@
-define('soldier', ['sentient'], function() {
+define('soldier', ['neutral'], function() {
 
     var image = 'soldier' + (Math.random() * 3 + 1 | 0);
 
     function getSize() {
         return 50;
+    }
+
+    function getHealth() {
+        return 125;
     }
 
     return {
@@ -17,15 +21,24 @@ define('soldier', ['sentient'], function() {
             data.type = 'soldier';
             data.image = image;
             data.width = data.height = getSize();
-            data.maxHealth = 125;
-            data.speed = 0.001;
+            data.maxHealth = getHealth();
+            data.speed = 0.005;
             return data;
         },
         getWidth: getSize,
         getHeight: getSize,
+        getHealth: getHealth,
 
-        wander: function() {
-            // noop
+        // noop
+        wander: function() {},
+
+        seenAttack: function(sup, from) {
+            sup();
+            // TODO: check if `from` is another soldier
+            var dist = getDistance(from);
+            if (dist === null || dist > 35) return;
+
+            trigger('chase', from);
         }
     };
 });

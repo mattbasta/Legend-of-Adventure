@@ -63,6 +63,10 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 
     ent.vm.Set("getDistance", func(call otto.FunctionCall) otto.Value {
         entity := ent.location.GetEntity(call.Argument(0).String())
+        if entity == nil {
+            result, _ := ent.vm.ToValue(nil)
+            return result
+        }
         // TODO: This might be really costly if it has to look up the
         // position form the VM
         dist := Distance(ent, entity)
@@ -107,6 +111,19 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
                 ent,
             ),
         )
+
+        return otto.Value{}
+    })
+
+    ent.vm.Set("die", func(call otto.FunctionCall) otto.Value {
+        log.Println("Entity death: ", ent.id)
+        ent.location.Broadcast(
+            ent.location.GetEvent(events.DEATH, "", ent),
+        )
+
+        ent.location.RemoveEntity(ent)
+
+        ent.closing <- true
 
         return otto.Value{}
     })
@@ -186,17 +203,28 @@ func (self *VirtualEntity) handle(event *events.Event) {
         split := strings.Split(event.Body, " ")
         x, _ := strconv.ParseFloat(split[0], 10)
         y, _ := strconv.ParseFloat(split[1], 10)
-        // item := split[2]
+        item := split[2]
 
         entX, entY := self.Position()
-        entW, entH := self.Size()
+        // entW, entH := self.Size()
+        entW, entH := 1, 1
 
-        if x < entX || x > entX + float64(entW) || y < entY - float64(entH) || y > entY { return }
+        attackDetails := fmt.Sprintf("'%s', %d, '%s'", event.Origin, damage, item)
+
+        if x < entX - ATTACK_WIGGLE_ROOM ||
+           x > entX + float64(entW) + ATTACK_WIGGLE_ROOM ||
+           y < entY - float64(entH) - ATTACK_WIGGLE_ROOM ||
+           y > entY + ATTACK_WIGGLE_ROOM {
+            self.Pass("seenAttack", attackDetails)
+            return
+        }
+
+        log.Println("Direct hit by " + event.Origin + " on " + self.id)
 
         // TODO: Figure out how to calculate this
         damage := 10
 
-        self.Pass("attacked", fmt.Sprintf("'%s', %d", event.Origin, damage))
+        self.Pass("attacked", attackDetails)
     }
 }
 

@@ -146,6 +146,9 @@ func (self *Player) listenOutbound() {
 
 func (self *Player) handleOutbound(evt *events.Event) bool {
     switch evt.Type {
+    case events.DEATH:
+        self.outbound_raw <- "delevt:" + evt.Origin + "\n" + evt.Origin
+
     case events.DIRECT_ATTACK:
         split := strings.Split(evt.Body, " ")
         x, _ := strconv.ParseFloat(split[0], 10)

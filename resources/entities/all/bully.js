@@ -6,6 +6,10 @@ define('bully', ['peaceful'], function() {
         return 50;
     }
 
+    function getHealth() {
+        return 100;
+    }
+
     return {
         setup: function(sup) {
             sup();
@@ -23,13 +27,14 @@ define('bully', ['peaceful'], function() {
             data.type = 'child';
             data.image = 'bully';
             data.width = data.height = getSize();
-            data.maxHealth = 100;
+            data.maxHealth = getHealth();
             data.speed = 0.0035;
             data.nametag = 'Timmy the Bully';
             return data;
         },
         getWidth: getSize,
         getHeight: getSize,
+        getHealth: getHealth,
 
         stopChasing: function(sup) {
             sup();
