@@ -42,12 +42,12 @@ func HandleCheat(message string, player *Player) bool {
         }
 
     case "hea":
-        newHealth, err := strconv.ParseUint(spl[1], 10, 0)
+        newHealth, err := strconv.ParseInt(spl[1], 10, 0)
         if err != nil {
             sayToPlayer("Invalid health", player)
             return true
         }
-        player.IncrementHealth(uint(newHealth) - player.GetHealth())
+        player.IncrementHealth(int(newHealth) - int(player.GetHealth()))
         sayToPlayer("Updating health to " + strconv.Itoa(int(player.GetHealth())), player)
         return true
 

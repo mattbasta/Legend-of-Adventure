@@ -57,8 +57,8 @@ func setUpPathing(ent *VirtualEntity) {
         intX, intY := int64(x), int64(y)
 
         // If we're off the edge of the map, it's a bad direction.
-        if intX + dirX < 1 || intX + dirX + w > levW - 1 ||
-           intY + dirY - h < 1 || intY + dirY > levH - 1 {
+        if intX + dirX <= 1 || intX + dirX + w >= levW - 1 ||
+           intY + dirY - h <= 1 || intY + dirY >= levH - 1 {
             result, _ := ent.vm.ToValue(false)
             return result
         }
@@ -68,7 +68,11 @@ func setUpPathing(ent *VirtualEntity) {
         if dirY < 0 { intY = intY - h }
         if dirX > 0 { intX = intX + w }
 
-        result, _ := ent.vm.ToValue(!hitmap[intY + dirY][intX + dirX])
+        result, _ := ent.vm.ToValue(
+            !hitmap[intY + dirY][intX + dirX] &&
+            !hitmap[intY + dirY - h][intX + dirX] &&
+            !hitmap[intY + dirY - h][intX + dirX + w] &&
+            !hitmap[intY + dirY][intX + dirX + w])
         return result
 
     })
@@ -102,7 +106,6 @@ func setUpPathing(ent *VirtualEntity) {
             for j := minX; j <= maxX; j++ {
                 // Skip the tile that the entity is on.
                 if intY == i && intX == j { continue }
-                // log.Println(i, j, h)
                 if hitmap[i][j] || hitmap[i - h][j] { continue }
                 if hitmap[i][j + w] || hitmap[i - h][j + w] { continue }
                 dirStage = append(dirStage, ventDirection{int(j - intX), int(i - intY)})
@@ -157,6 +160,28 @@ func setUpPathing(ent *VirtualEntity) {
         )
         return otto.Value {}
     })
+
+    ent.vm.Set("stageRepellerCoord", func(call otto.FunctionCall) otto.Value {
+        x, _ := call.Argument(0).ToFloat()
+        y, _ := call.Argument(1).ToFloat()
+
+        ent.repulseDirections = append(
+            ent.repulseDirections,
+            calculateDirection(x, y),
+        )
+        return otto.Value {}
+    })
+    ent.vm.Set("stageAttractorCoord", func(call otto.FunctionCall) otto.Value {
+        x, _ := call.Argument(0).ToFloat()
+        y, _ := call.Argument(1).ToFloat()
+
+        ent.attractDirections = append(
+            ent.attractDirections,
+            calculateDirection(x, y),
+        )
+        return otto.Value {}
+    })
+
     ent.vm.Set("getDirectionToBestTile", func(call otto.FunctionCall) otto.Value {
         if len(ent.directionStage) == 0 {
             ent.bestDirection = nil

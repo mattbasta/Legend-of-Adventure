@@ -4,6 +4,7 @@ import (
     "fmt"
     "log"
     "strconv"
+    "strings"
     "time"
 
     "github.com/robertkrimen/otto"
@@ -79,6 +80,37 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         return result
     })
 
+    ent.vm.Set("attack", func(call otto.FunctionCall) otto.Value {
+        x, _ := call.Argument(0).ToFloat()
+        y, _ := call.Argument(1).ToFloat()
+
+        weapon := call.Argument(2).String()
+
+        ent.location.Broadcast(
+            ent.location.GetEvent(
+                events.DIRECT_ATTACK,
+                fmt.Sprintf("%f %f %s", x, y, weapon),
+                ent,
+            ),
+        )
+
+        return otto.Value{}
+    })
+
+    ent.vm.Set("say", func(call otto.FunctionCall) otto.Value {
+        message := call.Argument(0).String()
+        x, y := ent.Position()
+        ent.location.Broadcast(
+            ent.location.GetEvent(
+                events.CHAT,
+                fmt.Sprintf("%f %f\n%s", x, y, message),
+                ent,
+            ),
+        )
+
+        return otto.Value{}
+    })
+
     setUpPathing(ent)
 
     return ent
@@ -148,7 +180,23 @@ func (self *VirtualEntity) handle(event *events.Event) {
     case events.DEATH:
         fallthrough
     case events.REGION_EXIT:
-        self.Pass("forget", event.Origin)
+        self.Pass("forget", "'" + event.Origin + "'")
+
+    case events.DIRECT_ATTACK:
+        split := strings.Split(event.Body, " ")
+        x, _ := strconv.ParseFloat(split[0], 10)
+        y, _ := strconv.ParseFloat(split[1], 10)
+        // item := split[2]
+
+        entX, entY := self.Position()
+        entW, entH := self.Size()
+
+        if x < entX || x > entX + float64(entW) || y < entY - float64(entH) || y > entY { return }
+
+        // TODO: Figure out how to calculate this
+        damage := 10
+
+        self.Pass("attacked", fmt.Sprintf("'%s', %d", event.Origin, damage))
     }
 }
 

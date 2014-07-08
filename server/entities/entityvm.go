@@ -52,7 +52,7 @@ func (self *EntityVM) Call(name string) string {
 func (self *EntityVM) Pass(name, args string) {
     _, err := self.vm.Run("trigger('" + name + "', " + args + ")");
     if err != nil {
-        log.Println("Entity error: ", err)
+        log.Println("Entity error when triggering " + name + "(" + args + "): ", err)
     }
 }
 

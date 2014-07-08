@@ -16,12 +16,21 @@ define('bully', ['peaceful'], function() {
         return 50;
     }
 
+    var halfLevWidth;
+    var halfLevHeight;
+
+    // When the entity gets past this distance, it will try to get back to
+    // the center of the region.
+    var NERVOUS_DISTANCE = 20;
+
     return {
         setup: function(sup) {
             sup();
             trigger('schedule', function() {
                 trigger('wander');
             }, 100);
+            halfLevHeight = getLevHeight() / 2;
+            halfLevWidth = getLevWidth() / 2;
         },
         getLocationUpdate: function(sup) {
             return '{"type":"child",' + sup().substr(1);
@@ -44,6 +53,14 @@ define('bully', ['peaceful'], function() {
         seenEntity: function(sup, id, body, dist) {
             sup();
             if (body.type == 'bully') trigger('flee', id);
+        },
+
+        stagePathElements: function(sup, x, y) {
+            sup();
+            if (Math.abs(x - halfLevWidth) > NERVOUS_DISTANCE ||
+                Math.abs(y - halfLevHeight) > NERVOUS_DISTANCE) {
+                stageAttractorCoord(halfLevWidth, halfLevHeight);
+            }
         }
     };
 });

@@ -1,7 +1,10 @@
 package entities
 
 import (
+	"fmt"
 	"log"
+
+	"legend-of-adventure/server/events"
 )
 
 
@@ -127,6 +130,16 @@ func (self *Inventory) Use(index uint, holder Animat) {
 		holder.IncrementHealth(FOOD_HEALTH_INCREASE)
 		self.inv[index] = ""
 		self.Owner.UpdateInventory()
+
+	case 'w':
+		x, y := holder.Position()
+		holder.Location().Broadcast(
+			holder.Location().GetEvent(
+				events.DIRECT_ATTACK,
+				fmt.Sprintf("%f %f %s", x, y, self.inv[index]),
+				holder,
+			),
+		)
 	}
 
 }

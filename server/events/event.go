@@ -52,9 +52,9 @@ const (
 	//     spread: {0: linear, 1: solid}
 	//     item_code: The full code for the item producing the attack
 	SPLASH_ATTACK EventType = "sak"
-	// An event which signifies damage to a single nearby entity caused by an
-	// entity attack. Damage is to be calculated by the attacked.
-	//    Body: target_id item_code
+	// An event which signifies damage to a single point caused by an entity
+	// attack. Damage is to be calculated by the attacked.
+	//    Body: x y item_code
 	DIRECT_ATTACK EventType = "dak"
 	// A sound command.
 	//   Body: sound_id x y radius spread

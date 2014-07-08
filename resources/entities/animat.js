@@ -6,6 +6,9 @@ define('animat', [], function() {
     var dirX = 0;
     var dirY = 1;
 
+    var levWidth;
+    var levHeight;
+
     var speed = 0.0075;  // This is player speed.
 
     var lastCalculation = Date.now();
@@ -25,6 +28,10 @@ define('animat', [], function() {
         x += vX * speed * delta;
         y += vY * speed * delta;
 
+        // TODO: make these use real dimensions
+        x = Math.min(levWidth - 2, Math.max(x, 1));
+        y = Math.min(levHeight - 1, Math.max(y, 2));
+
     }
 
     var schedule = [];
@@ -35,6 +42,8 @@ define('animat', [], function() {
             var data = trigger('getData');
             if (!data) return;
             speed = data.speed || speed;
+            levHeight = getLevHeight();
+            levWidth = getLevWidth();
         },
 
         setPosition: function(sup, newX, newY) {

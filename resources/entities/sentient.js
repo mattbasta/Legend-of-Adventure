@@ -7,7 +7,7 @@ define('sentient', ['harmable', 'animat'], function() {
     var wandering = false;
 
     var FLEE_DISTANCE = 15;
-    var HURT_DISTANCE = 1;
+    var HURT_DISTANCE = 1.3;
 
     var levWidth;
     var levHeight;
@@ -19,16 +19,12 @@ define('sentient', ['harmable', 'animat'], function() {
     ];
 
     function getBestDirection(weighted) {
+        var x = trigger('getX');
+        var y = trigger('getY');
+
         // TODO: Set real values for size
-        stageAvailableTiles(trigger('getX'), trigger('getY'), 1, 1);
-        if (chasing) {
-            stageAttractor(chasing);
-        }
-        if (fleeingFrom.length) {
-            for (var i = 0; i < fleeingFrom.length; i++) {
-                stageRepeller(fleeingFrom[i]);
-            }
-        }
+        stageAvailableTiles(x, y, 1, 1);
+        trigger('stagePathElements', x, y);
         var bestDirection = getDirectionToBestTile();
         if (bestDirection === null) return null;
         return DIRECTIONS[bestDirection];
@@ -41,7 +37,6 @@ define('sentient', ['harmable', 'animat'], function() {
                 dist = getDistance(fleeingFrom[i]);
                 if (dist < FLEE_DISTANCE) {
                     stillMustFlee = true;
-                    // log('must flee');
                     break;
                 }
             }
@@ -97,12 +92,10 @@ define('sentient', ['harmable', 'animat'], function() {
             if (idx === -1) {
                 fleeingFrom.push(id);
             }
-            log('Fleeing ' + id);
         },
         chase: function(sup, id) {
             if (chasing === id) return;
             chasing = id;
-            log('Chasing ' + id);
         },
         stopChasing: function(sup) {
             chasing = null;
@@ -155,6 +148,23 @@ define('sentient', ['harmable', 'animat'], function() {
                     trigger('startMoving', bestDirection[0], bestDirection[1]);
                 }
             }
+        },
+
+        stagePathElements: function() {
+            if (chasing) {
+                stageAttractor(chasing);
+            }
+            if (fleeingFrom.length) {
+                for (var i = 0; i < fleeingFrom.length; i++) {
+                    stageRepeller(fleeingFrom[i]);
+                }
+            }
+        },
+
+        attacked: function(sup) {
+            sup();
+            log("ouch");
+            say("ouch!");
         }
     };
 });

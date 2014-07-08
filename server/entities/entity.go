@@ -56,5 +56,5 @@ type Animat interface {
 
     GetHealth() uint
     IsAtMaxHealth() bool
-    IncrementHealth(amount uint)
+    IncrementHealth(amount int)
 }

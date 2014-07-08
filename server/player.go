@@ -126,6 +126,7 @@ func (self *Player) listenOutbound() {
     for {
         select {
         case msg := <-self.outbound:
+            if self.handleOutbound(msg) { continue }
             self.outbound_raw <- msg.String()
         case msg := <-self.outbound_raw:
             websocket.Message.Send(self.connection, msg)
@@ -141,6 +142,32 @@ func (self *Player) listenOutbound() {
     }
 
 }
+
+
+func (self *Player) handleOutbound(evt *events.Event) bool {
+    switch evt.Type {
+    case events.DIRECT_ATTACK:
+        split := strings.Split(evt.Body, " ")
+        x, _ := strconv.ParseFloat(split[0], 10)
+        y, _ := strconv.ParseFloat(split[1], 10)
+        // item := split[2]
+
+        entX, entY := self.Position()
+        entW, entH := self.Size()
+
+        if x < entX || x > entX + float64(entW) || y < entY - float64(entH) || y > entY { return true }
+
+        // TODO: Figure out how to calculate this
+        damage := 10
+
+        self.IncrementHealth(-1 * damage)
+
+    default:
+        return false
+    }
+    return true
+}
+
 
 func (self *Player) Listen() {
     defer self.connection.Close()
@@ -385,8 +412,8 @@ func (self *Player) String() string {
         "}")
 }
 
-func (self *Player) IncrementHealth(amount uint) {
-    self.health += amount
+func (self *Player) IncrementHealth(amount int) {
+    self.health = uint(int(self.health) + amount)
     if self.health > PLAYER_MAX_HEALTH {
         self.health = PLAYER_MAX_HEALTH
     } else if self.health < 0 {
