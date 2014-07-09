@@ -176,5 +176,6 @@ func (self *ItemEntity) Killer(in chan bool) {
 func (self ItemEntity) ID() string                   { return self.id }
 func (self ItemEntity) Position() (float64, float64) { return self.x, self.y }
 func (self ItemEntity) Size() (uint, uint)           { return 24, 24 }
+func (self ItemEntity) Type() string                 { return "item" }
 func (self ItemEntity) Location() EntityRegion       { return self.location }
 func (self ItemEntity) Inventory() *Inventory        { return nil }

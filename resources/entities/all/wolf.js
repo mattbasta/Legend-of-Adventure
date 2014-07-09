@@ -19,7 +19,6 @@ define('wolf', ['hostile'], function() {
         getData: function(sup) {
             var data = sup();
             data.proto = 'animal';
-            data.type = 'wolf';
             data.image = 'wolf';
             data.width = data.height = getSize();
             data.maxHealth = getHealth();

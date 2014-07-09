@@ -19,7 +19,6 @@ define('zombie', ['hostile'], function() {
         getData: function(sup) {
             var data = sup();
             data.proto = 'avatar';
-            data.type = 'zombie';
             data.image = 'zombie';
             data.width = data.height = getSize();
             data.maxHealth = getHealth();
@@ -28,6 +27,18 @@ define('zombie', ['hostile'], function() {
         },
         getWidth: getSize,
         getHeight: getSize,
-        getHealth: getHealth
+        getHealth: getHealth,
+
+        seenEntity: function(sup, id) {
+            var type = getType(id);
+            if (type === 'zombie' || type === 'death_waker') {
+                return;
+            }
+            sup();
+        },
+
+        type: function() {
+            return 'zombie';
+        }
     };
 });

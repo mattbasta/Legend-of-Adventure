@@ -36,14 +36,10 @@ define('child', ['peaceful'], function() {
             halfLevHeight = getLevHeight() / 2;
             halfLevWidth = getLevWidth() / 2;
         },
-        getLocationUpdate: function(sup) {
-            return '{"type":"child",' + sup().substr(1);
-        },
 
         getData: function(sup) {
             var data = sup();
             data.proto = 'avatar';
-            data.type = 'child';
             data.image = image;
             data.width = data.height = getSize();
             data.maxHealth = getHealth();
@@ -57,7 +53,7 @@ define('child', ['peaceful'], function() {
 
         seenEntity: function(sup, id, body, dist) {
             sup();
-            if (body.type == 'bully') trigger('flee', id);
+            if (getType(id) == 'bully') trigger('flee', id);
         },
 
         stagePathElements: function(sup, x, y) {

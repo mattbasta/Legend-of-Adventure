@@ -28,7 +28,6 @@ define('trader', ['peaceful'], function() {
         getData: function(sup) {
             var data = sup();
             data.proto = 'avatar';
-            data.type = 'trader';
             data.image = 'npc';
             data.width = data.height = getSize();
             data.maxHealth = getHealth();
@@ -38,6 +37,10 @@ define('trader', ['peaceful'], function() {
         },
         getWidth: getSize,
         getHeight: getSize,
-        getHealth: getHealth
+        getHealth: getHealth,
+
+        type: function() {
+            return 'trader';
+        }
     };
 });

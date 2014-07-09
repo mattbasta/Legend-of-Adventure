@@ -391,6 +391,7 @@ func (self Player) Killer(in chan bool)          { return }
 func (self Player) Location() entities.EntityRegion { return self.location }
 func (self Player) MovementEffect() string       { return "" }
 func (self Player) Position() (float64, float64) { return self.x, self.y }
+func (self Player) Type() string                 { return "player" }
 func (self Player) Size() (uint, uint)           { return 50, 50 }
 func (self Player) Velocity() (int, int)         { return self.velX, self.velY }
 

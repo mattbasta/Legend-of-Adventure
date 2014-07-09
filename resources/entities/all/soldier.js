@@ -21,7 +21,6 @@ define('soldier', ['neutral'], function() {
         getData: function(sup) {
             var data = sup();
             data.proto = 'avatar';
-            data.type = 'soldier';
             data.image = image;
             data.width = data.height = getSize();
             data.maxHealth = getHealth();

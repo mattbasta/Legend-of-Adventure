@@ -61,6 +61,14 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
         return otto.Value {}
     })
 
+    ent.vm.Set("getType", func(call otto.FunctionCall) otto.Value {
+        eid, _ := call.Argument(0).ToString()
+        entity := ent.location.GetEntity(eid)
+        if entity == nil { return otto.Value {} }
+        result, _ := ent.vm.ToValue(entity.Type())
+        return result
+    })
+
     ent.vm.Set("getDistance", func(call otto.FunctionCall) otto.Value {
         entity := ent.location.GetEntity(call.Argument(0).String())
         if entity == nil {
@@ -252,17 +260,25 @@ func (self *VirtualEntity) Killer(in chan bool) {
 }
 
 
-func (self VirtualEntity) Position() (float64, float64) {
+func (self *VirtualEntity) Position() (float64, float64) {
     x, y := self.Call("getX"), self.Call("getY")
     xF, _ := strconv.ParseFloat(x, 64)
     yF, _ := strconv.ParseFloat(y, 64)
     return xF, yF
 }
-func (self VirtualEntity) Size() (uint, uint) {
+func (self *VirtualEntity) Size() (uint, uint) {
     width, height := self.Call("getWidth"), self.Call("getHeight")
     widthUint, _ := strconv.ParseUint(width, 10, 0)
     heightUint, _ := strconv.ParseUint(height, 10, 0)
     return uint(widthUint), uint(heightUint)
+}
+
+func (self *VirtualEntity) Type() string {
+    eType := self.Call("type")
+    if eType == "" {
+        return "generic"
+    }
+    return eType
 }
 
 func (self VirtualEntity) ID() string                   { return self.id }

@@ -24,7 +24,6 @@ define('bully', ['peaceful'], function() {
         getData: function(sup) {
             var data = sup();
             data.proto = 'avatar';
-            data.type = 'child';
             data.image = 'bully';
             data.width = data.height = getSize();
             data.maxHealth = getHealth();
@@ -47,7 +46,7 @@ define('bully', ['peaceful'], function() {
 
         seenEntity: function(sup, id, body, dist) {
             sup();
-            if (chasing || body.type !== 'child') return;
+            if (chasing || getType(body) !== 'child') return;
 
             trigger('chase', id);
         }

@@ -32,7 +32,6 @@ define('sheep', ['peaceful'], function() {
         getData: function(sup) {
             var data = sup();
             data.proto = 'animal';
-            data.type = 'sheep';
             data.image = 'sheep';
             data.width = data.height = getSize();
             data.maxHealth = getHealth();

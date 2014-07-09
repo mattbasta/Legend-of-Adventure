@@ -38,6 +38,7 @@ type Entity interface {
     Location() EntityRegion
     Inventory() *Inventory // May return nil
 
+    Type() string
     String() string
 }
 

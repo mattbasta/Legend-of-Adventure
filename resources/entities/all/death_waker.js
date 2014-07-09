@@ -19,7 +19,6 @@ define('death_waker', ['peaceful'], function() {
         getData: function(sup) {
             var data = sup();
             data.proto = 'avatar';
-            data.type = 'death_waker';
             data.image = 'death_waker';
             data.width = data.height = getSize();
             data.maxHealth = getHealth();
@@ -28,6 +27,10 @@ define('death_waker', ['peaceful'], function() {
         },
         getWidth: getSize,
         getHeight: getSize,
-        getHealth: getHealth
+        getHealth: getHealth,
+
+        type: function() {
+            return 'death_waker';
+        }
     };
 });
