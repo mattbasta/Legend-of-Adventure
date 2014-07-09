@@ -7,7 +7,7 @@ define('sentient', ['harmable', 'animat'], function() {
     var wandering = false;
 
     var FLEE_DISTANCE = 15;
-    var HURT_DISTANCE = 1.3;
+    var HURT_DISTANCE = 1;
 
     var levWidth;
     var levHeight;
@@ -57,9 +57,12 @@ define('sentient', ['harmable', 'animat'], function() {
                     return;
                 }
                 if (trigger('doesAttack') && dist <= HURT_DISTANCE) {
-                    say('dak' + trigger('getX') + ' ' + trigger('getY') + ' x');
-                    sendEvent('dak', trigger('getX') + ' ' + trigger('getY') + ' x');
-                    // trigger('attack', chasing);
+                    sendEvent(
+                        'dak',
+                        trigger('getX') + ' ' + trigger('getY') + ' ' + (
+                            trigger('holdingWeapon') || 'x'
+                        )
+                    );
                 }
                 // If what we're chasing is in range, stop to try to attack it.
                 if (dist < HURT_DISTANCE) {

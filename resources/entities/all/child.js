@@ -1,4 +1,4 @@
-define('bully', ['peaceful'], function() {
+define('child', ['peaceful'], function() {
 
     var names = [
         'Susie',
@@ -46,7 +46,7 @@ define('bully', ['peaceful'], function() {
             data.type = 'child';
             data.image = image;
             data.width = data.height = getSize();
-            data.maxHealth = 100;
+            data.maxHealth = getHealth();
             data.speed = 0.004;
             data.nametag = name;
             return data;

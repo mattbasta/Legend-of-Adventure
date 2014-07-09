@@ -1,7 +1,7 @@
 package entities
 
 import (
-    // "log"
+    "log"
     "math"
     "math/rand"
 
@@ -157,6 +157,7 @@ func setUpPathing(ent *VirtualEntity) {
         stagedEntity := ent.location.GetEntity(eid)
         if stagedEntity == nil { return otto.Value {} }
         eX, eY := stagedEntity.Position()
+        log.Println(eX, eY)
 
         ent.attractDirections = append(
             ent.attractDirections,

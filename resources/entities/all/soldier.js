@@ -1,4 +1,7 @@
 define('soldier', ['neutral'], function() {
+    'use strict';
+
+    var SOLDIER_WEAPON = 'wsp.soldier';
 
     var image = 'soldier' + (Math.random() * 3 + 1 | 0);
 
@@ -22,7 +25,7 @@ define('soldier', ['neutral'], function() {
             data.image = image;
             data.width = data.height = getSize();
             data.maxHealth = getHealth();
-            data.speed = 0.005;
+            data.speed = 0.0075;
             return data;
         },
         getWidth: getSize,
@@ -32,13 +35,29 @@ define('soldier', ['neutral'], function() {
         // noop
         wander: function() {},
 
-        seenAttack: function(sup, from) {
+        seenAttack: function(sup, from, damage, item) {
             sup();
-            // TODO: check if `from` is another soldier
+
+            if (item === SOLDIER_WEAPON) return;
+
             var dist = getDistance(from);
-            if (dist === null || dist > 35) return;
+            if (dist === null || dist > 50) return;
 
             trigger('chase', from);
+        },
+
+        holdingWeapon: function() {
+            return SOLDIER_WEAPON;
+        },
+
+        stopChasing: function(sup) {
+            sup();
+            trigger('stopMoving');
+        },
+
+        attacked: function(sup, from, damage, item) {
+            if (item === SOLDIER_WEAPON) return;
+            sup();
         }
     };
 });

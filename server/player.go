@@ -28,7 +28,8 @@ type Player struct {
     x, y       float64
     velX, velY int
     dirX, dirY int
-    isDead     bool
+    lastUpdate int64
+
     health     uint
 
     nametag    string
@@ -54,7 +55,7 @@ func NewPlayer(conn *websocket.Conn) *Player {
         outbound, outbound_raw, closing,
         entities.NextEntityID(),
         float64(reg.Terrain.Width) / 2, float64(reg.Terrain.Height) / 2, 0, 0, 0, 1,
-        false,
+        time.Now().UnixNano(),
         PLAYER_MAX_HEALTH,
         "",
         nil,
@@ -98,6 +99,21 @@ func (self *Player) gameTick() {
             if self.location == nil {
                 continue
             }
+
+            now := time.Now().UnixNano()
+            delta := float64((now - self.lastUpdate) / 1000000)
+            if self.velX != 0 || self.velY != 0 {
+                velX, velY := float64(self.velX), float64(self.velY)
+                if velX != 0 && velY != 0 {
+                    velX = velX * SQRT1_2
+                    velY = velY * SQRT1_2
+                }
+                self.x += velX * PLAYER_SPEED * delta
+                self.y += velY * PLAYER_SPEED * delta
+
+                self.lastUpdate = now
+            }
+
             for _, portal := range self.location.Terrain.Portals {
                 if entities.IsEntityCollidingWithPortal(portal, self) {
                     log.Println("Player in contact with portal")
@@ -156,7 +172,8 @@ func (self *Player) handleOutbound(evt *events.Event) bool {
         // item := split[2]
 
         entX, entY := self.Position()
-        entW, entH := self.Size()
+        // entW, entH := self.Size()
+        entW, entH := 1, 1
 
         if x < entX || x > entX + float64(entW) || y < entY - float64(entH) || y > entY { return true }
 
@@ -269,6 +286,8 @@ func (self *Player) handle(msg string) {
         self.dirX = int(dirX)
         self.dirY = int(dirY)
 
+        self.lastUpdate = time.Now().UnixNano()
+
         self.location.Broadcast(
             self.location.GetEvent(
                 events.ENTITY_UPDATE,
@@ -363,7 +382,6 @@ func (self Player) Receive() chan<- *events.Event {
     return (chan<- *events.Event)(self.outbound)
 }
 
-func (self Player) Dead() bool                   { return self.isDead }
 func (self Player) Direction() (int, int)        { return self.dirX, self.dirY }
 func (self Player) GetHealth() uint              { return self.health }
 func (self Player) ID() string                   { return self.name }
@@ -421,7 +439,6 @@ func (self *Player) IncrementHealth(amount int) {
         self.health = PLAYER_MAX_HEALTH
     } else if self.health < 0 {
         self.health = 0
-        self.isDead = true
         // TODO: Add death handler here
     }
     self.outbound_raw <- "hea" + strconv.Itoa(int(self.health))

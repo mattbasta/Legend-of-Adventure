@@ -266,6 +266,5 @@ func (self VirtualEntity) Size() (uint, uint) {
 }
 
 func (self VirtualEntity) ID() string                   { return self.id }
-func (self VirtualEntity) Dead() bool                   { return false }
 func (self VirtualEntity) Location() EntityRegion       { return self.location }
 func (self VirtualEntity) Inventory() *Inventory        { return nil }

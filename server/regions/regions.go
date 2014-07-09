@@ -316,7 +316,8 @@ func (self *Region) PopulateEntities() {
 			placeEntity("child")
 			placeEntity("child")
 			placeEntity("child")
-			placeEntity("child")
+
+			placeEntity("trader")
 		}
 
 	case terrain.REGIONTYPE_SHOP:
@@ -329,6 +330,21 @@ func (self *Region) PopulateEntities() {
 
 		if rng.Intn(SOLDIER_IN_HOUSE_ODDS) == 0 {
 			placeEntity("soldier")
+		}
+		if rng.Intn(TRADER_IN_HOUSE_ODDS) == 0 {
+			placeEntity("trader")
+		}
+
+	case terrain.REGIONTYPE_DUNGEON:
+		entCount := rng.Intn(MAX_ENTITIES_PER_DUNGEON)
+		for i := 0; i < entCount; i++ {
+			var entType string
+			if i % DEATH_WAKER_ODDS == 0 {
+				entType = "zombie"
+			} else {
+				entType = "death_waker"
+			}
+			placeEntity(entType)
 		}
 	}
 
