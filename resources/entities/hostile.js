@@ -23,6 +23,10 @@ define('hostile', ['sentient'], function() {
             if (!chasing) {
                 trigger('chase', id);
             }
+        },
+
+        doesAttack: function() {
+            return true;
         }
     };
 });

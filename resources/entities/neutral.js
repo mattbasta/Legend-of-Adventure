@@ -9,6 +9,10 @@ define('neutral', ['sentient'], function() {
         attacked: function(sup, from) {
             sup();
             trigger('chase', from);
+        },
+
+        doesAttack: function() {
+            return true;
         }
     };
 });

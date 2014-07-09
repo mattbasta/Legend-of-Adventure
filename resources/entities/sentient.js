@@ -51,13 +51,15 @@ define('sentient', ['harmable', 'animat'], function() {
             if (chasing) {
                 // Try tossing out an attack.
                 var dist = getDistance(chasing);
-                if (dist === null) {
+                if (dist === null || dist > FLEE_DISTANCE) {
                     trigger('stopChasing');
                     reevaluateBehavior();
                     return;
                 }
                 if (trigger('doesAttack') && dist <= HURT_DISTANCE) {
-                    trigger('attack', chasing);
+                    say('dak' + trigger('getX') + ' ' + trigger('getY') + ' x');
+                    sendEvent('dak', trigger('getX') + ' ' + trigger('getY') + ' x');
+                    // trigger('attack', chasing);
                 }
                 // If what we're chasing is in range, stop to try to attack it.
                 if (dist < HURT_DISTANCE) {

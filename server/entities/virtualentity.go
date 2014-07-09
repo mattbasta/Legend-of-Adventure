@@ -197,7 +197,7 @@ func (self *VirtualEntity) handle(event *events.Event) {
     case events.DEATH:
         fallthrough
     case events.REGION_EXIT:
-        self.Pass("forget", "'" + event.Origin + "'")
+        self.Pass("forget", "'" + event.Body + "'")
 
     case events.DIRECT_ATTACK:
         split := strings.Split(event.Body, " ")
@@ -208,6 +208,9 @@ func (self *VirtualEntity) handle(event *events.Event) {
         entX, entY := self.Position()
         // entW, entH := self.Size()
         entW, entH := 1, 1
+
+        // TODO: Figure out how to calculate this
+        damage := 10
 
         attackDetails := fmt.Sprintf("'%s', %d, '%s'", event.Origin, damage, item)
 
@@ -220,9 +223,6 @@ func (self *VirtualEntity) handle(event *events.Event) {
         }
 
         log.Println("Direct hit by " + event.Origin + " on " + self.id)
-
-        // TODO: Figure out how to calculate this
-        damage := 10
 
         self.Pass("attacked", attackDetails)
     }

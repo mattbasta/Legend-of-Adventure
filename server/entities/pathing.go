@@ -142,7 +142,9 @@ func setUpPathing(ent *VirtualEntity) {
 
     ent.vm.Set("stageRepeller", func(call otto.FunctionCall) otto.Value {
         eid, _ := call.Argument(0).ToString()
-        eX, eY := ent.location.GetEntity(eid).Position()
+        stagedEntity := ent.location.GetEntity(eid)
+        if stagedEntity == nil { return otto.Value {} }
+        eX, eY := stagedEntity.Position()
 
         ent.repulseDirections = append(
             ent.repulseDirections,
@@ -152,7 +154,9 @@ func setUpPathing(ent *VirtualEntity) {
     })
     ent.vm.Set("stageAttractor", func(call otto.FunctionCall) otto.Value {
         eid, _ := call.Argument(0).ToString()
-        eX, eY := ent.location.GetEntity(eid).Position()
+        stagedEntity := ent.location.GetEntity(eid)
+        if stagedEntity == nil { return otto.Value {} }
+        eX, eY := stagedEntity.Position()
 
         ent.attractDirections = append(
             ent.attractDirections,
