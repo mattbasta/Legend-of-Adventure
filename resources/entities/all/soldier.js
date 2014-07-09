@@ -23,7 +23,6 @@ define('soldier', ['neutral'], function() {
             data.proto = 'avatar';
             data.image = image;
             data.width = data.height = getSize();
-            data.maxHealth = getHealth();
             data.speed = 0.0075;
             return data;
         },

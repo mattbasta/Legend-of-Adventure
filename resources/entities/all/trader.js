@@ -30,7 +30,6 @@ define('trader', ['peaceful'], function() {
             data.proto = 'avatar';
             data.image = 'npc';
             data.width = data.height = getSize();
-            data.maxHealth = getHealth();
             data.speed = 0.004;
             data.nametag = name;
             return data;

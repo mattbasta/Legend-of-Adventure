@@ -13,6 +13,13 @@ define('entitymovement', [], function() {
         sheep_bounce_x: noop,
         sheep_bounce_y: function(ticks) {
             return Math.abs(Math.sin(ticks / 500 * 2 * Math.PI)) * -5;
+        },
+
+        shake_x: function(ticks) {
+            return Math.random() * 10 - 5;
+        },
+        shake_y: function(ticks) {
+            return Math.random() * 10 - 5;
         }
     }
 });

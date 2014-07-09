@@ -21,7 +21,6 @@ define('wolf', ['hostile'], function() {
             data.proto = 'animal';
             data.image = 'wolf';
             data.width = data.height = getSize();
-            data.maxHealth = getHealth();
             data.speed = 0.003;
             data.nametag = 'Big Bad Wolf';
             return data;

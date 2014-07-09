@@ -274,10 +274,9 @@ func (self *Region) PopulateEntities() {
 	rng := rand.New(rand.NewSource(int64(self.X * self.Y)))
 
 	placeEntity := func(entType string) {
-		ent := entities.NewVirtualEntity(entType)
+        // TODO: Make this use real values
 		// entW, entH := ent.Size()
 		entW, entH := 1, 1
-		ent.SetLocation(self)
 		for {
 			x := rng.Intn(int(self.Terrain.Width) - 2 - int(entW)) + 1
 			y := rng.Intn(int(self.Terrain.Height) - 2 - int(entH)) + 1 + int(entH)
@@ -287,10 +286,9 @@ func (self *Region) PopulateEntities() {
 				self.Terrain.Hitmap[y][x + int(entW)]) {
 				continue
 			}
-			ent.SetPosition(float64(x), float64(y))
-			break
+			self.Spawn(entType, float64(x), float64(y))
+			return
 		}
-		self.AddEntity(ent)
 	}
 
 	switch self.Type {
@@ -348,6 +346,13 @@ func (self *Region) PopulateEntities() {
 		}
 	}
 
+}
+
+func (self *Region) Spawn(entType string, x, y float64) {
+	ent := entities.NewVirtualEntity(entType)
+	ent.SetLocation(self)
+	ent.SetPosition(x, y)
+	self.AddEntity(ent)
 }
 
 

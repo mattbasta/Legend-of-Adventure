@@ -34,7 +34,6 @@ define('sheep', ['peaceful'], function() {
             data.proto = 'animal';
             data.image = 'sheep';
             data.width = data.height = getSize();
-            data.maxHealth = getHealth();
             data.speed = 0.00075;
             data.nametag = 'Innocent Sheep';
             if (moving) data.movement = 'sheep_bounce';
@@ -47,6 +46,7 @@ define('sheep', ['peaceful'], function() {
         getWidth: getSize,
         getHeight: getSize,
         getHealth: getHealth,
+
         startMoving: function(sup) {
             moving = true;
             return sup();

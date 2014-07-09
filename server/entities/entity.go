@@ -24,6 +24,8 @@ type EntityRegion interface {
     GetEvent(type_ events.EventType, body string, origin Entity) *events.Event
 
     GetTerrain() *terrain.Terrain
+
+    Spawn(entityType string, x, y float64)
 }
 
 

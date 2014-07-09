@@ -3,6 +3,7 @@ package entities
 import (
     "fmt"
     "log"
+    "math/rand"
     "strconv"
     "strings"
     "time"
@@ -47,95 +48,6 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 
     ent.EntityVM = *GetEntityVM(entityName)
 
-    ent.vm.Set("sendEvent", func(call otto.FunctionCall) otto.Value {
-        if ent.location == nil {
-            return otto.Value {}
-        }
-        ent.location.Broadcast(
-            ent.location.GetEvent(
-                events.GetType(call.Argument(0).String()),
-                call.Argument(1).String(),
-                ent,
-            ),
-        )
-        return otto.Value {}
-    })
-
-    ent.vm.Set("getType", func(call otto.FunctionCall) otto.Value {
-        eid, _ := call.Argument(0).ToString()
-        entity := ent.location.GetEntity(eid)
-        if entity == nil { return otto.Value {} }
-        result, _ := ent.vm.ToValue(entity.Type())
-        return result
-    })
-
-    ent.vm.Set("getDistance", func(call otto.FunctionCall) otto.Value {
-        entity := ent.location.GetEntity(call.Argument(0).String())
-        if entity == nil {
-            result, _ := ent.vm.ToValue(nil)
-            return result
-        }
-        // TODO: This might be really costly if it has to look up the
-        // position form the VM
-        dist := Distance(ent, entity)
-        result, _ := ent.vm.ToValue(dist)
-        return result
-    })
-
-    ent.vm.Set("getDistanceFrom", func(call otto.FunctionCall) otto.Value {
-        entity := ent.location.GetEntity(call.Argument(0).String())
-
-        x, _ := call.Argument(1).ToFloat()
-        y, _ := call.Argument(2).ToFloat()
-        dist := DistanceFrom(entity, x, y)
-        result, _ := ent.vm.ToValue(dist)
-        return result
-    })
-
-    ent.vm.Set("attack", func(call otto.FunctionCall) otto.Value {
-        x, _ := call.Argument(0).ToFloat()
-        y, _ := call.Argument(1).ToFloat()
-
-        weapon := call.Argument(2).String()
-
-        ent.location.Broadcast(
-            ent.location.GetEvent(
-                events.DIRECT_ATTACK,
-                fmt.Sprintf("%f %f %s", x, y, weapon),
-                ent,
-            ),
-        )
-
-        return otto.Value{}
-    })
-
-    ent.vm.Set("say", func(call otto.FunctionCall) otto.Value {
-        message := call.Argument(0).String()
-        x, y := ent.Position()
-        ent.location.Broadcast(
-            ent.location.GetEvent(
-                events.CHAT,
-                fmt.Sprintf("%f %f\n%s", x, y, message),
-                ent,
-            ),
-        )
-
-        return otto.Value{}
-    })
-
-    ent.vm.Set("die", func(call otto.FunctionCall) otto.Value {
-        log.Println("Entity death: ", ent.id)
-        ent.location.Broadcast(
-            ent.location.GetEvent(events.DEATH, "", ent),
-        )
-
-        ent.location.RemoveEntity(ent)
-
-        ent.closing <- true
-
-        return otto.Value{}
-    })
-
     setUpPathing(ent)
 
     return ent
@@ -146,6 +58,48 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 func (self *VirtualEntity) SetLocation(location EntityRegion) {
     self.location = location
 
+    self.vm.Set("sendEvent", func(call otto.FunctionCall) otto.Value {
+        if self.location == nil {
+            return otto.Value {}
+        }
+        self.location.Broadcast(
+            self.location.GetEvent(
+                events.GetType(call.Argument(0).String()),
+                call.Argument(1).String(),
+                self,
+            ),
+        )
+        return otto.Value {}
+    })
+
+    self.vm.Set("getType", func(call otto.FunctionCall) otto.Value {
+        eid, _ := call.Argument(0).ToString()
+        entity := self.location.GetEntity(eid)
+        if entity == nil { return otto.Value {} }
+        result, _ := self.vm.ToValue(entity.Type())
+        return result
+    })
+
+    self.vm.Set("getDistance", func(call otto.FunctionCall) otto.Value {
+        entity := self.location.GetEntity(call.Argument(0).String())
+        if entity == nil { return otto.Value {} }
+        // TODO: This might be really costly if it has to look up the
+        // position from the VM
+        dist := Distance(self, entity)
+        result, _ := self.vm.ToValue(dist)
+        return result
+    })
+
+    self.vm.Set("getDistanceFrom", func(call otto.FunctionCall) otto.Value {
+        entity := self.location.GetEntity(call.Argument(0).String())
+
+        x, _ := call.Argument(1).ToFloat()
+        y, _ := call.Argument(2).ToFloat()
+        dist := DistanceFrom(entity, x, y)
+        result, _ := self.vm.ToValue(dist)
+        return result
+    })
+
     self.vm.Set("getLevWidth", func(call otto.FunctionCall) otto.Value {
         result, _ := self.vm.ToValue(self.location.GetTerrain().Width)
         return result
@@ -154,6 +108,85 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
     self.vm.Set("getLevHeight", func(call otto.FunctionCall) otto.Value {
         result, _ := self.vm.ToValue(self.location.GetTerrain().Height)
         return result
+    })
+
+    self.vm.Set("attack", func(call otto.FunctionCall) otto.Value {
+        x, _ := call.Argument(0).ToFloat()
+        y, _ := call.Argument(1).ToFloat()
+
+        weapon := call.Argument(2).String()
+
+        self.location.Broadcast(
+            self.location.GetEvent(
+                events.DIRECT_ATTACK,
+                fmt.Sprintf("%f %f %s", x, y, weapon),
+                self,
+            ),
+        )
+
+        return otto.Value {}
+    })
+
+    self.vm.Set("say", func(call otto.FunctionCall) otto.Value {
+        message := call.Argument(0).String()
+        x, y := self.Position()
+        self.location.Broadcast(
+            self.location.GetEvent(
+                events.CHAT,
+                fmt.Sprintf("%f %f\n%s", x, y, message),
+                self,
+            ),
+        )
+
+        return otto.Value {}
+    })
+
+    self.vm.Set("die", func(call otto.FunctionCall) otto.Value {
+        log.Println("Entity death: ", self.id)
+        self.location.Broadcast(
+            self.location.GetEvent(events.DEATH, "", self),
+        )
+
+        self.location.RemoveEntity(self)
+
+        self.closing <- true
+
+        return otto.Value{}
+    })
+
+    self.vm.Set("spawn", func(call otto.FunctionCall) otto.Value {
+        entType := call.Argument(0).String()
+        radius, _ := call.Argument(1).ToFloat()
+
+        entX, entY := self.Position()
+        rng := rand.New(rand.NewSource(int64(entX * entY)))
+        terrain := self.location.GetTerrain()
+        hitmap := terrain.Hitmap
+
+        // TODO: Make this use real values
+        newEntW, newEntH := 1, 1
+
+        for {
+            newEntX := entX + (rng.Float64() - 0.5) * radius * 2
+            newEntY := entY + (rng.Float64() - 0.5) * radius * 2
+            intNEX, intNEY := int(newEntX), int(newEntY)
+
+            if intNEX + newEntW > int(terrain.Width) - 1 || intNEX < 1 { continue }
+            if intNEY > int(terrain.Height) - 1 || intNEY - newEntH < 1 { continue }
+
+            if hitmap[intNEY][intNEX] ||
+               hitmap[intNEY - newEntH][intNEX] ||
+               hitmap[intNEY - newEntH][intNEX + newEntW] ||
+               hitmap[intNEY][intNEX + newEntW] {
+                continue
+            }
+
+            log.Println(self.id + " spawning " + entType, newEntX, newEntY)
+            self.location.Spawn(entType, newEntX, newEntY)
+            break
+        }
+
+        return otto.Value {}
     })
 
     self.Pass("setup", "null")
@@ -275,6 +308,7 @@ func (self *VirtualEntity) Size() (uint, uint) {
 
 func (self *VirtualEntity) Type() string {
     eType := self.Call("type")
+    eType = eType[1:len(eType)-1]
     if eType == "" {
         return "generic"
     }

@@ -27,7 +27,6 @@ const (
 	// A new entity has entered the region.
 	//   Body: Entity description information
 	REGION_ENTRANCE        EventType = "add"
-	REGION_ENTRANCE_ENTITY EventType = "spa"
 	// An entity has left the region.
 	//   Body: empty
 	REGION_EXIT EventType = "del"

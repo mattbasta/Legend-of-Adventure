@@ -45,7 +45,6 @@ define('homely', ['sentient'], function() {
             data.proto = 'avatar';
             data.image = image;
             data.width = data.height = getSize();
-            data.maxHealth = getHealth();
             data.speed = 0.00075;
             data.nametag = name;
             return data;

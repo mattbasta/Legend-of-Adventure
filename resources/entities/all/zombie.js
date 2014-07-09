@@ -21,7 +21,6 @@ define('zombie', ['hostile'], function() {
             data.proto = 'avatar';
             data.image = 'zombie';
             data.width = data.height = getSize();
-            data.maxHealth = getHealth();
             data.speed = 0.005;
             return data;
         },
@@ -29,8 +28,10 @@ define('zombie', ['hostile'], function() {
         getHeight: getSize,
         getHealth: getHealth,
 
-        seenEntity: function(sup, id) {
+        // TODO: Convert this to `seenEntity` to free up resources
+        chase: function(sup, id) {
             var type = getType(id);
+            log(type, type == 'zombie' || type == 'death_waker');
             if (type === 'zombie' || type === 'death_waker') {
                 return;
             }
