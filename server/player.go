@@ -204,11 +204,11 @@ func (self *Player) Listen() {
             var msg string
             err := websocket.Message.Receive(self.connection, &msg)
             if err != nil {
+                log.Println(err)
                 self.closing <- true
                 return
-            } else {
-                go self.handle(msg)
             }
+            self.handle(msg)
         }
     }
 
@@ -236,44 +236,31 @@ func (self *Player) handle(msg string) {
     case "loc": // loc == location
         posdata := strings.Split(split[1], ":")
         if len(posdata) < 4 {
-            self.closing <- true
             return
         }
         // TODO: Perform more cheat testing here
         newX, err := strconv.ParseFloat(posdata[0], 64)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
         newY, err := strconv.ParseFloat(posdata[1], 64)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
         if newX < 0 || newX > float64(self.location.Terrain.Width) ||
             newY < 0 || newY > float64(self.location.Terrain.Height) {
             log.Println("User attempted to exceed bounds of the level")
             self.closing <- true
         }
         velX, err := strconv.ParseInt(posdata[2], 10, 0)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
         velY, err := strconv.ParseInt(posdata[3], 10, 0)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
         if velX < -1 || velX > 1 || velY < -1 || velX > 1 {
             log.Println("User attempted to go faster than possible")
             self.closing <- true
             return
         }
         dirX, err := strconv.ParseInt(posdata[4], 10, 0)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
         dirY, err := strconv.ParseInt(posdata[5], 10, 0)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
         if dirX < -1 || dirX > 1 || dirY < -1 || dirX > 1 {
             log.Println("User attempted face invalid direction")
             self.closing <- true
@@ -298,9 +285,7 @@ func (self *Player) handle(msg string) {
 
     case "use":
         index, err := strconv.ParseUint(split[1], 10, 0)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
         self.inventory.Use(uint(index), self)
 
     case "dro":
@@ -309,13 +294,9 @@ func (self *Player) handle(msg string) {
     case "lev":
         pos := strings.Split(split[1], ":")
         xPos, err := strconv.ParseInt(pos[0], 10, 0)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
         yPos, err := strconv.ParseInt(pos[1], 10, 0)
-        if err != nil {
-            return
-        }
+        if err != nil { return }
 
         if Iabs(self.location.X - int(xPos)) > 1 ||
            Iabs(self.location.Y - int(yPos)) > 1 {
@@ -337,6 +318,7 @@ func (self *Player) sendToLocation(parentID, type_ string, x, y int, newX, newY 
     newLocation := regions.GetRegion(parentID, type_, x, y)
 
     if newLocation == nil {
+        log.Println("Requested region that does not exist:", parentID, type_, x, y)
         return
     }
 

@@ -64,7 +64,7 @@ func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
     fromDirX, fromDirY := from.Direction()
     item.x, item.y = fromX + float64(fromDirX), fromY + float64(fromDirY)
 
-    item.receiver = make(chan *events.Event)
+    item.receiver = make(chan *events.Event, 128)
 
     go func() {
         for {

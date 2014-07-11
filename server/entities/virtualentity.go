@@ -32,7 +32,7 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
     ent.id = NextEntityID()
     ent.closing = make(chan bool, 1)
 
-    ent.receiver = make(chan *events.Event)
+    ent.receiver = make(chan *events.Event, 128)
 
     go func() {
         for {

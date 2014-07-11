@@ -39,6 +39,11 @@ define('zombie', ['hostile'], function() {
 
         type: function() {
             return 'zombie';
+        },
+
+        attacked: function(sup, from) {
+            if (getType(from) === 'zombie') return;
+            sup();
         }
     };
 });
