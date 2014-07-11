@@ -231,6 +231,7 @@ func (self *VirtualEntity) handle(event *events.Event) {
         fallthrough
     case events.ENTITY_UPDATE:
         ent := self.location.GetEntity(event.Origin)
+        if ent == nil { return }
         dist := Distance(ent, self)
         if dist > ENTITY_VISION { return }
         self.Pass("seenEntity", fmt.Sprintf("'%s', %s, %f", event.Origin, event.Body, dist))
