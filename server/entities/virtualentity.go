@@ -30,7 +30,7 @@ type VirtualEntity struct {
 func NewVirtualEntity(entityName string) *VirtualEntity {
     ent := new(VirtualEntity)
     ent.id = NextEntityID()
-    ent.closing = make(chan bool)
+    ent.closing = make(chan bool, 1)
 
     ent.receiver = make(chan *events.Event)
 

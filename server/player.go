@@ -44,7 +44,7 @@ func NewPlayer(conn *websocket.Conn) *Player {
 
     outbound := make(chan *events.Event, SOCKET_BUFFER_SIZE)
     outbound_raw := make(chan string, SOCKET_BUFFER_SIZE)
-    closing := make(chan bool)
+    closing := make(chan bool, 1)
 
     // Get the region and make it active.
     reg := regions.GetRegion(terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0)

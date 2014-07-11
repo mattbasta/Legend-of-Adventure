@@ -56,7 +56,7 @@ type EntityThatCanThrow interface {
 func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
     item := new(ItemEntity)
     item.id = NextEntityID()
-    item.closing = make(chan bool)
+    item.closing = make(chan bool, 1)
     item.itemCode = code
     item.location = from.Location()
 

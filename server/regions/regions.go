@@ -47,7 +47,7 @@ func startRegionGetter() {
 				reg.Type = regType
 				reg.X = x
 				reg.Y = y
-				reg.killer = make(chan bool)
+				reg.killer = make(chan bool, 1)
 				reg.doTTL()
 
 				reg.entities = make([]*entities.Entity, 0, 32)
