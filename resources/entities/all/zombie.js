@@ -31,7 +31,6 @@ define('zombie', ['hostile'], function() {
         // TODO: Convert this to `seenEntity` to free up resources
         chase: function(sup, id) {
             var type = getType(id);
-            log(type, type == 'zombie' || type == 'death_waker');
             if (type === 'zombie' || type === 'death_waker') {
                 return;
             }

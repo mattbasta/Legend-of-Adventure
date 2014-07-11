@@ -19,20 +19,16 @@ define('death_waker', ['peaceful'], function() {
         trigger('stopWandering');
         sendEvent('epu', '{"movement":"shake"}');
         trigger('schedule', function() {
-            doSpawn();
+            var numEnts = Math.random() * 3 + 1 | 0;
+            for (var i = 0; i < numEnts; i++) {
+                spawn('zombie', 5);
+            }
 
             shaking = false;
             sendEvent('epu', '{"movement":null}');
             trigger('wander');
             scheduleWake();
         }, 2500);
-    }
-
-    function doSpawn() {
-        var numEnts = Math.random() * 3 + 1 | 0;
-        for (var i = 0; i < numEnts; i++) {
-            spawn('zombie', 5);
-        }
     }
 
     return {

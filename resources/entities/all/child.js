@@ -61,6 +61,9 @@ define('child', ['peaceful'], function() {
                 Math.abs(y - halfLevHeight) > NERVOUS_DISTANCE) {
                 stageAttractorCoord(halfLevWidth, halfLevHeight);
             }
+        },
+        type: function() {
+            return 'child';
         }
     };
 });
