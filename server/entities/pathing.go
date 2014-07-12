@@ -44,34 +44,14 @@ func setUpPathing(ent *VirtualEntity) {
         x, _ := call.Argument(0).ToFloat()
         y, _ := call.Argument(1).ToFloat()
 
-        w, _ := call.Argument(2).ToInteger()
-        h, _ := call.Argument(3).ToInteger()
+        w, _ := call.Argument(2).ToFloat()
+        h, _ := call.Argument(3).ToFloat()
 
-        dirX, _ := call.Argument(4).ToInteger()
-        dirY, _ := call.Argument(5).ToInteger()
+        dirX, _ := call.Argument(4).ToFloat()
+        dirY, _ := call.Argument(5).ToFloat()
 
-        terrain := ent.location.GetTerrain()
-        levH, levW := int64(terrain.Height), int64(terrain.Width)
-
-        intX, intY := int64(x), int64(y)
-
-        // If we're off the edge of the map, it's a bad direction.
-        if intX + dirX <= 1 || intX + dirX + w >= levW - 1 ||
-           intY + dirY - h <= 1 || intY + dirY >= levH - 1 {
-            result, _ := ent.vm.ToValue(false)
-            return result
-        }
-
-        hitmap := ent.location.GetTerrain().Hitmap
-
-        if dirY < 0 { intY = intY - h }
-        if dirX > 0 { intX = intX + w }
-
-        result, _ := ent.vm.ToValue(
-            !hitmap[intY + dirY][intX + dirX] &&
-            !hitmap[intY + dirY - h][intX + dirX] &&
-            !hitmap[intY + dirY - h][intX + dirX + w] &&
-            !hitmap[intY + dirY][intX + dirX + w])
+        fits := ent.location.GetTerrain().Hitmap.Fits(x + dirX, y + dirY, w, h)
+        result, _ := ent.vm.ToValue(fits)
         return result
 
     })
@@ -82,32 +62,17 @@ func setUpPathing(ent *VirtualEntity) {
 
         ent.stageX, ent.stageY = x, y
 
-        w, _ := call.Argument(2).ToInteger()
-        h, _ := call.Argument(3).ToInteger()
-
-        terrain := ent.location.GetTerrain()
-        levH, levW := int64(terrain.Height), int64(terrain.Width)
-
-        intX, intY := int64(x), int64(y)
-
-        minY, maxY := intY - 1, intY + 1
-        if minY - h < 1 { minY = 1 + h }
-        if maxY >= levH - 1 { maxY = levH - 1 }
-        minX, maxX := intX - 1, intX + 1
-        if minX < 1 { minX = 1 }
-        if maxX + w >= levW - 1 { maxX = levW - w - 1 }
+        w, _ := call.Argument(2).ToFloat()
+        h, _ := call.Argument(3).ToFloat()
 
         dirStage := make([]ventDirection, 0, 8)
-
         hitmap := ent.location.GetTerrain().Hitmap
 
-        for i := minY; i <= maxY; i++ {
-            for j := minX; j <= maxX; j++ {
-                // Skip the tile that the entity is on.
-                if intY == i && intX == j { continue }
-                if hitmap[i][j] || hitmap[i - h][j] { continue }
-                if hitmap[i][j + w] || hitmap[i - h][j + w] { continue }
-                dirStage = append(dirStage, ventDirection{int(j - intX), int(i - intY)})
+        for i := y - 1; i <= y + 1; i++ {
+            for j := x - 1; j <= x + 1; j++ {
+                if y == i && x == j { continue }
+                if !hitmap.Fits(j, i, w, h) { continue }
+                dirStage = append(dirStage, ventDirection{int(j - x), int(i - y)})
             }
         }
 

@@ -276,17 +276,12 @@ func (self *Region) PopulateEntities() {
 	placeEntity := func(entType string) {
         // TODO: Make this use real values
 		// entW, entH := ent.Size()
-		entW, entH := 1, 1
+		entW, entH := 1.0, 1.0
 		for {
-			x := rng.Intn(int(self.Terrain.Width) - 2 - int(entW)) + 1
-			y := rng.Intn(int(self.Terrain.Height) - 2 - int(entH)) + 1 + int(entH)
-			if (self.Terrain.Hitmap[y][x] ||
-				self.Terrain.Hitmap[y - int(entH)][x + int(entW)] ||
-				self.Terrain.Hitmap[y - int(entH)][x] ||
-				self.Terrain.Hitmap[y][x + int(entW)]) {
-				continue
-			}
-			self.Spawn(entType, float64(x), float64(y))
+			x := rng.Float64() * float64(self.Terrain.Width - 2 - uint(entW)) + 1
+			y := rng.Float64() * float64(self.Terrain.Height - 2 - uint(entH)) + 1 + entH
+			if !self.Terrain.Hitmap.Fits(x, y, entW, entH) { continue }
+			self.Spawn(entType, x, y)
 			return
 		}
 	}

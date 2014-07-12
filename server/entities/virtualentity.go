@@ -164,22 +164,12 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         hitmap := terrain.Hitmap
 
         // TODO: Make this use real values
-        newEntW, newEntH := 1, 1
+        newEntW, newEntH := 1.0, 1.0
 
         for {
             newEntX := entX + (rng.Float64() - 0.5) * radius * 2
             newEntY := entY + (rng.Float64() - 0.5) * radius * 2
-            intNEX, intNEY := int(newEntX), int(newEntY)
-
-            if intNEX + newEntW > int(terrain.Width) - 1 || intNEX < 1 { continue }
-            if intNEY > int(terrain.Height) - 1 || intNEY - newEntH < 1 { continue }
-
-            if hitmap[intNEY][intNEX] ||
-               hitmap[intNEY - newEntH][intNEX] ||
-               hitmap[intNEY - newEntH][intNEX + newEntW] ||
-               hitmap[intNEY][intNEX + newEntW] {
-                continue
-            }
+            if !hitmap.Fits(newEntX, newEntY, newEntW, newEntH) { continue }
 
             log.Println(self.id + " spawning " + entType, newEntX, newEntY)
             self.location.Spawn(entType, newEntX, newEntY)

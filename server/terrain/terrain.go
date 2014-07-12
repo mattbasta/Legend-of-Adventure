@@ -20,7 +20,7 @@ type Terrain struct {
     X int
     Y int
 	Tiles  [][]uint
-	Hitmap [][]bool
+	Hitmap Hitmap
     Portals []Portal
 }
 
@@ -51,7 +51,7 @@ func Get(region Region) *Terrain {
 
 func New(width, height uint) *Terrain {
     tiles := make([][]uint, height)
-    hitmap := make([][]bool, height)
+    hitmap := make(Hitmap, height)
     for i := range tiles {
         tiles[i] = make([]uint, width)
         hitmap[i] = make([]bool, width)
