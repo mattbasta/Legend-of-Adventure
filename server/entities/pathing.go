@@ -12,8 +12,12 @@ type PathingHelper struct {
     stageX, stageY float64
     directionStage []ventDirection
     bestDirection  *ventDirection
+
     repulseDirections []ventDirection
     attractDirections []ventDirection
+
+    repulseCoords [][2]float64
+    attractCoords [][2]float64
 }
 
 
@@ -79,6 +83,8 @@ func setUpPathing(ent *VirtualEntity) {
         ent.directionStage = dirStage
         ent.repulseDirections = make([]ventDirection, 0)
         ent.attractDirections = make([]ventDirection, 0)
+        ent.repulseCoords = make([][2]float64, 0)
+        ent.attractCoords = make([][2]float64, 0)
         return otto.Value {}
     })
 
@@ -114,6 +120,10 @@ func setUpPathing(ent *VirtualEntity) {
             ent.repulseDirections,
             calculateDirection(eX, eY),
         )
+        ent.repulseCoords = append(
+            ent.repulseCoords,
+            [2]float64 {eX, eY},
+        )
         return otto.Value {}
     })
     ent.vm.Set("stageAttractor", func(call otto.FunctionCall) otto.Value {
@@ -126,6 +136,10 @@ func setUpPathing(ent *VirtualEntity) {
             ent.attractDirections,
             calculateDirection(eX, eY),
         )
+        ent.attractCoords = append(
+            ent.attractCoords,
+            [2]float64 {eX, eY},
+        )
         return otto.Value {}
     })
 
@@ -137,6 +151,10 @@ func setUpPathing(ent *VirtualEntity) {
             ent.repulseDirections,
             calculateDirection(x, y),
         )
+        ent.repulseCoords = append(
+            ent.repulseCoords,
+            [2]float64 {x, y},
+        )
         return otto.Value {}
     })
     ent.vm.Set("stageAttractorCoord", func(call otto.FunctionCall) otto.Value {
@@ -146,6 +164,10 @@ func setUpPathing(ent *VirtualEntity) {
         ent.attractDirections = append(
             ent.attractDirections,
             calculateDirection(x, y),
+        )
+        ent.attractCoords = append(
+            ent.attractCoords,
+            [2]float64 {x, y},
         )
         return otto.Value {}
     })
@@ -216,9 +238,82 @@ func setUpPathing(ent *VirtualEntity) {
             }
         }
 
-
         bestDir = &tempDirs[ventRng.Intn(len(tempDirs))]
         result, _ := ent.vm.ToValue(ventDirections[*bestDir])
+        return result
+    })
+
+    ent.vm.Set("pathToBestTile", func(call otto.FunctionCall) otto.Value {
+
+        attractPaths := make([]*[]pathStep, 0, len(ent.attractCoords))
+
+        terrain := ent.location.GetTerrain()
+        hitmap := &terrain.Hitmap
+
+        // TODO: Replace these!
+        entW, entH := 1.0, 1.0
+
+        // Find all paths to all attractors
+        for _, coord := range ent.attractCoords {
+            temp := PathAStar(
+                ent.stageX, ent.stageY,
+                entW, entH,
+                coord[0], coord[1],
+                hitmap,
+            )
+            if temp == nil {
+                // TODO: Trigger a forget event
+                continue
+            }
+            attractPaths = append(attractPaths, temp)
+        }
+
+        viablePaths := attractPaths
+
+        // If the entity has nowhere to go, choose some random paths that the
+        // entity can go.
+        if len(viablePaths) == 0 {
+
+            // TODO: It's possible that this might run forever if the entity is
+            // in a really unfortunate spot. If this can't find a valid
+            // direction after a set number of tries, it should give up and
+            // return nil.
+            for i := 0; i < ASTAR_FLEE_PATH_SAMPLE; i++ {
+                randX := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
+                randY := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
+                if !hitmap.Fits(ent.stageX + randX, ent.stageY + randY, entW, entH) {
+                    i--
+                    continue
+                }
+                temp := PathAStar(
+                    ent.stageX, ent.stageY,
+                    entW, entH,
+                    ent.stageX + randX, ent.stageY + randY,
+                    hitmap,
+                )
+                if temp == nil { continue }
+                viablePaths = append(viablePaths, temp)
+            }
+
+        }
+
+        var mostViablePath *[]pathStep
+        if len(viablePaths) > 1 {
+            // mostViablePath = viablePaths[0]
+            // for i, path := range viablePaths {
+            //     score := 0
+            //     score += path.F
+
+            // }
+        } else {
+            mostViablePath = viablePaths[0]
+        }
+
+        // Step zero is the origin, so find the first step at index 1
+        firstStep := (*mostViablePath)[1]
+        firstStepDirection := calculateDirection(float64(firstStep.X), float64(firstStep.Y))
+
+        result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
         return result
     })
 }

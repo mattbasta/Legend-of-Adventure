@@ -191,7 +191,7 @@ func (self *VirtualEntity) SetPosition(x, y float64) {
 func (self *VirtualEntity) gameTick() {
     if self.lastTick != 0 { return }
     go func() {
-        ticker := time.NewTicker(250 * time.Millisecond)
+        ticker := time.NewTicker(VIRTUAL_ENTITY_TICK_MS * time.Millisecond)
         self.lastTick = time.Now().UnixNano() / 1e6
         defer ticker.Stop()
         for {

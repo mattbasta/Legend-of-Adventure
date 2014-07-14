@@ -44,13 +44,13 @@ type NoiseGenerator struct {
 }
 
 func NewNoiseGenerator(seed int) *NoiseGenerator {
-    rnd := rand.New(rand.NewSource(int64(seed)))
+    rng := rand.New(rand.NewSource(int64(seed)))
 
     gen := new(NoiseGenerator)
     gen.rgradients = make([]Vec2, TERRAIN_PERLIN_PERIOD)
     gen.permutations = rand.Perm(TERRAIN_PERLIN_PERIOD)
     for i := range gen.rgradients {
-        gen.rgradients[i] = random_gradient(rnd)
+        gen.rgradients[i] = random_gradient(rng)
     }
 
     return gen
