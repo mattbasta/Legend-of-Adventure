@@ -29,6 +29,13 @@ func DistanceFrom(e1 positionedEntity, x, y float64) float64 {
     )
 }
 
+func DistanceFromCoords(x1, y1, x2, y2 float64) float64 {
+    return math.Hypot(
+        x1 - x2,
+        y1 - y2,
+    )
+}
+
 func IsEntityCollidingWithPortal(portal terrain.Portal, entity positionedEntity) bool {
     ex, ey := entity.Position() // TODO: Update this to use ApproximatePosition
     ew, eh := entity.Size()

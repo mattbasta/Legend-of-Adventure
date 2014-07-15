@@ -279,6 +279,7 @@ func setUpPathing(ent *VirtualEntity) {
             // direction after a set number of tries, it should give up and
             // return nil.
             for i := 0; i < ASTAR_FLEE_PATH_SAMPLE; i++ {
+                // TODO: choose tiles which are a minimum distance away
                 randX := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
                 randY := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
                 if !hitmap.Fits(ent.stageX + randX, ent.stageY + randY, entW, entH) {
@@ -299,12 +300,30 @@ func setUpPathing(ent *VirtualEntity) {
 
         var mostViablePath *[]pathStep
         if len(viablePaths) > 1 {
-            // mostViablePath = viablePaths[0]
-            // for i, path := range viablePaths {
-            //     score := 0
-            //     score += path.F
+            mostViablePath = nil
+            highestScore := 0
+            for _, path := range viablePaths {
+                score := 0
+                minPathDistance := 99999.9
+                for _, ps := range (*path)[1:] {
+                    stepDist := 0.0
+                    for _, repCoord := range ent.repulseCoords {
+                        stepDist += DistanceFromCoords(
+                            float64(ps.X), float64(ps.Y),
+                            repCoord[0], repCoord[1],
+                        )
+                    }
+                    if stepDist < minPathDistance {
+                        minPathDistance = stepDist
+                    }
+                }
+                score += int(minPathDistance)
+                if mostViablePath == nil || score > highestScore {
+                    mostViablePath = path
+                    highestScore = score
+                }
 
-            // }
+            }
         } else {
             mostViablePath = viablePaths[0]
         }
