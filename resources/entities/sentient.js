@@ -25,7 +25,7 @@ define('sentient', ['harmable', 'animat'], function() {
         // TODO: Set real values for size
         stageAvailableTiles(x, y, 1, 1);
         trigger('stagePathElements', x, y);
-        var bestDirection = getDirectionToBestTile();
+        var bestDirection = trigger('getDirectionToBestTile');
         if (bestDirection === null) return null;
         return DIRECTIONS[bestDirection];
     }
@@ -174,6 +174,10 @@ define('sentient', ['harmable', 'animat'], function() {
                     stageRepeller(fleeingFrom[i]);
                 }
             }
+        },
+
+        getDirectionToBestTile: function() {
+            return getDirectionToBestTile();
         }
     };
 });

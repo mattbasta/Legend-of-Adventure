@@ -1,4 +1,4 @@
-define('homely', ['sentient'], function() {
+define('homely', ['npc', 'sentient'], function() {
 
     var sprites = [
         'homely1',

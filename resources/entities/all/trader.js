@@ -1,4 +1,4 @@
-define('trader', ['peaceful'], function() {
+define('trader', ['npc', 'peaceful'], function() {
 
     var names = [
         'Tom',
@@ -40,6 +40,10 @@ define('trader', ['peaceful'], function() {
 
         type: function() {
             return 'trader';
+        },
+
+        getDirectionToBestTile: function() {
+            return pathToBestTile();
         }
     };
 });

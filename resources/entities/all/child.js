@@ -1,4 +1,4 @@
-define('child', ['peaceful'], function() {
+define('child', ['npc', 'peaceful'], function() {
 
     var names = [
         'Susie',

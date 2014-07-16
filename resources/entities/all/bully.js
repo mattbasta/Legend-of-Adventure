@@ -1,4 +1,4 @@
-define('bully', ['peaceful'], function() {
+define('bully', ['npc', 'peaceful'], function() {
 
     var chasing = null;
 

@@ -1,4 +1,4 @@
-define('soldier', ['neutral'], function() {
+define('soldier', ['npc', 'neutral'], function() {
     'use strict';
 
     var SOLDIER_WEAPON = 'wsp.soldier';
