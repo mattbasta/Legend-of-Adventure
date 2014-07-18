@@ -14,4 +14,6 @@ const VIRTUAL_ENTITY_TICK_MS = 200
 // pathing entity has no attractors and one or more repulsors in order to find
 // a suitable fleeing route.
 const ASTAR_FLEE_PATH_SAMPLE = 6
+
 const ASTAR_RANDOM_SAMPLE_DIAMETER = 10
+const ASTAR_RANDOM_MAX_TRIES = 25

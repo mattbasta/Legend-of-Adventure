@@ -14,16 +14,18 @@ type pathStep struct {
     X, Y int
     F, G, H int
     Parent *pathStep
+    pX, pY int
+    updated bool
 }
 
-func (self *pathStep) relativeDistance() int {
+func (self pathStep) relativeDistance() int {
     parent := self.Parent
     hor := (int)(math.Abs((float64)(self.X - parent.X)))
     ver := (int)(math.Abs((float64)(self.Y - parent.Y)))
     return hor + ver
 }
 
-func (self *pathStep) updateWeight(destX, destY float64) {
+func (self pathStep) updateWeight(destX, destY float64) {
     if self.relativeDistance() == 1 {
         self.G = self.Parent.G + 10
     } else {
@@ -35,12 +37,15 @@ func (self *pathStep) updateWeight(destX, destY float64) {
     self.F = self.G + self.H
 }
 
-func (self *pathStep) getPath() []pathStep {
+func (self pathStep) getPath(set map[[2]int]pathStep) []pathStep {
     revOutput := make([]pathStep, 0)
-    next := self
-    for parent := next.Parent; parent != nil; parent = next.Parent {
-        revOutput = append(revOutput, *next)
-        next = parent
+    var nX, nY int
+    nX, nY = self.pX, self.pY
+    for {
+        parent := set[[2]int {nX, nY}]
+        revOutput = append(revOutput, parent)
+        if parent.pX == -1 || parent.pY == -1 { break }
+        nX, nY = parent.pX, parent.pY
     }
 
     // reverse the output
@@ -67,7 +72,7 @@ func pathIndex(x, y int, haystack *[]pathStep) int {
     return -1
 }
 
-func pathRemove(needle *pathStep, haystack *[]pathStep) *[]pathStep {
+func pathRemove(needle pathStep, haystack *[]pathStep) *[]pathStep {
     for i, step := range *haystack {
         if step.X == needle.X && step.Y == needle.Y {
             temp := append((*haystack)[:i], (*haystack)[i+1:]...)
@@ -81,30 +86,32 @@ func pathRemove(needle *pathStep, haystack *[]pathStep) *[]pathStep {
 func PathAStar(sx, sy, w, h, dx, dy float64, hitmap *terrain.Hitmap) *[]pathStep {
     openList := make([]pathStep, 1)
 
-    closedCoords := make(map[[2]int]bool, 1024)
+    closedCoords := make(map[[2]int]pathStep, 1024)
 
     intSX, intSY := int(sx), int(sy)
     // intDX, intDY := int(dx), int(dy)
 
     // Add the origin to the path
-    openList[0] = pathStep {
+    origin := pathStep {
         intSX, intSY,
         0, 0, 0,
         nil,
+        -1, -1,
+        false,
     }
+    openList[0] = origin
 
-    getFMin := func() *pathStep {
-        if len(openList) == 0 { return nil }
+    getFMin := func() pathStep {
         index := 0
         for i, ps := range openList {
             if ps.F < openList[index].F {
                 index = i
             }
         }
-        return &openList[index]
+        return openList[index]
     }
 
-    getNeighbors := func(from *pathStep) []pathStep {
+    getNeighbors := func(from pathStep) []pathStep {
         output := make([]pathStep, 0, 8)
         for i := -1; i < 2; i++ {
             for j := -1; j < 2; j++ {
@@ -120,11 +127,12 @@ func PathAStar(sx, sy, w, h, dx, dy float64, hitmap *terrain.Hitmap) *[]pathStep
 
                 // TODO: Don't allow diagonals if the tile can't be reached directly
 
-                output = append(output, pathStep {
-                    x, y,
-                    0, 0, 0,
-                    from,
-                })
+                newStep := new(pathStep)
+                newStep.X, newStep.Y = x, y
+                newStep.Parent = &from
+                newStep.pX, newStep.pY = from.X, from.Y
+
+                output = append(output, *newStep)
             }
         }
         return output
@@ -132,19 +140,16 @@ func PathAStar(sx, sy, w, h, dx, dy float64, hitmap *terrain.Hitmap) *[]pathStep
 
     // Begin the search
     for {
+        if len(openList) == 0 { return nil }
         current := getFMin()
-
-        if current == nil {
-            return nil
-        }
 
         // Move current from the open list to the close list
         openList = *pathRemove(current, &openList)
         if current.X == int(dx) && current.Y == int(dy) {
-            finalPath := current.getPath()
+            finalPath := current.getPath(closedCoords)
             return &finalPath
         }
-        closedCoords[[...]int {current.X, current.Y}] = true
+        closedCoords[[...]int {current.X, current.Y}] = current
 
         walkable := getNeighbors(current)
         for _, ps := range walkable {
@@ -155,6 +160,8 @@ func PathAStar(sx, sy, w, h, dx, dy float64, hitmap *terrain.Hitmap) *[]pathStep
                 idx := pathIndex(ps.X, ps.Y, &openList)
                 if openList[idx].F > ps.F {
                     openList[idx].Parent = ps.Parent
+                    openList[idx].updated = true
+                    openList[idx].pX, openList[idx].pY = ps.Parent.X, ps.Parent.Y
                 }
             }
 

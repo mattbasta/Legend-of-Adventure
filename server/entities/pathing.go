@@ -1,6 +1,7 @@
 package entities
 
 import (
+    "log"
     "math"
     "math/rand"
 
@@ -245,6 +246,7 @@ func setUpPathing(ent *VirtualEntity) {
 
     ent.vm.Set("pathToBestTile", func(call otto.FunctionCall) otto.Value {
 
+        log.Println("Pathing to best tile")
         attractPaths := make([]*[]pathStep, 0, len(ent.attractCoords))
 
         terrain := ent.location.GetTerrain()
@@ -273,26 +275,36 @@ func setUpPathing(ent *VirtualEntity) {
         // If the entity has nowhere to go, choose some random paths that the
         // entity can go.
         if len(viablePaths) == 0 {
-
-            // TODO: It's possible that this might run forever if the entity is
-            // in a really unfortunate spot. If this can't find a valid
-            // direction after a set number of tries, it should give up and
-            // return nil.
+            log.Println("No viable paths")
+            tries := 0
             for i := 0; i < ASTAR_FLEE_PATH_SAMPLE; i++ {
+
+                if tries > ASTAR_RANDOM_MAX_TRIES {
+                    log.Println("Gave up")
+                    return otto.Value {}
+                }
+
                 // TODO: choose tiles which are a minimum distance away
                 randX := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
                 randY := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
                 if !hitmap.Fits(ent.stageX + randX, ent.stageY + randY, entW, entH) {
                     i--
+                    tries++
+                    log.Println("Entity doesn't fit into attempted path")
                     continue
                 }
+                log.Println(ent.stageX + randX, ent.stageY + randY)
                 temp := PathAStar(
                     ent.stageX, ent.stageY,
                     entW, entH,
                     ent.stageX + randX, ent.stageY + randY,
                     hitmap,
                 )
-                if temp == nil { continue }
+                if temp == nil {
+                    tries++
+                    log.Println("No path produced")
+                    continue
+                }
                 viablePaths = append(viablePaths, temp)
             }
 
@@ -300,10 +312,11 @@ func setUpPathing(ent *VirtualEntity) {
 
         var mostViablePath *[]pathStep
         if len(viablePaths) > 1 {
+            log.Println("Multiple paths possible")
             mostViablePath = nil
             highestScore := 0
             for _, path := range viablePaths {
-                score := 0
+                score := len(*path) * -1
                 minPathDistance := 99999.9
                 for _, ps := range (*path)[1:] {
                     stepDist := 0.0
@@ -325,11 +338,12 @@ func setUpPathing(ent *VirtualEntity) {
 
             }
         } else {
+            log.Println("One viable path")
             mostViablePath = viablePaths[0]
         }
 
-        // Step zero is the origin, so find the first step at index 1
-        firstStep := (*mostViablePath)[1]
+        firstStep := (*mostViablePath)[0]
+        log.Println("First step:", firstStep)
         firstStepDirection := calculateDirection(float64(firstStep.X), float64(firstStep.Y))
 
         result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
