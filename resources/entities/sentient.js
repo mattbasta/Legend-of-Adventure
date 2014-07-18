@@ -18,14 +18,14 @@ define('sentient', ['harmable', 'animat'], function() {
         [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]
     ];
 
-    function getBestDirection(weighted) {
+    function getBestDirection(wandering) {
         var x = trigger('getX');
         var y = trigger('getY');
 
         // TODO: Set real values for size
         stageAvailableTiles(x, y, 1, 1);
         trigger('stagePathElements', x, y);
-        var bestDirection = trigger('getDirectionToBestTile');
+        var bestDirection = trigger('getDirectionToBestTile', wandering);
         if (bestDirection === null) return null;
         return DIRECTIONS[bestDirection];
     }
@@ -120,7 +120,7 @@ define('sentient', ['harmable', 'animat'], function() {
             if (chasing || fleeingFrom.length) return;
             if (wandering) return;
 
-            var bestDirection = getBestDirection();
+            var bestDirection = getBestDirection(true);
             if (!bestDirection) return;
             wanderDir = bestDirection;
             wandering = true;

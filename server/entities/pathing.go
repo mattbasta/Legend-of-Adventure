@@ -19,6 +19,8 @@ type PathingHelper struct {
 
     repulseCoords [][2]float64
     attractCoords [][2]float64
+
+    lastPath *[]pathStep
 }
 
 
@@ -55,7 +57,37 @@ func setUpPathing(ent *VirtualEntity) {
         dirX, _ := call.Argument(4).ToFloat()
         dirY, _ := call.Argument(5).ToFloat()
 
-        fits := ent.location.GetTerrain().Hitmap.Fits(x + dirX, y + dirY, w, h)
+        terrain := ent.location.GetTerrain()
+        hitmap := terrain.Hitmap
+
+        fits := hitmap.Fits(x + dirX, y + dirY, w, h)
+
+        if !fits {
+            result, _ := ent.vm.ToValue(false)
+            return result
+        }
+
+        if ent.lastPath != nil && len(*ent.lastPath) > 0 {
+            firstStep := (*ent.lastPath)[0]
+            if len(*ent.lastPath) == 1 {
+                if DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x, y) <
+                   DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x + dirX, y + dirY) {
+                    fits = false
+                }
+            } else if len(*ent.lastPath) >= 2 {
+                firstDist := DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x, y)
+                firstDistAfter := DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x + dirX, y + dirY)
+                secondDist := DistanceFromCoords(float64((*ent.lastPath)[1].X), float64((*ent.lastPath)[1].Y), x, y)
+                secondDistAfter := DistanceFromCoords(float64((*ent.lastPath)[1].X), float64((*ent.lastPath)[1].Y), x + dirX, y + dirY)
+
+                if firstDist < firstDistAfter {
+                    sliced := (*ent.lastPath)[1:]
+                    ent.lastPath = &sliced
+                    fits = secondDist < secondDistAfter
+                }
+            }
+        }
+
         result, _ := ent.vm.ToValue(fits)
         return result
 
@@ -71,7 +103,9 @@ func setUpPathing(ent *VirtualEntity) {
         h, _ := call.Argument(3).ToFloat()
 
         dirStage := make([]ventDirection, 0, 8)
-        hitmap := ent.location.GetTerrain().Hitmap
+
+        terrain := ent.location.GetTerrain()
+        hitmap := terrain.Hitmap
 
         for i := y - 1; i <= y + 1; i++ {
             for j := x - 1; j <= x + 1; j++ {
@@ -110,6 +144,11 @@ func setUpPathing(ent *VirtualEntity) {
         return ventDirection{xDir, yDir}
 
     }
+
+    ent.vm.Set("clearStagedPath", func(call otto.FunctionCall) otto.Value {
+        ent.lastPath = nil
+        return otto.Value {}
+    })
 
     ent.vm.Set("stageRepeller", func(call otto.FunctionCall) otto.Value {
         eid, _ := call.Argument(0).ToString()
@@ -246,11 +285,17 @@ func setUpPathing(ent *VirtualEntity) {
 
     ent.vm.Set("pathToBestTile", func(call otto.FunctionCall) otto.Value {
 
+        if ent.lastPath != nil && len(*ent.lastPath) > 0 {
+            firstStepDirection := calculateDirection(float64((*ent.lastPath)[0].X), float64((*ent.lastPath)[0].Y))
+            result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
+            return result
+        }
+
         log.Println("Pathing to best tile")
         attractPaths := make([]*[]pathStep, 0, len(ent.attractCoords))
 
         terrain := ent.location.GetTerrain()
-        hitmap := &terrain.Hitmap
+        hitmap := terrain.Hitmap
 
         // TODO: Replace these!
         entW, entH := 1.0, 1.0
@@ -261,7 +306,7 @@ func setUpPathing(ent *VirtualEntity) {
                 ent.stageX, ent.stageY,
                 entW, entH,
                 coord[0], coord[1],
-                hitmap,
+                &hitmap,
             )
             if temp == nil {
                 // TODO: Trigger a forget event
@@ -276,6 +321,10 @@ func setUpPathing(ent *VirtualEntity) {
         // entity can go.
         if len(viablePaths) == 0 {
             log.Println("No viable paths")
+
+            terrain := ent.location.GetTerrain()
+            hitmap := terrain.Hitmap
+
             tries := 0
             for i := 0; i < ASTAR_FLEE_PATH_SAMPLE; i++ {
 
@@ -284,21 +333,25 @@ func setUpPathing(ent *VirtualEntity) {
                     return otto.Value {}
                 }
 
-                // TODO: choose tiles which are a minimum distance away
                 randX := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
                 randY := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
+
+                if math.Abs(randX) + math.Abs(randY) < ASTAR_MIN_RANDOM_SAMPLE_DIAMETER {
+                    i--
+                    continue
+                }
+
                 if !hitmap.Fits(ent.stageX + randX, ent.stageY + randY, entW, entH) {
                     i--
                     tries++
                     log.Println("Entity doesn't fit into attempted path")
                     continue
                 }
-                log.Println(ent.stageX + randX, ent.stageY + randY)
                 temp := PathAStar(
                     ent.stageX, ent.stageY,
                     entW, entH,
                     ent.stageX + randX, ent.stageY + randY,
-                    hitmap,
+                    &hitmap,
                 )
                 if temp == nil {
                     tries++
@@ -345,6 +398,8 @@ func setUpPathing(ent *VirtualEntity) {
         firstStep := (*mostViablePath)[0]
         log.Println("First step:", firstStep)
         firstStepDirection := calculateDirection(float64(firstStep.X), float64(firstStep.Y))
+
+        ent.lastPath = mostViablePath
 
         result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
         return result
