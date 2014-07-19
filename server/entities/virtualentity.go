@@ -1,6 +1,7 @@
 package entities
 
 import (
+    "encoding/json"
     "fmt"
     "log"
     "math/rand"
@@ -100,6 +101,14 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         return result
     })
 
+    self.vm.Set("getDistanceTo", func(call otto.FunctionCall) otto.Value {
+        x, _ := call.Argument(0).ToFloat()
+        y, _ := call.Argument(1).ToFloat()
+        dist := DistanceFrom(self, x, y)
+        result, _ := self.vm.ToValue(dist)
+        return result
+    })
+
     self.vm.Set("getLevWidth", func(call otto.FunctionCall) otto.Value {
         result, _ := self.vm.ToValue(self.location.GetTerrain().Width)
         return result
@@ -130,6 +139,13 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
     self.vm.Set("say", func(call otto.FunctionCall) otto.Value {
         message := call.Argument(0).String()
         x, y := self.Position()
+
+        nametag := self.Call("nametag")
+        if nametag != "undefined" {
+            nametag = nametag[1:len(nametag)-1]
+            message = fmt.Sprintf("<span class=\"nametag\">%s:</span> %s", nametag, message)
+        }
+
         self.location.Broadcast(
             self.location.GetEvent(
                 events.CHAT,
@@ -216,6 +232,7 @@ func (self *VirtualEntity) Receive() chan<- *events.Event {
 func (self *VirtualEntity) handle(event *events.Event) {
     switch event.Type {
     case events.SPAWN:
+        fallthrough
     case events.REGION_ENTRANCE:
         self.Pass("entered", event.Body)
         fallthrough
@@ -257,6 +274,14 @@ func (self *VirtualEntity) handle(event *events.Event) {
         log.Println("Direct hit by " + event.Origin + " on " + self.id)
 
         self.Pass("attacked", attackDetails)
+
+    case events.CHAT:
+        split := strings.Split(event.Body, "\n")
+        coords := strings.Split(split[0], " ")
+        x, _ := strconv.ParseFloat(coords[0], 10)
+        y, _ := strconv.ParseFloat(coords[1], 10)
+        data, _ := json.Marshal(split[1])
+        self.Pass("heard", fmt.Sprintf("%f, %f, %s", x, y, data))
     }
 }
 

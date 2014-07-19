@@ -49,6 +49,9 @@ define('homely', ['npc', 'sentient'], function() {
             data.nametag = name;
             return data;
         },
+        nametag: function() {
+            return name;
+        },
         getWidth: getSize,
         getHeight: getSize,
         getHealth: getHealth

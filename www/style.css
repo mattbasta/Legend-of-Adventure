@@ -64,6 +64,11 @@ body.loading {
     position: absolute;
     z-index: 1000;
 }
+
+span.nametag {
+    color: blue;
+}
+
 #talkbar.empty {
     color: #aaa;
 }

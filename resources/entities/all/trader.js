@@ -34,6 +34,9 @@ define('trader', ['npc', 'peaceful'], function() {
             data.nametag = name;
             return data;
         },
+        nametag: function() {
+            return name;
+        },
         getWidth: getSize,
         getHeight: getSize,
         getHealth: getHealth,

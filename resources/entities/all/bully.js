@@ -24,8 +24,11 @@ define('bully', ['npc', 'peaceful'], function() {
             data.image = 'bully';
             data.width = data.height = getSize();
             data.speed = 0.0035;
-            data.nametag = 'Timmy the Bully';
+            data.nametag = trigger('nametag');
             return data;
+        },
+        nametag: function() {
+            return 'Timmy the Bully';
         },
         getWidth: getSize,
         getHeight: getSize,

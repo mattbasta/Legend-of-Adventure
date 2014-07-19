@@ -7,6 +7,8 @@ function addMethod(method, body) {
     methods[method].push(body[method]);
 }
 
+var defined = {};
+
 var defining = false;
 var defineQueue = [];
 this.define = function define(name, inherits, body) {
@@ -15,11 +17,17 @@ this.define = function define(name, inherits, body) {
         inherits = [];
     }
 
-    for (var i = 0; i < inherits.length; i++) {
-        defineQueue.push(inherits[i]);
+    var main;
+    if (!(name in defined)) {
+        for (var i = 0; i < inherits.length; i++) {
+            defineQueue.push(inherits[i]);
+        }
+        main = body();
+        defined[name] = main;
+    } else {
+        main = defined[name];
     }
 
-    var main = body();
     for (var method in main) {
         // log('Adding ' + method + ' to ' + name);
         addMethod(method, main);
