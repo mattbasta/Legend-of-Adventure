@@ -299,10 +299,10 @@ func (self *VirtualEntity) Size() (uint, uint) {
 
 func (self *VirtualEntity) Type() string {
     eType := self.Call("type")
-    eType = eType[1:len(eType)-1]
     if eType == "" {
         return "generic"
     }
+    eType = eType[1:len(eType)-1]
     return eType
 }
 
