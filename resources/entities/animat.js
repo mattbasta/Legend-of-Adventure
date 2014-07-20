@@ -34,6 +34,15 @@ define('animat', [], function() {
 
     }
 
+    function getLocationUpdate() {
+        return {
+            x: x,
+            y: y,
+            velocity: [velX, velY],
+            direction: [dirX, dirY]
+        };
+    }
+
     var schedule = [];
 
     return {
@@ -57,21 +66,9 @@ define('animat', [], function() {
         getY: function() {
             return y;
         },
-        getData: function(sup) {
-            var data = sup() || {};
-            data.x = x;
-            data.y = y;
-            return data;
-        },
-
+        getData: getLocationUpdate,
         getLocationUpdate: function() {
-            var trimmedData = {
-                x: x,
-                y: y,
-                velocity: [velX, velY],
-                direction: [dirX, dirY]
-            };
-            return JSON.stringify(trimmedData);
+            return JSON.stringify(getLocationUpdate());
         },
         startMoving: function(sup, newDirX, newDirY) {
             calculateLocation();

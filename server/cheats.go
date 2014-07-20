@@ -2,7 +2,9 @@ package server
 
 import (
     "log"
+    "os"
     "regexp"
+    "runtime/pprof"
     "strconv"
     "strings"
 
@@ -40,6 +42,16 @@ func HandleCheat(message string, player *Player) bool {
             sayToPlayer(strconv.Itoa(int(player.GetHealth())), player)
             return true
         }
+
+    case "pan":
+
+        if spl[1] != "sure" {
+            sayToPlayer("You must be sure.", player)
+            return true
+        }
+
+        pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+        panic("Debug Panic")
 
     case "hea":
         newHealth, err := strconv.ParseInt(spl[1], 10, 0)

@@ -35,18 +35,6 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 
     ent.receiver = make(chan *events.Event, 128)
 
-    go func() {
-        for {
-            select {
-            case <-ent.closing:
-                ent.closing <- true
-                return
-            case event := <-ent.receiver:
-                ent.handle(event)
-            }
-        }
-    }()
-
     ent.EntityVM = *GetEntityVM(entityName)
 
     setUpPathing(ent)
@@ -216,6 +204,8 @@ func (self *VirtualEntity) gameTick() {
                 now := time.Now().UnixNano() / 1e6
                 self.Pass("tick", fmt.Sprintf("%d, %d", now, now - self.lastTick))
                 self.lastTick = now
+            case event := <-self.receiver:
+                self.handle(event)
             case <-self.closing:
                 self.closing <- true
                 return

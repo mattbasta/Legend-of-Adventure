@@ -4,7 +4,7 @@
     font-weight: 400;
     src: local('VT323'), local('VT323-Regular'), url(http://themes.googleusercontent.com/static/fonts/vt323/v5/SSPdB6sO_7a9ZMMiCroIGqCWcynf_cDxXwCLxiixG1c.woff) format('woff');
 }
-* {
+*, *:before, *:after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -50,6 +50,7 @@ body.loading {
 #chatbox p + p + p {opacity: 0.8;}
 #chatbox p + p + p + p {opacity: 1;}
 #chatbox p span {color: #a00;}
+#chatbox p span.nametag {color: blue;}
 #chatbox p small {color: #888;}
 #talkbar {
     background: #000;
@@ -63,10 +64,6 @@ body.loading {
     padding: 0.1em 0.25em;
     position: absolute;
     z-index: 1000;
-}
-
-span.nametag {
-    color: blue;
 }
 
 #talkbar.empty {
