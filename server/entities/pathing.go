@@ -285,7 +285,10 @@ func setUpPathing(ent *VirtualEntity) {
 
     ent.vm.Set("pathToBestTile", func(call otto.FunctionCall) otto.Value {
 
-        if ent.lastPath != nil && len(*ent.lastPath) > 0 {
+        if ent.lastPath != nil &&
+           len(*ent.lastPath) > 1 &&
+           len(ent.attractCoords) == 0 {
+
             firstStepDirection := calculateDirection(float64((*ent.lastPath)[0].X), float64((*ent.lastPath)[0].Y))
             result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
             return result
