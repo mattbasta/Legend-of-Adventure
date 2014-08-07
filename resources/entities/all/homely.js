@@ -15,6 +15,7 @@ define('homely', ['npc', 'sentient'], function() {
         'Bob',
         'Jordan',
         'Little Timmy',
+        'Little Tammy',
         'Sips',
         'Bilbo',
         'Kip',
