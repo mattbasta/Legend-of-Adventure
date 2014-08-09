@@ -46,6 +46,14 @@ define('trader', ['npc', 'peaceful'], function() {
         },
 
         getDirectionToBestTile: function() {
+            sendEvent(
+                'par',
+                trigger('getX') + ' ' +
+                trigger('getY') + ' ' +
+                'blue ' +
+                '10 ' +
+                '100'
+            )
             return pathToBestTile();
         }
     };

@@ -398,6 +398,12 @@ func setUpPathing(ent *VirtualEntity) {
             mostViablePath = viablePaths[0]
         }
 
+        // for _, step := *mostViablePath {
+        //     ent.location.Broadcast(
+        //         ent.location.GetEvent(events.PARTICLE, ''),
+        //     )
+        // }
+
         firstStep := (*mostViablePath)[0]
         log.Println("First step:", firstStep)
         firstStepDirection := calculateDirection(float64(firstStep.X), float64(firstStep.Y))

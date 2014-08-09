@@ -17,6 +17,23 @@ define('particles', [], function() {
         this.accY = 0;
     }
 
+    var constructors = {
+        bloodspatter: function(self) {
+            self.velX = (Math.random() - 0.5) * 3;
+            self.velY = 7 * Math.random() + 5;
+            self.accY = -1;
+            self.floor = self.y;
+            self.x += 25;
+            self.y += 5;
+        }
+    };
+
+    Particle.prototype.init = function(constructor) {
+        if (constructor in constructors) {
+            constructors[constructor](this);
+        }
+    };
+
     Particle.prototype.setPosition = function(x, y) {
         this.x = x;
         this.y = y;
@@ -26,9 +43,9 @@ define('particles', [], function() {
         this.velX += this.accX;
         this.velY += this.accY;
         this.x += this.velX;
-        this.y += this.velY;
+        this.y -= this.velY;
 
-        if (this.floor !== null && this.y < this.floor) {
+        if (this.floor !== null && this.y > this.floor) {
             this.y = this.floor;
             this.velY *= -1;
         }

@@ -94,6 +94,7 @@ func (self *Player) gameTick() {
     ticker := time.NewTicker(250 * time.Millisecond)
     defer ticker.Stop()
     for {
+
         select {
         case <-ticker.C:
             if self.location == nil {
@@ -181,6 +182,20 @@ func (self *Player) handleOutbound(evt *events.Event) bool {
         damage := 10
 
         self.IncrementHealth(-1 * damage)
+
+
+        particles := ""
+        for i := 0; i < 10; i++ {
+            if particles != "" {
+                particles += "\n"
+            }
+            particles += fmt.Sprintf(
+                "%f %f red 5 35 bloodspatter",
+                self.x,
+                self.y,
+            )
+        }
+        self.outbound <- self.location.GetEvent(events.PARTICLE, particles, nil)
 
     default:
         return false

@@ -18,11 +18,11 @@ define('inventory', ['comm', 'keys'], function(comm, keys) {
         selected %= slots.length;
     }
 
-    keys.up.on(74, function() {  // J
+    keys.up.on(75, function() {  // K
         comm.send('cyc', 'f');
         incrSel(1);
     });
-    keys.up.on(75, function() {  // K
+    keys.up.on(74, function() {  // J
         comm.send('cyc', 'b');
         incrSel(-1);
     });

@@ -1,6 +1,6 @@
 define('drawing',
-    ['entities', 'canvases', 'images', 'level', 'settings'],
-    function(entities, canvases, images, level, settings) {
+    ['canvases', 'comm', 'entities', 'images', 'level', 'particles', 'settings'],
+    function(canvases, comm, entities, images, level, Particle, settings) {
 
     'use strict';
 
@@ -18,16 +18,37 @@ define('drawing',
 
     var terrainBuffers = [];
 
+    var activeParticles = [];
+
+    comm.messages.on('par', function(body) {
+        body.split('\n').forEach(function(particle) {
+            var data = particle.split(' ');
+            var parInst = new Particle(
+                data[4] | 0,
+                data[3] | 0,
+                data[2]  // Color is not an integer
+            );
+            parInst.setPosition(
+                parseFloat(data[0]) * tilesize,
+                parseFloat(data[1]) * tilesize
+            );
+            if (data[5]) {
+                parInst.init(data[5]);
+            }
+            activeParticles.push(parInst);
+        });
+    });
+
     /*
     State is in the following form:
-    1. X coord of the left edge of where the level starts to draw
-    2. Y coord of the top edge of where the level starts to draw
-    3. Width of the drawing surface
-    4. Height of the drawing surface
-    5. The X coord in the layer canvases to clip from
-    6. The Y coord in the layer canvases to clip from
-    7. The width of the rectangle to clip from the layer canvases
-    8. The height of the rectangle to clip from the layer canvases
+    0. X coord of the left edge of where the level starts to draw
+    1. Y coord of the top edge of where the level starts to draw
+    2. Width of the drawing surface
+    3. Height of the drawing surface
+    4. The X coord in the layer canvases to clip from
+    5. The Y coord in the layer canvases to clip from
+    6. The width of the rectangle to clip from the layer canvases
+    7. The height of the rectangle to clip from the layer canvases
     */
 
     function draw() {
@@ -40,9 +61,9 @@ define('drawing',
         if (!terrainBuffers.length || !terrainBuffers[0].length) return;
 
         var output = canvases.getContext('output');
+        var i;
         if (state) {
             var scale;
-            var i;
             var j;
 
             // Draw the terrain
@@ -72,6 +93,11 @@ define('drawing',
 
             // Draw the entities
             entities.drawAll(output, state);
+
+            // Draw the region particles
+            for (i = 0; i < activeParticles.length; i++) {
+                activeParticles[i].draw(output, -1 * state[0], -1 * state[1]);
+            }
         }
         if (settings.show_fps) {
             output.fillStyle = 'white';
@@ -83,6 +109,13 @@ define('drawing',
         }
         if (settings.show_hitmappings) {
             entities.drawHitmappings(output, state);
+        }
+
+        // Update each region particle
+        for (i = activeParticles.length - 1; i >= 0; i--) {
+            if (activeParticles[i].tick()) {
+                activeParticles.splice(i, 1);
+            }
         }
     }
 

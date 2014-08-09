@@ -65,6 +65,9 @@ const (
 	// as an entity.
 	//   Body: target_id item_code
 	GIVE EventType = "giv"
+	// Particle spawn command.
+	//   Body: x y color diameter ticks constructor[\n ...]
+	PARTICLE EventType = "par"
 )
 
 type Event struct {
