@@ -13,8 +13,13 @@ define('death_waker', ['peaceful'], function() {
     }
 
     var shaking = false;
+    var seeingPlayers = [];
 
     function wake() {
+        if (!seeingPlayers.length) {
+            scheduleWake();
+            return;
+        }
         shaking = true;
         trigger('stopWandering');
         sendEvent('epu', '{"movement":"shake"}');
@@ -60,6 +65,21 @@ define('death_waker', ['peaceful'], function() {
 
         type: function() {
             return 'death_waker';
+        },
+
+        seenEntity: function(sup, id) {
+            if (getType(id) === 'player' && seeingPlayers.indexOf(id) === -1) {
+                seeingPlayers.push(id);
+            }
+            sup();
+        },
+
+        forget: function(sup, id) {
+            sup();
+            var idx = seeingPlayers.indexOf(id);
+            if (idx !== -1) {
+                seeingPlayers.splice(idx, 1);
+            }
         }
     };
 });
