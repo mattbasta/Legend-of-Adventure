@@ -49,7 +49,7 @@ define('bully', ['npc', 'peaceful'], function() {
 
         seenEntity: function(sup, id, body, dist) {
             sup();
-            if (chasing || getType(body) !== 'child') return;
+            if (chasing || getType(id) !== 'child') return;
 
             trigger('chase', id);
         }
