@@ -35,7 +35,11 @@ define('drawing',
             if (data[5]) {
                 parInst.init(data[5]);
             }
-            activeParticles.push(parInst);
+            if (data[6]) {
+                entities.addParticle(data[6], parInst);
+            } else {
+                activeParticles.push(parInst);
+            }
         });
     });
 

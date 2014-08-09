@@ -185,15 +185,11 @@ func (self *Player) handleOutbound(evt *events.Event) bool {
 
 
         particles := ""
-        for i := 0; i < 10; i++ {
+        for i := 0; i < 5; i++ {
             if particles != "" {
                 particles += "\n"
             }
-            particles += fmt.Sprintf(
-                "%f %f red 5 35 bloodspatter",
-                self.x,
-                self.y,
-            )
+            particles += "0 0 red 5 25 bloodspatter local"
         }
         self.outbound <- self.location.GetEvent(events.PARTICLE, particles, nil)
 

@@ -101,6 +101,8 @@ define('entities',
         props.canvas.width = props.width;
         props.canvas.height = props.height;
 
+        props.particles = [];
+
         registry[props.id] = props;
         draw(props.id);
     }
@@ -158,7 +160,8 @@ define('entities',
         x: 0,
         y: 0,
         direction: [0, 0],
-        speed: 0.0075
+        speed: 0.0075,
+        particles: []
     });
 
     var firstLevel = true;
@@ -198,6 +201,15 @@ define('entities',
             var a_y;
             for (var entity in registry) {
                 a = registry[entity];
+
+                if (a.particles.length) {
+                    for (var i = a.particles.length - 1; i >= 0; i--) {
+                        if (a.particles[i].tick()) {
+                            a.particles.splice(i, 1);
+                        }
+                    }
+                }
+
                 a_x = a.velocity[0];
                 a_y = a.velocity[1];
                 if (!a_x && !a_y) continue;
@@ -290,6 +302,16 @@ define('entities',
                         (destY - 10) - 10
                     );
                 }
+
+                if (entity.particles.length) {
+                    for (var j = 0; j < entity.particles.length; j++) {
+                        entity.particles[j].draw(
+                            context,
+                            entity.x * settings.tilesize - state[0],
+                            entity.y * settings.tilesize - state[1]
+                        );
+                    }
+                }
             }
         },
         drawHitmappings: function(context, state) {
@@ -305,6 +327,10 @@ define('entities',
         },
         resetFollow: function() {
             follow = 'local';
+        },
+        addParticle: function(eid, particle) {
+            if (!registry[eid]) return;
+            registry[eid].particles.push(particle);
         }
     };
 });
