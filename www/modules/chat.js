@@ -26,7 +26,7 @@ define('chat', ['comm', 'entities', 'keys', 'level'], function(comm, entities, k
         var coords = body.substr(0, breakIdx).split(' ');
         var local = entities.getLocal();
         var dist = Math.sqrt(
-            Math.pow(local.x - coords[0], 2),
+            Math.pow(local.x - coords[0], 2) +
             Math.pow(local.y - coords[1], 2)
         );
         if (dist > CHAT_DISTANCE) return;
