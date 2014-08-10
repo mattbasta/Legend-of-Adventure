@@ -1,11 +1,14 @@
 package entities
 
 import (
+    "fmt"
     "log"
     "math"
     "math/rand"
 
     "github.com/robertkrimen/otto"
+
+    "legend-of-adventure/server/events"
 )
 
 
@@ -20,7 +23,7 @@ type PathingHelper struct {
     repulseCoords [][2]float64
     attractCoords [][2]float64
 
-    lastPath *[]pathStep
+    lastPath []pathStep
 }
 
 
@@ -67,22 +70,22 @@ func setUpPathing(ent *VirtualEntity) {
             return result
         }
 
-        if ent.lastPath != nil && len(*ent.lastPath) > 0 {
-            firstStep := (*ent.lastPath)[0]
-            if len(*ent.lastPath) == 1 {
+        if ent.lastPath != nil && len(ent.lastPath) > 0 {
+            firstStep := ent.lastPath[0]
+            if len(ent.lastPath) == 1 {
                 if DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x, y) <
                    DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x + dirX, y + dirY) {
                     fits = false
                 }
-            } else if len(*ent.lastPath) >= 2 {
+            } else if len(ent.lastPath) >= 2 {
                 firstDist := DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x, y)
                 firstDistAfter := DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x + dirX, y + dirY)
-                secondDist := DistanceFromCoords(float64((*ent.lastPath)[1].X), float64((*ent.lastPath)[1].Y), x, y)
-                secondDistAfter := DistanceFromCoords(float64((*ent.lastPath)[1].X), float64((*ent.lastPath)[1].Y), x + dirX, y + dirY)
+                secondDist := DistanceFromCoords(float64(ent.lastPath[1].X), float64(ent.lastPath[1].Y), x, y)
+                secondDistAfter := DistanceFromCoords(float64(ent.lastPath[1].X), float64(ent.lastPath[1].Y), x + dirX, y + dirY)
 
                 if firstDist < firstDistAfter {
-                    sliced := (*ent.lastPath)[1:]
-                    ent.lastPath = &sliced
+                    sliced := ent.lastPath[1:]
+                    ent.lastPath = sliced
                     fits = secondDist < secondDistAfter
                 }
             }
@@ -286,16 +289,16 @@ func setUpPathing(ent *VirtualEntity) {
     ent.vm.Set("pathToBestTile", func(call otto.FunctionCall) otto.Value {
 
         if ent.lastPath != nil &&
-           len(*ent.lastPath) > 1 &&
+           len(ent.lastPath) > 1 &&
            len(ent.attractCoords) == 0 {
 
-            firstStepDirection := calculateDirection(float64((*ent.lastPath)[0].X), float64((*ent.lastPath)[0].Y))
+            firstStepDirection := calculateDirection(float64(ent.lastPath[0].X), float64(ent.lastPath[0].Y))
             result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
             return result
         }
 
         log.Println("Pathing to best tile")
-        attractPaths := make([]*[]pathStep, 0, len(ent.attractCoords))
+        attractPaths := make([][]pathStep, 0, len(ent.attractCoords))
 
         terrain := ent.location.GetTerrain()
         hitmap := terrain.Hitmap
@@ -339,6 +342,7 @@ func setUpPathing(ent *VirtualEntity) {
                 randX := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
                 randY := ventRng.Float64() * ASTAR_RANDOM_SAMPLE_DIAMETER - ASTAR_RANDOM_SAMPLE_DIAMETER / 2
 
+
                 if math.Abs(randX) + math.Abs(randY) < ASTAR_MIN_RANDOM_SAMPLE_DIAMETER {
                     i--
                     continue
@@ -347,7 +351,7 @@ func setUpPathing(ent *VirtualEntity) {
                 if !hitmap.Fits(ent.stageX + randX, ent.stageY + randY, entW, entH) {
                     i--
                     tries++
-                    log.Println("Entity doesn't fit into attempted path")
+                    // log.Println("Entity doesn't fit into attempted path")
                     continue
                 }
                 temp := PathAStar(
@@ -366,15 +370,15 @@ func setUpPathing(ent *VirtualEntity) {
 
         }
 
-        var mostViablePath *[]pathStep
+        var mostViablePath []pathStep
         if len(viablePaths) > 1 {
             log.Println("Multiple paths possible")
             mostViablePath = nil
             highestScore := 0
             for _, path := range viablePaths {
-                score := len(*path) * -1
+                score := len(path) * -1
                 minPathDistance := 99999.9
-                for _, ps := range (*path)[1:] {
+                for _, ps := range path[1:] {
                     stepDist := 0.0
                     for _, repCoord := range ent.repulseCoords {
                         stepDist += DistanceFromCoords(
@@ -398,13 +402,21 @@ func setUpPathing(ent *VirtualEntity) {
             mostViablePath = viablePaths[0]
         }
 
-        // for _, step := *mostViablePath {
-        //     ent.location.Broadcast(
-        //         ent.location.GetEvent(events.PARTICLE, ''),
-        //     )
-        // }
+        for _, step := range mostViablePath {
+            ent.location.Broadcast(
+                ent.location.GetEvent(
+                    events.PARTICLE,
+                    fmt.Sprintf(
+                        "%d %d red 10 20",
+                        step.X,
+                        step.Y,
+                    ),
+                    nil,
+                ),
+            )
+        }
 
-        firstStep := (*mostViablePath)[0]
+        firstStep := mostViablePath[0]
         log.Println("First step:", firstStep)
         firstStepDirection := calculateDirection(float64(firstStep.X), float64(firstStep.Y))
 

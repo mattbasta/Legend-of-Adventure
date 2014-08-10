@@ -1,48 +1,32 @@
-define('trader', ['npc', 'peaceful'], function() {
-
-    var names = [
-        'Tom',
-        'Bob',
-        'Alfred',
-        'Joe'
-    ];
-
-    var name = 'Trader ' + names[Math.random() * names.length | 0];
+define('test', ['npc', 'peaceful'], function() {
 
     function getSize() {
         return 50;
     }
 
     function getHealth() {
-        return 200;
+        return 100000;
     }
 
     return {
-        setup: function(sup) {
-            sup();
-            trigger('schedule', function() {
-                trigger('wander');
-            }, 100);
-        },
-
         getData: function(sup) {
             var data = sup();
             data.proto = 'avatar';
-            data.image = 'npc';
+            data.image = 'avatar';
             data.width = data.height = getSize();
             data.speed = 0.004;
-            data.nametag = name;
+            data.nametag = 'Test Player';
             return data;
         },
         nametag: function() {
-            return name;
+            return 'Test Player';
         },
         getWidth: getSize,
         getHeight: getSize,
         getHealth: getHealth,
 
         type: function() {
-            return 'trader';
+            return 'test player';
         },
 
         getDirectionToBestTile: function(sup, wandering) {
@@ -59,6 +43,15 @@ define('trader', ['npc', 'peaceful'], function() {
             } else {
                 return pathToBestTile();
             }
-        }
+        },
+
+        seenEntity: function(sup, id) {
+            if (getType(id) === 'player') {
+                trigger('chase', id);
+            }
+        },
+
+        // noop wander
+        wander: function() {}
     };
 });

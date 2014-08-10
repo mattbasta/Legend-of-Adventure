@@ -310,7 +310,9 @@ func (self *Region) PopulateEntities() {
 			placeEntity("child")
 			placeEntity("child")
 
-			placeEntity("trader")
+			// placeEntity("trader")
+
+			self.Spawn("test", 50, 50)
 		}
 
 	case terrain.REGIONTYPE_SHOP:
