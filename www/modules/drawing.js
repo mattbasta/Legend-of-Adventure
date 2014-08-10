@@ -124,6 +124,7 @@ define('drawing',
     }
 
     function redrawTerrain() {
+        activeParticles = [];
         images.waitFor(level.getTileset()).done(function(tileset) {
             var c = canvases.getContext('terrain');
             var tileSize = tileset.width / tilesPerRow;
