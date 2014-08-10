@@ -60,7 +60,7 @@ define('sentient', ['harmable', 'animat'], function() {
                     sendEvent(
                         'dak',
                         trigger('getX') + ' ' + trigger('getY') + ' ' + (
-                            trigger('holdingWeapon') || 'x'
+                            trigger('holdingWeapon') || 'null'
                         )
                     );
                 }

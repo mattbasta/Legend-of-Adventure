@@ -8,6 +8,8 @@ define('test', ['npc', 'peaceful'], function() {
         return 100000;
     }
 
+    var chasing;
+
     return {
         getData: function(sup) {
             var data = sup();
@@ -46,9 +48,27 @@ define('test', ['npc', 'peaceful'], function() {
         },
 
         seenEntity: function(sup, id) {
-            if (getType(id) === 'player') {
+            if (getType(id) === 'player' && !chasing) {
                 trigger('chase', id);
             }
+        },
+
+        chase: function(sup, id) {
+            sup();
+            chasing = id;
+        },
+
+        forget: function(sup, id) {
+            sup();
+            if (id === chasing) {
+                trigger('stopMoving');
+                chasing = null;
+            }
+        },
+
+        stopChasing: function(sup) {
+            sup();
+            trigger('forget', chasing);
         },
 
         // noop wander

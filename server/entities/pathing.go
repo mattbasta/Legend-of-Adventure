@@ -72,21 +72,19 @@ func setUpPathing(ent *VirtualEntity) {
 
         if ent.lastPath != nil && len(ent.lastPath) > 0 {
             firstStep := ent.lastPath[0]
+            fsX, fsY := float64(firstStep.X), float64(firstStep.Y)
+            firstDist := DistanceFromCoords(fsX, fsY, x, y)
+            firstDistAfter := DistanceFromCoords(fsX, fsY, x + dirX, y + dirY)
             if len(ent.lastPath) == 1 {
-                if DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x, y) <
-                   DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x + dirX, y + dirY) {
+                if firstDist < firstDistAfter {
                     fits = false
                 }
             } else if len(ent.lastPath) >= 2 {
-                firstDist := DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x, y)
-                firstDistAfter := DistanceFromCoords(float64(firstStep.X), float64(firstStep.Y), x + dirX, y + dirY)
-                secondDist := DistanceFromCoords(float64(ent.lastPath[1].X), float64(ent.lastPath[1].Y), x, y)
-                secondDistAfter := DistanceFromCoords(float64(ent.lastPath[1].X), float64(ent.lastPath[1].Y), x + dirX, y + dirY)
-
                 if firstDist < firstDistAfter {
                     sliced := ent.lastPath[1:]
                     ent.lastPath = sliced
-                    fits = secondDist < secondDistAfter
+                    lpX, lpY := float64(ent.lastPath[0].X), float64(ent.lastPath[0].Y)
+                    fits = DistanceFromCoords(lpX, lpY, x, y) < DistanceFromCoords(lpX, lpY, x + dirX, y + dirY)
                 }
             }
         }
@@ -288,23 +286,25 @@ func setUpPathing(ent *VirtualEntity) {
 
     ent.vm.Set("pathToBestTile", func(call otto.FunctionCall) otto.Value {
 
+        // TODO: Replace these!
+        entW, entH := 1.0, 1.0
+
         if ent.lastPath != nil &&
            len(ent.lastPath) > 1 &&
            len(ent.attractCoords) == 0 {
 
-            firstStepDirection := calculateDirection(float64(ent.lastPath[0].X), float64(ent.lastPath[0].Y))
+            firstStepDirection := calculateDirection(
+                float64(ent.lastPath[0].X) + entW / 2,
+                float64(ent.lastPath[0].Y),
+            )
             result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
             return result
         }
 
-        log.Println("Pathing to best tile")
         attractPaths := make([][]pathStep, 0, len(ent.attractCoords))
 
         terrain := ent.location.GetTerrain()
         hitmap := terrain.Hitmap
-
-        // TODO: Replace these!
-        entW, entH := 1.0, 1.0
 
         // Find all paths to all attractors
         for _, coord := range ent.attractCoords {
@@ -316,6 +316,7 @@ func setUpPathing(ent *VirtualEntity) {
             )
             if temp == nil {
                 // TODO: Trigger a forget event
+                log.Println("Attractor path could not be found.")
                 continue
             }
             attractPaths = append(attractPaths, temp)
@@ -397,9 +398,11 @@ func setUpPathing(ent *VirtualEntity) {
                 }
 
             }
-        } else {
+        } else if len(viablePaths) == 1 {
             log.Println("One viable path")
             mostViablePath = viablePaths[0]
+        } else {
+            return otto.Value {}
         }
 
         for _, step := range mostViablePath {
@@ -417,8 +420,23 @@ func setUpPathing(ent *VirtualEntity) {
         }
 
         firstStep := mostViablePath[0]
-        log.Println("First step:", firstStep)
-        firstStepDirection := calculateDirection(float64(firstStep.X), float64(firstStep.Y))
+        if len(mostViablePath) > 1 {
+            distFromFirstStep := DistanceFromCoords(
+                ent.stageX,
+                ent.stageY,
+                float64(firstStep.X) + entW / 2,
+                float64(firstStep.Y),
+            )
+            if distFromFirstStep < 1 {
+                mostViablePath = mostViablePath[1:]
+                firstStep = mostViablePath[0]
+            }
+
+        }
+        firstStepDirection := calculateDirection(
+            float64(firstStep.X) + entW / 2,
+            float64(firstStep.Y),
+        )
 
         ent.lastPath = mostViablePath
 
