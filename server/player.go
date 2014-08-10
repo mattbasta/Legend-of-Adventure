@@ -35,6 +35,8 @@ type Player struct {
     nametag    string
 
     inventory *entities.Inventory
+
+    coordStack [][2]float64
 }
 
 func NewPlayer(conn *websocket.Conn) *Player {
@@ -59,6 +61,7 @@ func NewPlayer(conn *websocket.Conn) *Player {
         PLAYER_MAX_HEALTH,
         "",
         nil,
+        make([][2]float64, 0),
     }
     reg.AddEntity(&player)
 
@@ -119,17 +122,31 @@ func (self *Player) gameTick() {
                 if entities.IsEntityCollidingWithPortal(portal, self) {
                     log.Println("Player in contact with portal")
                     var target string
+                    currentCoords := [2]float64 {self.x, self.y}
+
+                    destX, destY := portal.DestX, portal.DestY
                     if portal.Target == ".." {
                         target = self.location.ParentID
+                        if len(self.coordStack) > 0 {
+                            coords := self.coordStack[len(self.coordStack) - 1]
+                            self.x, self.y = coords[0], coords[1] + 1
+                            destX, destY = self.x, self.y
+                            self.coordStack = self.coordStack[:len(self.coordStack) - 1]
+                        }
                     } else if portal.Target == "." {
                         target = self.location.ID()
+                        if len(self.coordStack) > 0 {
+                            self.coordStack[len(self.coordStack) - 1] = currentCoords
+                        }
+                        self.x, self.y = portal.DestX, portal.DestY
                     } else {
                         target = self.location.ID() + "," + portal.Target
+                        self.coordStack = append(self.coordStack, currentCoords)
+                        self.x, self.y = portal.DestX, portal.DestY
                     }
 
-                    self.x, self.y = portal.DestX, portal.DestY
                     parent, type_, x, y := regions.GetRegionData(target)
-                    self.sendToLocation(parent, type_, x, y, portal.DestX, portal.DestY)
+                    self.sendToLocation(parent, type_, x, y, destX, destY)
                 }
             }
         case <-self.closing:
