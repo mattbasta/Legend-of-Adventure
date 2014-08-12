@@ -120,7 +120,7 @@ func GetDungeonLayout(parent string) *DungeonLayout {
 
         directions := make([][2]int, len(movableDirections))
         copy(directions, movableDirections)
-        dirPerms := rand.Perm(len(movableDirections))
+        dirPerms := rng.Perm(len(movableDirections))
         for i, v := range dirPerms {
             directions[v] = movableDirections[i]
         }

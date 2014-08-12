@@ -4,7 +4,7 @@
 package terrain
 
 import (
-    // "log"
+    "log"
     "math"
     "math/rand"
 )
@@ -44,11 +44,12 @@ type NoiseGenerator struct {
 }
 
 func NewNoiseGenerator(seed int) *NoiseGenerator {
+    log.Println("seed", seed)
     rng := rand.New(rand.NewSource(int64(seed)))
 
     gen := new(NoiseGenerator)
     gen.rgradients = make([]Vec2, TERRAIN_PERLIN_PERIOD)
-    gen.permutations = rand.Perm(TERRAIN_PERLIN_PERIOD)
+    gen.permutations = rng.Perm(TERRAIN_PERLIN_PERIOD)
     for i := range gen.rgradients {
         gen.rgradients[i] = random_gradient(rng)
     }
@@ -116,7 +117,8 @@ func (self *NoiseGenerator) FillGrid(x, y int, grid *[][]uint, max uint) {
             (*grid)[j][i] = uint(
                 // self.Get2DInt(x + j, y + i, max - 1) +
                 self.GetCentered2DInt(x + j, y + i, PERLIN_BIOME_FREQUENCY, max - 1) +
-                PERLIN_UPLIFT)
+                PERLIN_UPLIFT,
+            )
         }
     }
 }
