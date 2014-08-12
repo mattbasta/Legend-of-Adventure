@@ -114,7 +114,7 @@ func (self *NoiseGenerator) FillGrid(x, y int, grid *[][]uint, max uint) {
     // log.Println(self.Get2D(float64(x) * PERLIN_FREQUENCY, float64(y) * PERLIN_FREQUENCY) * 100)
     for i := 0; i < len(*grid); i++ {
         for j := 0; j < len((*grid)[i]); j++ {
-            (*grid)[j][i] = uint(
+            (*grid)[i][j] = uint(
                 // self.Get2DInt(x + j, y + i, max - 1) +
                 self.GetCentered2DInt(x + j, y + i, PERLIN_BIOME_FREQUENCY, max - 1) +
                 PERLIN_UPLIFT,
