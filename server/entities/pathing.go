@@ -213,7 +213,7 @@ func setUpPathing(ent *VirtualEntity) {
         return otto.Value {}
     })
 
-    ent.vm.Set("getDirectionToBestTile", func(call otto.FunctionCall) otto.Value {
+    getDirectionToBestTile := func(call otto.FunctionCall) otto.Value {
         if len(ent.directionStage) == 0 {
             ent.bestDirection = nil
             return otto.Value {}
@@ -282,7 +282,8 @@ func setUpPathing(ent *VirtualEntity) {
         bestDir = &tempDirs[ventRng.Intn(len(tempDirs))]
         result, _ := ent.vm.ToValue(ventDirections[*bestDir])
         return result
-    })
+    }
+    ent.vm.Set("getDirectionToBestTile", getDirectionToBestTile)
 
     ent.vm.Set("pathToBestTile", func(call otto.FunctionCall) otto.Value {
 
@@ -299,6 +300,21 @@ func setUpPathing(ent *VirtualEntity) {
             )
             result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
             return result
+
+        } else if len(ent.attractCoords) > 0 && len(ent.repulseCoords) == 0 {
+            attractMin := 10.0
+            for _, coord := range ent.attractCoords {
+                dist := DistanceFromCoords(
+                    ent.stageX, ent.stageY,
+                    coord[0], coord[1],
+                )
+                if dist < attractMin {
+                    attractMin = dist
+                }
+            }
+            if attractMin < ASTAR_NAIVE_FALLBACK_DIST {
+                return getDirectionToBestTile(call)
+            }
         }
 
         attractPaths := make([][]pathStep, 0, len(ent.attractCoords))
@@ -399,7 +415,6 @@ func setUpPathing(ent *VirtualEntity) {
 
             }
         } else if len(viablePaths) == 1 {
-            log.Println("One viable path")
             mostViablePath = viablePaths[0]
         } else {
             return otto.Value {}

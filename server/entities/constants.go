@@ -18,3 +18,7 @@ const ASTAR_FLEE_PATH_SAMPLE = 6
 const ASTAR_MIN_RANDOM_SAMPLE_DIAMETER = 3
 const ASTAR_RANDOM_SAMPLE_DIAMETER = 30
 const ASTAR_RANDOM_MAX_TRIES = 25
+
+// Within this distance, we fall back on naive pathing instead of full-on
+// A* pathing.
+const ASTAR_NAIVE_FALLBACK_DIST = 2.5
