@@ -19,14 +19,17 @@ const (
 
     DUNGEON_MIN_SIZE = 3
     DUNGEON_MAX_SIZE = 7
+    DUNGEON_STAIRS_DOWN_ODDS = 7 // out of 10
+    DUNGEON_BOSS_ODDS = 3 // out of 10
+    DUNGEON_ANGEL_ODDS = 3 // out of 10
 
     WORLD_OVERWORLD = "overworld"
     WORLD_ETHER     = "ether"
 
     REGIONTYPE_FIELD   = "field"
     REGIONTYPE_DUNGEON = "dungeon"
-    REGIONTYPE_SHOP = "shop"
-    REGIONTYPE_HOUSE = "house"
+    REGIONTYPE_SHOP    = "shop"
+    REGIONTYPE_HOUSE   = "house"
 )
 
 var regionSizes = map[string][2]uint {

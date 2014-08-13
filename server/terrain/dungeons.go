@@ -88,7 +88,7 @@ func GetDungeonLayout(parent string) *DungeonLayout {
     }
 
     roomsToProcess := [][2]int{
-        [2]int{entranceX, entranceY},
+        {entranceX, entranceY},
     }
     layout.Grid[entranceY][entranceX].ToBeProcessed = true
 
@@ -171,21 +171,21 @@ func GetDungeonLayout(parent string) *DungeonLayout {
         }
     }
 
-    if rng.Intn(2) == 0 {
+    if rng.Intn(10) <= DUNGEON_STAIRS_DOWN_ODDS {
         room := terminalRooms[rng.Intn(len(terminalRooms))]
         log.Println("Generating stairwell down")
         room.Type = "stairwell"
     }
 
     // Generate boss room?
-    if len(terminalRooms) > 0 && rng.Intn(3) == 0 {
+    if len(terminalRooms) > 0 && rng.Intn(10) <= DUNGEON_BOSS_ODDS {
         roomIndex := rng.Intn(len(terminalRooms))
         terminalRooms[roomIndex].Type = "boss"
         log.Println("Generating boss room")
         terminalRooms = append(terminalRooms[:roomIndex], terminalRooms[roomIndex+1:]...)
     }
     // Generate angel room?
-    if len(terminalRooms) > 0 && rng.Intn(2) == 0 {
+    if len(terminalRooms) > 0 && rng.Intn(10) <= DUNGEON_ANGEL_ODDS {
         roomIndex := rng.Intn(len(terminalRooms))
         terminalRooms[roomIndex].Type = "angel"
         log.Println("Generating angel room")
