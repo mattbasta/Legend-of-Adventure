@@ -94,17 +94,16 @@ func (self *NoiseGenerator) Get2D(x, y float64) float64 {
     return lerp(vx0, vx1, fy)
 }
 
-func (self *NoiseGenerator) Get2DInt(x, y int, max uint) int {
+func (self *NoiseGenerator) Get2DNormal(x, y int, max float64) float64 {
     v := self.Get2D(float64(x) * PERLIN_FREQUENCY, float64(y) * PERLIN_FREQUENCY)
     v = v * 0.5 + 0.5
     v = math.Pow(v, PERLIN_DILATION)
-    return int(v * float64(max))
+    return v * max
 }
 
-func (self *NoiseGenerator) GetCentered2DInt(x, y int, freq float64, bounds uint) int {
-    v := self.Get2D(float64(x) * freq, float64(y) * freq)
+func (self *NoiseGenerator) GetCentered2D(x, y int, freq float64, bounds uint) float64 {
     // v = math.Pow(v, PERLIN_DILATION)
-    return int(v * float64(bounds))
+    return self.Get2D(float64(x) * freq, float64(y) * freq) * float64(bounds)
 }
 
 func (self *NoiseGenerator) FillGrid(x, y int, grid *[][]uint, max uint) {
@@ -114,8 +113,8 @@ func (self *NoiseGenerator) FillGrid(x, y int, grid *[][]uint, max uint) {
     for i := 0; i < len(*grid); i++ {
         for j := 0; j < len((*grid)[i]); j++ {
             (*grid)[i][j] = uint(
-                self.Get2DInt(x + j, y + i, max - 1) +
-                self.GetCentered2DInt(x + j, y + i, PERLIN_BIOME_FREQUENCY, max - 1) +
+                self.Get2DNormal(x + j, y + i, float64(max - 1)) +
+                self.GetCentered2D(x + j, y + i, PERLIN_BIOME_FREQUENCY, max - 1) +
                 PERLIN_UPLIFT,
             )
         }
