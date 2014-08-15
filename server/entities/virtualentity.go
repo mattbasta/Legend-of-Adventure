@@ -4,7 +4,6 @@ import (
     "encoding/json"
     "fmt"
     "log"
-    "math/rand"
     "strconv"
     "strings"
     "time"
@@ -12,6 +11,7 @@ import (
     "github.com/robertkrimen/otto"
 
     "legend-of-adventure/server/events"
+    "legend-of-adventure/server/terrain"
 )
 
 
@@ -163,7 +163,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         radius, _ := call.Argument(1).ToFloat()
 
         entX, entY := self.Position()
-        rng := rand.New(rand.NewSource(int64(entX * entY)))
+        rng := terrain.GetCoordRNG(entX, entY)
         terrain := self.location.GetTerrain()
         hitmap := terrain.Hitmap
 

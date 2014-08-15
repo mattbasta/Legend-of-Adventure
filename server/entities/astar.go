@@ -2,13 +2,10 @@ package entities
 
 import (
     "math"
-    "math/rand"
 
     "legend-of-adventure/server/terrain"
 )
 
-
-var rng = rand.New(rand.NewSource(123123))
 
 type pathStep struct {
     X, Y int

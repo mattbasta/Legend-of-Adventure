@@ -9,3 +9,6 @@ const SOLDIER_IN_HOUSE_ODDS = 2
 const TRADER_IN_HOUSE_ODDS = 4
 const WOLF_ODDS = 4
 const DEATH_WAKER_ODDS = 4
+
+const ODDS_DUNGEON = 14
+const ODDS_TOWN = 14

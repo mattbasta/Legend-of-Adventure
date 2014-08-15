@@ -1,10 +1,6 @@
 package terrain
 
-import (
-    "hash/crc32"
-    "log"
-    "math/rand"
-)
+import "log"
 
 
 var roomTypes = [...]string {
@@ -62,9 +58,7 @@ func GetDungeonLayout(parent string) *DungeonLayout {
         return layout
     }
 
-    h := crc32.NewIEEE()
-    h.Write([]byte(parent))
-    rng := rand.New(rand.NewSource(int64(h.Sum32())))
+    rng := GetNameRNG(parent)
 
     dWidth := rng.Intn(DUNGEON_MAX_SIZE - DUNGEON_MIN_SIZE) + DUNGEON_MIN_SIZE
     dHeight := rng.Intn(DUNGEON_MAX_SIZE - DUNGEON_MIN_SIZE) + DUNGEON_MIN_SIZE

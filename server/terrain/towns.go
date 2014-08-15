@@ -1,9 +1,6 @@
 package terrain
 
-import (
-    "log"
-    "math/rand"
-)
+import "log"
 
 var buildings = [...]string{
     "plaza",
@@ -134,8 +131,7 @@ func ApplyTown(terrain *Terrain) {
 
     // TODO: Initialize portal slice here
 
-    // TODO: Use a real pairing function
-    rng := rand.New(rand.NewSource(int64(terrain.X * terrain.Y)))
+    rng := GetCoordRNG(float64(terrain.X), float64(terrain.Y))
 
     centerIndex := rng.Intn(len(townCenters))
     center := townCenters[centerIndex]

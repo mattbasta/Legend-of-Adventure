@@ -2,7 +2,6 @@ package regions
 
 import (
 	"log"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -270,8 +269,7 @@ func (self Region) GetEntity(ID string) entities.Entity {
 }
 
 func (self *Region) PopulateEntities() {
-	// TODO: make this more random
-	rng := rand.New(rand.NewSource(int64(self.X * self.Y)))
+	rng := terrain.GetCoordRNG(float64(self.X), float64(self.Y))
 
 	placeEntity := func(entType string) {
         // TODO: Make this use real values
@@ -357,10 +355,7 @@ func (self *Region) Spawn(entType string, x, y float64) {
 
 func isTownPos(x, y int) bool {
 	// Always force spawn to be a town.
-	if x == 0 && y == 0 {
-		return true
-	}
-	return false
+	return x == 0 && y == 0 || terrain.GetCoordOption(x, y, ODDS_TOWN)
 }
 
 func (self Region) IsDungeonEntrance() bool {
@@ -372,10 +367,7 @@ func (self Region) IsDungeonEntrance() bool {
 
 func isDungeonPos(x, y int) bool {
 	// Always force 1 0 to be a dungeon.
-	if x == 1 && y == 0 {
-		return true
-	}
-	return false
+	return x == 1 && y == 0 || terrain.GetCoordOption(x, y, ODDS_DUNGEON)
 }
 
 func IsValidRegionID(ID string) bool {

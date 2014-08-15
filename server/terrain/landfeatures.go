@@ -1,12 +1,8 @@
 package terrain
 
-import (
-    "math/rand"
-)
-
 
 func ApplyDungeonEntrance(terrain *Terrain) {
-    rng := rand.New(rand.NewSource(int64(terrain.X * terrain.Y)))
+    rng := GetCoordRNG(float64(terrain.X), float64(terrain.Y))
     tiles := GetFeatureTiles("tilesets/dungeon_portal")
     tiles.Apply(
         terrain,
