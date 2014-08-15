@@ -25,6 +25,12 @@ define('particles', [], function() {
             self.floor = self.y;
             self.x += 25;
             self.y += 5;
+        },
+        godmode: function(self) {
+            self.velX = (Math.random() - 0.5) * 2;
+            self.velY = (Math.random() - 0.5) * 2;
+            self.x += 20 + Math.random() * 10;
+            self.y -= 20 + Math.random() * 10;
         }
     };
 

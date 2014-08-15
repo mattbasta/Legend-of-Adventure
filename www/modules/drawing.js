@@ -22,6 +22,9 @@ define('drawing',
 
     comm.messages.on('par', function(body) {
         body.split('\n').forEach(function(particle) {
+            if (!particle) {
+                return;
+            }
             var data = particle.split(' ');
             var parInst = new Particle(
                 data[4] | 0,

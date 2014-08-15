@@ -141,6 +141,15 @@ func HandleCheat(message string, player *Player) bool {
         player.outbound_raw <- "epuevt:local\n{\"" + epuSplit[0] + "\":\"" + epuSplit[1] + "\"}"
         return true
 
+    case "god":
+        switch spl[1] {
+        case "on":
+            player.godMode = true
+        case "off":
+            player.godMode = false
+        }
+        return true
+
     }
 
     return false

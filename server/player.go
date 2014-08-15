@@ -4,6 +4,7 @@ import (
     "code.google.com/p/go.net/websocket"
     "fmt"
     "log"
+    "math/rand"
     "strconv"
     "strings"
     "time"
@@ -37,6 +38,8 @@ type Player struct {
     inventory *entities.Inventory
 
     coordStack [][2]float64
+
+    godMode    bool
 }
 
 func NewPlayer(conn *websocket.Conn) *Player {
@@ -62,6 +65,7 @@ func NewPlayer(conn *websocket.Conn) *Player {
         "",
         nil,
         make([][2]float64, 0),
+        false,
     }
     reg.AddEntity(&player)
 
@@ -116,6 +120,14 @@ func (self *Player) gameTick() {
                 self.y += velY * PLAYER_SPEED * delta
 
                 self.lastUpdate = now
+            }
+
+            if self.godMode && rand.Intn(3) == 0 {
+                particles := ""
+                for i := 0; i < 3; i++ {
+                    particles += "0 0 #F8FF9B 5 25 godmode local\n"
+                }
+                self.outbound <- self.location.GetEvent(events.PARTICLE, particles, nil)
             }
 
             for _, portal := range self.location.Terrain.Portals {
@@ -450,7 +462,9 @@ func (self *Player) IncrementHealth(amount int) {
         self.health = PLAYER_MAX_HEALTH
     } else if newHealth <= 0 {
         self.health = 0
-        self.death()
+        if !self.godMode {
+            self.death()
+        }
     } else {
         self.health = uint(newHealth)
     }
