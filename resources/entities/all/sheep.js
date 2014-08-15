@@ -41,7 +41,8 @@ define('sheep', ['peaceful'], function() {
         },
         getDrops: function() {
             // Drops a piece of meat
-            return ['f5'];
+            if ((Math.random() * 2 | 0) === 0) return '';
+            return 'f5';
         },
         getWidth: getSize,
         getHeight: getSize,

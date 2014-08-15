@@ -16,7 +16,7 @@ define('test', ['npc', 'peaceful'], function() {
             data.proto = 'avatar';
             data.image = 'avatar';
             data.width = data.height = getSize();
-            data.speed = 0.004;
+            data.speed = 0.006;
             data.nametag = 'Test Player';
             return data;
         },

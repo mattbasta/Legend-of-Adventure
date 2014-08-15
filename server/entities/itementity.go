@@ -54,16 +54,21 @@ type EntityThatCanThrow interface {
 }
 
 func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
-    item := new(ItemEntity)
-    item.id = NextEntityID()
-    item.closing = make(chan bool, 1)
-    item.itemCode = code
+    item := NewItemEntityInstance(code)
     item.location = from.Location()
 
     fromX, fromY := from.Position()
     fromDirX, fromDirY := from.Direction()
     item.x, item.y = fromX + float64(fromDirX), fromY + float64(fromDirY)
 
+    return item
+}
+
+func NewItemEntityInstance(code string) *ItemEntity {
+    item := new(ItemEntity)
+    item.id = NextEntityID()
+    item.closing = make(chan bool, 1)
+    item.itemCode = code
     item.receiver = make(chan *events.Event, 128)
 
     go func() {
@@ -131,6 +136,7 @@ func (self *ItemEntity) String() string {
     return (
         "{\"proto\":\"item\"," +
         "\"id\":\"" + self.ID() + "\"," +
+        "\"code\":\"" + self.itemCode + "\"," +
         fmt.Sprintf(
             "\"x\":\"%f\"," +
             "\"y\":\"%f\"," +

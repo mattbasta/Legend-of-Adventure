@@ -4,6 +4,7 @@ import (
     "encoding/json"
     "fmt"
     "log"
+    "math/rand"
     "strconv"
     "strings"
     "time"
@@ -13,6 +14,8 @@ import (
     "legend-of-adventure/server/events"
     "legend-of-adventure/server/terrain"
 )
+
+var globalEntityRng = rand.New(rand.NewSource(38503))
 
 
 type VirtualEntity struct {
@@ -150,6 +153,21 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         self.location.Broadcast(
             self.location.GetEvent(events.DEATH, "", self),
         )
+
+        itemCodes := self.Call("getDrops")
+        if itemCodes != "\"\"" && itemCodes != "undefined" {
+            items := strings.Split(itemCodes, "\n")
+            posX, posY := self.Position()
+            for _, item := range items {
+                item = item[1:len(item) - 1]
+                log.Println(self.id + " is dropping " + item)
+                itemEnt := NewItemEntityInstance(item)
+                itemEnt.location = self.location
+                itemEnt.x = posX + (globalEntityRng.Float64() * 3 - 1.5)
+                itemEnt.y = posY + (globalEntityRng.Float64() * 3 - 1.5)
+                self.location.AddEntity(itemEnt)
+            }
+        }
 
         self.location.RemoveEntity(self)
 

@@ -27,7 +27,7 @@ define('wolf', ['hostile'], function() {
         },
         getDrops: function() {
             // Drops a piece of meat
-            return ['f5'];
+            return 'f5';
         },
         getWidth: getSize,
         getHeight: getSize,
