@@ -445,12 +445,24 @@ func (self *Player) String() string {
 }
 
 func (self *Player) IncrementHealth(amount int) {
-    self.health = uint(int(self.health) + amount)
-    if self.health > PLAYER_MAX_HEALTH {
+    newHealth := int(self.health) + amount
+    if newHealth > PLAYER_MAX_HEALTH {
         self.health = PLAYER_MAX_HEALTH
-    } else if self.health < 0 {
+    } else if newHealth <= 0 {
         self.health = 0
-        // TODO: Add death handler here
+        self.death()
+    } else {
+        self.health = uint(newHealth)
     }
     self.outbound_raw <- "hea" + strconv.Itoa(int(self.health))
+}
+
+func (self *Player) death() {
+    for self.inventory.NumItems() > 0 {
+        self.inventory.Drop(self)
+    }
+
+    self.sendToLocation("overworld", "field:0:0", 0, 0, 50, 50)
+    self.health = PLAYER_MAX_HEALTH
+    self.outbound_raw <- "dea"
 }
