@@ -27,6 +27,13 @@ define('soldier', ['npc', 'neutral'], function() {
         }, Math.random() * 5000 + 3000);
     }
 
+    var drops = [
+        // Lower index is worth less.
+        'wsw.old.',
+        'wsw.plain.',
+        'wsw.sharp.',
+        'wsw.forged.'
+    ];
 
     return {
         setup: function(sup) {
@@ -42,6 +49,7 @@ define('soldier', ['npc', 'neutral'], function() {
             data.image = image;
             data.width = data.height = getSize();
             data.speed = 0.0075;
+            data.nametag = 'Soldier';
             return data;
         },
         silent: function() {
@@ -83,6 +91,10 @@ define('soldier', ['npc', 'neutral'], function() {
         attacked: function(sup, from, damage, item) {
             if (item === SOLDIER_WEAPON) return;
             sup();
+        },
+
+        getDrops: function() {
+            return drops[Math.pow(Math.random(), 3) * drops.length | 0]
         }
     };
 });
