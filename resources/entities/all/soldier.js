@@ -94,7 +94,8 @@ define('soldier', ['npc', 'neutral'], function() {
         },
 
         getDrops: function() {
-            return drops[Math.pow(Math.random(), 3) * drops.length | 0]
+            var level = Math.random() * 5 + 2 | 0;
+            return drops[Math.pow(Math.random(), 3) * drops.length | 0] + level;
         }
     };
 });
