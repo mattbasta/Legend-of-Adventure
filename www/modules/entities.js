@@ -49,9 +49,6 @@ define('entities',
             entity.velocity[0] = data.velocity[0] | 0;
             entity.velocity[1] = data.velocity[1] | 0;
 
-            if (follow === data[0])
-                require('level').setCenterPosition();
-
             var sp_dir = getSpriteDirection(entity.direction[0], entity.direction[1]);
             if (!entity.velocity[0] && !entity.velocity[1] && (oldVX || oldVY)) {
                 entity.position = sp_dir[0].position;
@@ -71,6 +68,10 @@ define('entities',
         for (var key in data) {
             if (!data.hasOwnProperty(key)) continue;
             entity[key] = data[key];
+        }
+
+        if (follow === origin) {
+            require('level').setCenterPosition();
         }
 
         draw(origin);

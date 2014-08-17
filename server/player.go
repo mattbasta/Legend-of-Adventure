@@ -353,6 +353,23 @@ func (self *Player) handle(msg string) {
 func (self *Player) sendToLocation(parentID, type_ string, x, y int, newX, newY float64) {
     newLocation := regions.GetRegion(parentID, type_, x, y)
 
+    self.x, self.y = newX, newY
+
+    if newLocation == self.location {
+        self.location.Broadcast(
+            self.location.GetEvent(
+                events.ENTITY_UPDATE,
+                "{" + self.PositionString() + "}",
+                self,
+            ),
+        )
+        self.outbound_raw <- (
+            "epuevt:local\n{" +
+            fmt.Sprintf("\"x\":%f,\"y\":%f", newX, newY) +
+            "}")
+        return
+    }
+
     if newLocation == nil {
         log.Println("Requested region that does not exist:", parentID, type_, x, y)
         return
@@ -476,7 +493,7 @@ func (self *Player) death() {
         self.inventory.Drop(self)
     }
 
-    self.sendToLocation("overworld", "field:0:0", 0, 0, 50, 50)
+    self.sendToLocation(terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0, 50, 50)
     self.health = PLAYER_MAX_HEALTH
     self.outbound_raw <- "dea"
 }
