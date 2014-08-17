@@ -486,8 +486,9 @@ func (self *Player) IncrementHealth(amount int) {
 
 func (self *Player) death() {
 
-
-
+    self.location.Broadcast(
+        self.location.GetEvent(events.PARTICLE_MACRO, fmt.Sprintf("%f %f deathFlake 25", self.x, self.y), self),
+    )
 
     for self.inventory.NumItems() > 0 {
         self.inventory.Drop(self)
