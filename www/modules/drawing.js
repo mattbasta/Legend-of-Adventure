@@ -20,6 +20,7 @@ define('drawing',
 
     var activeParticles = [];
 
+    // Particles
     comm.messages.on('par', function(body) {
         body.split('\n').forEach(function(particle) {
             if (!particle) {
@@ -42,6 +43,28 @@ define('drawing',
                 entities.addParticle(data[6], parInst);
             } else {
                 activeParticles.push(parInst);
+            }
+        });
+    });
+
+    // Particle macros
+    comm.messages.on('pma', function(body) {
+        body.split('\n').forEach(function(particle) {
+            if (!particle) {
+                return;
+            }
+            var data = particle.split(' ');
+            for (var i = 0; i < (data[3] | 0); i++) {
+                var parInst = Particle.macro(data[2]);
+                parInst.setPosition(
+                    parseFloat(data[0]) * tilesize,
+                    parseFloat(data[1]) * tilesize
+                );
+                if (data[4]) {
+                    entities.addParticle(data[4], parInst);
+                } else {
+                    activeParticles.push(parInst);
+                }
             }
         });
     });

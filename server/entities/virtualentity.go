@@ -39,6 +39,7 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
     ent.receiver = make(chan *events.Event, 128)
 
     ent.EntityVM = *GetEntityVM(entityName)
+    ent.vm.Set("ID", ent.id)
 
     setUpPathing(ent)
 

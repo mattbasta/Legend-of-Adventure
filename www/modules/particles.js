@@ -69,5 +69,27 @@ define('particles', [], function() {
         );
     };
 
+    Particle.macro = function(command) {
+        var par;
+        switch (command) {
+            case 'bloodspatter':
+                par = new Particle(25, 5, 'red');
+                break;
+            case 'zombiesquish':
+                par = new Particle(25, 5, '#7DCD77');
+                par.init('bloodspatter');
+                return par;
+            case 'deathwakersquish':
+                par = new Particle(25, 5, '#634A21');
+                par.init('bloodspatter');
+                return par;
+            case 'godmode':
+                par = new Particle(25, 5, '#F8FF9B');
+                break;
+        }
+        par.init(command);
+        return par;
+    };
+
     return Particle;
 });

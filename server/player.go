@@ -123,11 +123,10 @@ func (self *Player) gameTick() {
             }
 
             if self.godMode && rand.Intn(3) == 0 {
-                particles := ""
-                for i := 0; i < 3; i++ {
-                    particles += "0 0 #F8FF9B 5 25 godmode local\n"
-                }
-                self.outbound <- self.location.GetEvent(events.PARTICLE, particles, nil)
+                self.outbound <- self.location.GetEvent(events.PARTICLE_MACRO, "0.5 -0.5 godmode 3 local", nil)
+                self.location.Broadcast(
+                    self.location.GetEvent(events.PARTICLE_MACRO, "0.5 -0.5 godmode 3 " + self.ID(), self),
+                )
             }
 
             for _, portal := range self.location.Terrain.Portals {
@@ -213,14 +212,11 @@ func (self *Player) handleOutbound(evt *events.Event) bool {
         self.IncrementHealth(-1 * damage)
 
 
-        particles := ""
-        for i := 0; i < 5; i++ {
-            if particles != "" {
-                particles += "\n"
-            }
-            particles += "0 0 red 5 25 bloodspatter local"
-        }
-        self.outbound <- self.location.GetEvent(events.PARTICLE, particles, nil)
+        // Show blood spatter particles
+        self.outbound <- self.location.GetEvent(events.PARTICLE_MACRO, "0.5 0 bloodspatter 5 local", nil)
+        self.location.Broadcast(
+            self.location.GetEvent(events.PARTICLE_MACRO, "0.5 0 bloodspatter 5 " + self.ID(), self),
+        )
 
     default:
         return false
@@ -472,6 +468,10 @@ func (self *Player) IncrementHealth(amount int) {
 }
 
 func (self *Player) death() {
+
+
+
+
     for self.inventory.NumItems() > 0 {
         self.inventory.Drop(self)
     }

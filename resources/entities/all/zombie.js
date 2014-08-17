@@ -44,6 +44,10 @@ define('zombie', ['hostile'], function() {
         attacked: function(sup, from) {
             if (getType(from) === 'zombie') return;
             sup();
+        },
+
+        bloodSpatter: function() {
+            sendEvent('pma',  '0.5 0 zombiesquish 5 ' + ID);
         }
     };
 });

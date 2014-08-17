@@ -80,6 +80,10 @@ define('death_waker', ['peaceful'], function() {
             if (idx !== -1) {
                 seeingPlayers.splice(idx, 1);
             }
+        },
+
+        bloodSpatter: function() {
+            sendEvent('pma',  '0.5 0 deathwakersquish 5 ' + ID);
         }
     };
 });

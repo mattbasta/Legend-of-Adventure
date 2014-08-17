@@ -129,6 +129,7 @@ func (self *Inventory) Use(index uint, holder Animat) {
 		}
 		holder.IncrementHealth(FOOD_HEALTH_INCREASE)
 		self.inv[index] = ""
+		self.Consolidate()
 		self.Owner.UpdateInventory()
 
 	case 'w':
