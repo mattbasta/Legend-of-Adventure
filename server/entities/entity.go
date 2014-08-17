@@ -10,6 +10,7 @@ import (
 var entityNameCounter = 0
 
 func NextEntityID() string {
+    // TODO: Make this thread safe
     name := "e" + strconv.Itoa(entityNameCounter)
     entityNameCounter++
     return name

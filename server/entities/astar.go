@@ -111,7 +111,12 @@ func PathAStar(sx, sy, w, h, dx, dy float64, hitmap *terrain.Hitmap) []pathStep 
                 // Ignore tiles that we've already enumerated.
                 if _, ok := closedCoords[[2]int {x, y}]; ok { continue }
 
-                // TODO: Don't allow diagonals if the tile can't be reached directly
+                // Don't allow the entity to cut corners
+                if i != 0 && j != 0 {
+                    if !hitmap.Fits(float64(from.X + j), float64(from.Y), w, h) { continue }
+                    if !hitmap.Fits(float64(from.X), float64(from.Y + i), w, h) { continue }
+                }
+
                 newStep := new(pathStep)
                 newStep.X, newStep.Y = x, y
                 newStep.Parent = &from
