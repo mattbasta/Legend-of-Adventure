@@ -73,6 +73,7 @@ func NewPlayer(conn *websocket.Conn) *Player {
     player.inventory = entities.NewInventory(&player, PLAYER_INV_SIZE)
     player.inventory.Give("wsw.sharp.12")
     player.inventory.Give("f5")
+    player.inventory.Give("f5")
 
     go player.startPinging()
     go player.gameTick()
