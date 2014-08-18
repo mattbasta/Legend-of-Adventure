@@ -401,11 +401,8 @@ func (self *Player) UpdateInventory() {
             out += "\n"
         }
 
-        out += strconv.Itoa(i) + ":"
-        item := self.inventory.Get(i)
-        if item != "" {
-            out += item
-        }
+        item, count := self.inventory.Get(i)
+        out += fmt.Sprintf("%d:%s:%d", i, item, count)
         first = false
     }
     self.outbound_raw <- out

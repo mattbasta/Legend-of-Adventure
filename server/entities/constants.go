@@ -6,6 +6,8 @@ const TILE_SIZE = 50
 const ITEM_PICK_UP_DIST = 0.5
 const ENTITY_VISION = 20
 
+const INV_MAX_STACK = 32
+
 const ATTACK_WIGGLE_ROOM = 0.5
 
 const VIRTUAL_ENTITY_TICK_MS = 200

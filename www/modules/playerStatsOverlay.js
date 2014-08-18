@@ -9,6 +9,8 @@ define('playerStatsOverlay',
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
+    ctx.font = '20px VT323';
+    ctx.fillStyle = 'white';
 
     var selected = false;
     var hovering = -1;
@@ -99,8 +101,16 @@ define('playerStatsOverlay',
 
         var i;
         var sx;
+        var count;
+        var countWidth;
         for (i = 0; i < 5; i++) {
             sx = 0;
+
+            count = inventory.getCount(i);
+            if (count > 0) {
+                countWidth = ctx.measureText(count);
+            }
+
             if (i === 0) {
                 if (hovering === 0)
                     sx = selected ? 240 : 160;
@@ -110,8 +120,12 @@ define('playerStatsOverlay',
                     sx = 240;
                 ctx.drawImage(inventoryImg, sx, 0, 80, 80,
                               0, 0, 80, 80);
-                if (slots[i])
+                if (slots[i]) {
                     draw_item(10, 10, 60, 60, slots[i]);
+                    if (count && count !== 1) {
+                        ctx.fillText(count, 10 + 80 - countWidth.width - 20, 20);
+                    }
+                }
             } else {
                 if (hovering === i)
                     sx = selected ? 192 : 128;
@@ -121,8 +135,12 @@ define('playerStatsOverlay',
                               26 + i * 64, 14, 16, 64);
                 ctx.drawImage(inventoryImg, sx + (i < 4 ? 16 : 48), 80, 16, 64,
                               74 + i * 64, 14, 16, 64);
-                if(slots[i])
+                if(slots[i]) {
                     draw_item(34 + i * 64, 22, 48, 48, slots[i]);
+                    if (count && count !== 1) {
+                        ctx.fillText(count, (34 + i * 64) + 64 - countWidth.width - 15, 30);
+                    }
+                }
             }
         }
 

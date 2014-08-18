@@ -2,6 +2,7 @@ define('inventory', ['comm', 'keys'], function(comm, keys) {
     'use strict';
 
     var slots = [null, null, null, null, null];
+    var count = [0, 0, 0, 0, 0];
     var selected = 0;
 
     // Inventory update
@@ -10,6 +11,7 @@ define('inventory', ['comm', 'keys'], function(comm, keys) {
             var lined = item.split(':');
             var position = parseInt(lined[0], 10);
             slots[position] = lined[1] || null;
+            count[position] = lined[2] | 0;
         });
     });
 
@@ -45,6 +47,9 @@ define('inventory', ['comm', 'keys'], function(comm, keys) {
         getContents: function() {
             // Return a copy so the player can't cheat.
             return Array.apply(null, slots);
+        },
+        getCount: function(i) {
+            return count[i];
         }
     };
 });

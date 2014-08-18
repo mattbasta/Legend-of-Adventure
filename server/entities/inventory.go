@@ -16,16 +16,18 @@ type InventoryOwner interface {
 type Inventory struct {
 	Owner    InventoryOwner
 	inv      []string
+	counts	 []int
 	capacity int
 }
 
 func NewInventory(owner InventoryOwner, capacity int) *Inventory {
 	slots := make([]string, capacity)
-	return &Inventory{owner, slots, capacity}
+	counts := make([]int, capacity)
+	return &Inventory{owner, slots, counts, capacity}
 }
 
-func (self *Inventory) Get(index int) string {
-	return self.inv[index]
+func (self *Inventory) Get(index int) (string, int) {
+	return self.inv[index], self.counts[index]
 }
 
 func (self *Inventory) Capacity() int {
@@ -52,6 +54,14 @@ func (self *Inventory) IsFull() bool {
 }
 
 func (self *Inventory) Give(item string) (bool, int) { // Success, Slot
+	for i, v := range self.inv {
+		if v == item && self.counts[i] < INV_MAX_STACK {
+			self.counts[i]++
+			self.Owner.UpdateInventory()
+			return true, i
+		}
+	}
+
 	if self.IsFull() {
 		return false, 0
 	}
@@ -59,6 +69,7 @@ func (self *Inventory) Give(item string) (bool, int) { // Success, Slot
 	for i, v := range self.inv {
 		if v == "" {
 			self.inv[i] = item
+			self.counts[i] = 1
 			self.Owner.UpdateInventory()
 			return true, i
 		}
@@ -74,6 +85,7 @@ func (self *Inventory) Clear() {
 
 func (self *Inventory) ClearSlot(index int) {
 	self.inv[index] = ""
+	self.counts[index] = 0
 }
 
 func (self *Inventory) Consolidate() {
@@ -84,7 +96,9 @@ func (self *Inventory) Consolidate() {
 		for j := i + 1; j < self.capacity; j++ {
 			if self.inv[j] != "" {
 				self.inv[i] = self.inv[j]
+				self.counts[i] = self.counts[j]
 				self.inv[j] = ""
+				self.counts[j] = 0
 				break
 			}
 		}
@@ -99,17 +113,19 @@ func (self *Inventory) Cycle(command string) {
 	count := self.NumItems()
 
 	if command == "b" {
-		first := self.inv[0]
+		first, firstCount := self.inv[0], self.counts[0]
 		for i := 0; i <= count-2; i++ {
 			self.inv[i] = self.inv[i+1]
+			self.counts[i] = self.counts[i+1]
 		}
-		self.inv[count-1] = first
+		self.inv[count-1], self.counts[count-1] = first, firstCount
 	} else {
-		last := self.inv[count-1]
+		last, lastCount := self.inv[count-1], self.counts[count-1]
 		for i := count - 1; i > 0; i-- {
 			self.inv[i] = self.inv[i-1]
+			self.counts[i] = self.counts[i-1]
 		}
-		self.inv[0] = last
+		self.inv[0], self.counts[0] = last, lastCount
 	}
 	self.Owner.UpdateInventory()
 }
@@ -128,7 +144,10 @@ func (self *Inventory) Use(index uint, holder Animat) {
 			return
 		}
 		holder.IncrementHealth(FOOD_HEALTH_INCREASE)
-		self.inv[index] = ""
+		self.counts[index]--
+		if self.counts[index] == 0 {
+			self.inv[index] = ""
+		}
 		self.Consolidate()
 		self.Owner.UpdateInventory()
 
@@ -154,7 +173,10 @@ func (self *Inventory) Drop(dropper EntityThatCanThrow) {
 
 	reg := dropper.Location()
 	item := NewItemEntity(self.inv[0], dropper)
-	self.inv[0] = ""
+	self.counts[0]--
+	if self.counts[0] == 0 {
+		self.inv[0] = ""
+	}
 	reg.AddEntity(item)
 	self.Consolidate()
 	self.Owner.UpdateInventory()

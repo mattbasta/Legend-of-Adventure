@@ -64,11 +64,6 @@ func HandleCheat(message string, player *Player) bool {
         return true
 
     case "giv":
-        if player.inventory.IsFull() {
-            sayToPlayer("Your inventory is full.", player)
-            return true
-        }
-
         ok, slot := player.inventory.Give(spl[1])
         if !ok {
             sayToPlayer("Item could not be given", player)
