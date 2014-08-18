@@ -123,6 +123,9 @@ define('playerStatsOverlay',
                 if (slots[i]) {
                     draw_item(10, 10, 60, 60, slots[i]);
                     if (count && count !== 1) {
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                        ctx.fillRect(10 + 80 - countWidth.width - 25, 5, countWidth.width + 10, 19);
+                        ctx.fillStyle = '#fff';
                         ctx.fillText(count, 10 + 80 - countWidth.width - 20, 20);
                     }
                 }
@@ -138,6 +141,9 @@ define('playerStatsOverlay',
                 if(slots[i]) {
                     draw_item(34 + i * 64, 22, 48, 48, slots[i]);
                     if (count && count !== 1) {
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                        ctx.fillRect((34 + i * 64) + 64 - countWidth.width - 20, 15, countWidth.width + 10, 19);
+                        ctx.fillStyle = '#fff';
                         ctx.fillText(count, (34 + i * 64) + 64 - countWidth.width - 15, 30);
                     }
                 }
