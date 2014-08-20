@@ -5,7 +5,7 @@ define('playerStatsOverlay',
     'use strict';
 
     var canvas = document.getElementById('canvas_inventory');
-    var ctx = canvas.getContext("2d");
+    var ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
@@ -62,37 +62,40 @@ define('playerStatsOverlay',
     keys.up.on(32, useUp);
 
     var weapon_prefixes = {
-        plain: ["Plain", 0],
-        forged: ["Forged", 1],
-        sharp: ["Sharp", 2],
-        broad: ["Broad", 3],
-        old: ["Old", 4],
-        leg: ["Legendary", 5],
-        fla: ["Flaming", 6],
-        agile: ["Agile", 7],
-        bane: ["Baneful", 8],
-        ench: ["Enchanted", 9],
-        evil: ["Evil", 10],
-        spite: ["Spiteful", 11],
-        ether: ["Ether", 12],
-        ancie: ["Ancient", 13]
+        plain: ['Plain', 0],
+        forged: ['Forged', 1],
+        sharp: ['Sharp', 2],
+        broad: ['Broad', 3],
+        old: ['Old', 4],
+        leg: ['Legendary', 5],
+        fla: ['Flaming', 6],
+        agile: ['Agile', 7],
+        bane: ['Baneful', 8],
+        ench: ['Enchanted', 9],
+        evil: ['Evil', 10],
+        spite: ['Spiteful', 11],
+        ether: ['Ether', 12],
+        ancie: ['Ancient', 13]
     };
-    var weapon_order = ["sw", "bo", "ma", "ax", "ha", "st"];
-    var weapon_prefixes_order = ["plain", "forged", "sharp", "broad", "old", "leg", "fla", "agile", "bane", "ench", "evil", "spite", "ether", "ancie"];
+    var weapon_order = ['sw', 'bo', 'ma', 'ax', 'ha', 'st'];
+    var weapon_prefixes_order = ['plain', 'forged', 'sharp', 'broad', 'old', 'leg', 'fla', 'agile', 'bane', 'ench', 'evil', 'spite', 'ether', 'ancie'];
 
     function doRedraw(inventoryImg, itemsImg) {
         ctx.clearRect(0, 0, 374, 85);
 
         function draw_item(x, y, h, w, code) {
             var sy = 0, sx = 0;
-            if (code[0] == "w") {  // Weapons have special codes to allow modifiers
-                var attributes = code.substr(1).split(".");
+            if (code[0] == 'w') {  // Weapons have special codes to allow modifiers
+                var attributes = code.substr(1).split('.');
                 sx = weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
                 sy = weapon_order.indexOf(attributes[0]) * 24;
             } else {
                 var c = parseInt(code.substr(1), 10);
                 sx = c % 5 * 24;
                 sy = Math.floor(c / 5) * 24;
+                if (code[0] === 'p') {
+                    sy += 120;
+                }
             }
             ctx.drawImage(itemsImg, sx, sy, 24, 24, x, y, w, h);
         }
