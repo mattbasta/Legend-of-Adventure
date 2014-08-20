@@ -104,6 +104,8 @@ define('entities',
 
         props.particles = [];
 
+        props.composite = props.composite || null;
+
         registry[props.id] = props;
         draw(props.id);
     }
@@ -260,10 +262,14 @@ define('entities',
             var destX;
             var destY;
             var temp;
+            var comp;
+
+            var origCO = context.globalCompositeOperation;
 
             // Draw each entity in turn.
             for(var i = 0; i < entities.length; i++) {
                 entity = entities[i];
+                comp = entity.composite;
 
                 destX = entity.x * settings.tilesize + entity.xOffset - state[0];
                 destY = entity.y * settings.tilesize - entity.height - state[1];
@@ -273,12 +279,36 @@ define('entities',
                     destY += entitymovement[entity.movement + '_y'](now - entity.created);
                 }
 
+                if (entity.id === 'local') {
+                    if (settings.effect === 'flip') {
+                        context.save();
+                        context.scale(1, -1);
+                        destY *= -1;
+                        destY -= entity.height;
+                    } else if (settings.effect === 'invincible') {
+                        comp = 'difference';
+                    }
+                }
+
+                if (comp) {
+                    context.globalCompositeOperation = comp;
+                }
+
                 context.drawImage(
                     entity.canvas,
                     0, 0, entity.canvas.width, entity.canvas.height,
                     destX, destY,
                     entity.width, entity.height
                 );
+
+                if (entity.id === 'local') {
+                    if (settings.effect === 'flip') {
+                        context.restore();
+                    }
+                }
+                if (comp) {
+                    context.globalCompositeOperation = origCO;
+                }
 
                 if (entity.nametag) {
                     context.font = '30px VT323';

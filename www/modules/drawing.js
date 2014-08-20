@@ -91,10 +91,20 @@ define('drawing',
         if (!terrainBuffers.length || !terrainBuffers[0].length) return;
 
         var output = canvases.getContext('output');
+
+
         var i;
         if (state) {
             var scale;
             var j;
+
+            if (settings.effect === 'drained') {
+                output.globalCompositeOperation = 'luminosity';
+                output.fillStyle = 'white';
+                output.fillRect(state[4], state[5], state[2], state[3]);
+            } else {
+                output.globalCompositeOperation = null;
+            }
 
             // Draw the terrain
             scale = settings.scales.terrain;
@@ -146,6 +156,13 @@ define('drawing',
             if (activeParticles[i].tick()) {
                 activeParticles.splice(i, 1);
             }
+        }
+
+        if (settings.effect === 'blindness') {
+            output.fillStyle = 'rgba(0, 0, 0, 0.85)';
+            output.fillRect(0, 0, output.canvas.width, output.canvas.height);
+        } else if (settings.effect === 'flip') {
+            output.restore();
         }
     }
 

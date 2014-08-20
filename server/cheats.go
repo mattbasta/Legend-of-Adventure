@@ -145,6 +145,14 @@ func HandleCheat(message string, player *Player) bool {
         }
         return true
 
+    case "efx":
+        player.outbound_raw <- "efxevt:local\n" + spl[1]
+        return true
+
+    case "efc":
+        player.outbound_raw <- "efcevt:local\n"
+        return true
+
     }
 
     return false

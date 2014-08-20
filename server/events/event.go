@@ -71,6 +71,11 @@ const (
 	// Particle macro command.
 	//   Body: x y macro repeat[ entity][\n ...]
 	PARTICLE_MACRO EventType = "pma"
+	// Effect set command
+	//   Body: <effect name>
+	EFFECT EventType = "efx"
+	// Effect set command
+	EFFECT_CLEAR EventType = "efc"
 )
 
 type Event struct {

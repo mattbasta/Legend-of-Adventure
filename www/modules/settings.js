@@ -22,6 +22,8 @@ define('settings', [], function() {
             objects: 1
         },
 
+        effect: null,
+
         entityPrototypes: {
             avatar: {
                 image: "avatar",

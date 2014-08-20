@@ -1,5 +1,5 @@
 define(
     'game',
-    ['chat', 'comm', 'drawing', 'keys', 'level', 'playerStatsOverlay', 'sound', 'timing'],
+    ['chat', 'comm', 'drawing', 'effects', 'keys', 'level', 'playerStatsOverlay', 'sound', 'timing'],
     function() {}
 );
