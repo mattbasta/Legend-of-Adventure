@@ -51,6 +51,7 @@ not present in the Go port.
 
 ### Graphics
 
+* [Henrique Lazarini](http://7soul1.deviantart.com/) - Some item sprites
 * LordBagardo - Mob Sprites
 * Kazzador - Zombie Sprite
 
