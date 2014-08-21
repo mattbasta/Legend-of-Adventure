@@ -3,6 +3,7 @@ package entities
 import (
 	"fmt"
 	"log"
+	"math/rand"
 
 	"legend-of-adventure/server/events"
 )
@@ -10,6 +11,7 @@ import (
 
 type InventoryOwner interface {
 	UpdateInventory()
+	SetEffect(effect string, ttl int)
 }
 
 
@@ -144,12 +146,7 @@ func (self *Inventory) Use(index uint, holder Animat) {
 			return
 		}
 		holder.IncrementHealth(FOOD_HEALTH_INCREASE)
-		self.counts[index]--
-		if self.counts[index] == 0 {
-			self.inv[index] = ""
-		}
-		self.Consolidate()
-		self.Owner.UpdateInventory()
+		self.Remove(index)
 
 	case 'w':
 		x, y := holder.Position()
@@ -160,9 +157,36 @@ func (self *Inventory) Use(index uint, holder Animat) {
 				holder,
 			),
 		)
+
+	case 'p':
+		self.Remove(index)
+
+		effectN := rand.Intn(4)
+		var effect string
+		switch effectN {
+		case 0:
+			effect = "flip"
+		case 1:
+			effect = "invincible"
+		case 2:
+			effect = "blindness"
+		case 3:
+			effect = "drained"
+		}
+		holder.SetEffect(effect, rand.Intn(10) + 10)
 	}
 
 }
+
+func (self *Inventory) Remove(index uint) {
+	self.counts[index]--
+	if self.counts[index] == 0 {
+		self.inv[index] = ""
+	}
+	self.Consolidate()
+	self.Owner.UpdateInventory()
+}
+
 
 func (self *Inventory) Drop(dropper EntityThatCanThrow) {
 	if self.inv[0] == "" {

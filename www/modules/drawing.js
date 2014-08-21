@@ -138,6 +138,11 @@ define('drawing',
             for (i = 0; i < activeParticles.length; i++) {
                 activeParticles[i].draw(output, -1 * state[0], -1 * state[1]);
             }
+
+            if (settings.effect === 'drained') {
+                output.globalCompositeOperation = '';
+            }
+
         }
         if (settings.show_fps) {
             output.fillStyle = 'white';

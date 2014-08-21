@@ -40,6 +40,8 @@ type Player struct {
     coordStack [][2]float64
 
     godMode    bool
+
+    effectTTL  int
 }
 
 func NewPlayer(conn *websocket.Conn) *Player {
@@ -66,6 +68,7 @@ func NewPlayer(conn *websocket.Conn) *Player {
         nil,
         make([][2]float64, 0),
         false,
+        0,
     }
     reg.AddEntity(&player)
 
@@ -99,7 +102,7 @@ func (self *Player) startPinging() {
 }
 
 func (self *Player) gameTick() {
-    ticker := time.NewTicker(250 * time.Millisecond)
+    ticker := time.NewTicker(PLAYER_TICK_FREQ * time.Millisecond)
     defer ticker.Stop()
     for {
 
@@ -161,11 +164,23 @@ func (self *Player) gameTick() {
                     self.sendToLocation(parent, type_, x, y, destX, destY)
                 }
             }
+
+            if self.effectTTL > 0 {
+                self.effectTTL--
+                if self.effectTTL == 0 {
+                    self.outbound <- self.location.GetEvent(events.EFFECT_CLEAR, "", nil)
+                }
+            }
         case <-self.closing:
             self.closing <- true
             return
         }
     }
+}
+
+func (self *Player) SetEffect(effect string, ttl int) {
+    self.effectTTL = ttl
+    self.outbound <- self.location.GetEvent(events.EFFECT, effect, nil)
 }
 
 func (self *Player) listenOutbound() {

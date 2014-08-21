@@ -59,4 +59,5 @@ type Animat interface {
     GetHealth() uint
     IsAtMaxHealth() bool
     IncrementHealth(amount int)
+    SetEffect(effect string, ttl int)
 }
