@@ -39,12 +39,12 @@ define('npc', ['animat'], function() {
             }, Math.random() * 10000 + 4000);
         },
 
-        // getDirectionToBestTile: function(sup, wandering) {
-        //     if (wandering)
-        //         return getDirectionToBestTile();
-        //     else
-        //         return pathToBestTile();
-        // },
+        getDirectionToBestTile: function(sup, wandering) {
+            if (wandering)
+                return getDirectionToBestTile();
+            else
+                return pathToBestTile();
+        },
         chase: clearPath,
         stopChasing: clearPath,
         flee: clearPath,
