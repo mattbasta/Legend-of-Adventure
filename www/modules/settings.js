@@ -28,8 +28,8 @@ define('settings', [], function() {
             avatar: {
                 image: "avatar",
                 xOffset: 0,
-                width: 50,
-                height: 50,
+                width: 1,
+                height: 1,
                 speed: 0.0075,
                 sprite: {
                     left: [

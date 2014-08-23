@@ -290,6 +290,12 @@ func setUpPathing(ent *VirtualEntity) {
         // TODO: Replace these!
         entW, entH := 1.0, 1.0
 
+        log.Println(
+            ent.lastPath != nil,
+            len(ent.lastPath) > 1,
+            len(ent.attractCoords) == 0,
+        )
+
         if ent.lastPath != nil &&
            len(ent.lastPath) > 1 &&
            len(ent.attractCoords) == 0 {

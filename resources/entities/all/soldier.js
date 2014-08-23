@@ -6,7 +6,7 @@ define('soldier', ['npc', 'neutral'], function() {
     var image = 'soldier' + (Math.random() * 3 + 1 | 0);
 
     function getSize() {
-        return 50;
+        return 1;
     }
 
     function getHealth() {

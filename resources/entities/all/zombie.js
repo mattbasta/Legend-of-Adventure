@@ -1,7 +1,7 @@
 define('zombie', ['hostile'], function() {
 
     function getSize() {
-        return 50;
+        return 1;
     }
 
     function getHealth() {

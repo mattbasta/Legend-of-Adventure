@@ -3,7 +3,7 @@ define('bully', ['npc', 'peaceful'], function() {
     var chasing = null;
 
     function getSize() {
-        return 50;
+        return 1;
     }
 
     function getHealth() {

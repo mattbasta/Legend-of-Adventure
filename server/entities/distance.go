@@ -8,7 +8,7 @@ import (
 
 type positionedEntity interface {
     Position() (float64, float64)
-    Size() (uint, uint)
+    Size() (float64, float64)
 }
 
 
@@ -37,11 +37,10 @@ func DistanceFromCoords(x1, y1, x2, y2 float64) float64 {
 }
 
 func IsEntityCollidingWithPortal(portal terrain.Portal, entity positionedEntity) bool {
-    ex, ey := entity.Position() // TODO: Update this to use ApproximatePosition
+    ex, ey := entity.Position()
     ew, eh := entity.Size()
-    ewT, ehT := float64(ew / TILE_SIZE), float64(eh / TILE_SIZE)
-    return (ex + ewT >= float64(portal.X) &&
+    return (ex + ew >= float64(portal.X) &&
             float64(portal.X + portal.W) >= ex &&
             ey >= float64(portal.Y) &&
-            float64(portal.Y + portal.H) >= ey - ehT)
+            float64(portal.Y + portal.H) >= ey - eh)
 }

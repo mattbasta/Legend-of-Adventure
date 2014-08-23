@@ -13,7 +13,7 @@ define('child', ['npc', 'peaceful'], function() {
     var image = 'child' + (Math.random() * 2 + 1 | 0);
 
     function getSize() {
-        return 50;
+        return 1;
     }
 
     function getHealth() {

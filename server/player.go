@@ -440,7 +440,7 @@ func (self Player) Location() entities.EntityRegion { return self.location }
 func (self Player) MovementEffect() string       { return "" }
 func (self Player) Position() (float64, float64) { return self.x, self.y }
 func (self Player) Type() string                 { return "player" }
-func (self Player) Size() (uint, uint)           { return 50, 50 }
+func (self Player) Size() (float64, float64)     { return 1, 1 }
 func (self Player) Velocity() (int, int)         { return self.velX, self.velY }
 
 func (self *Player) PositionString() string {
@@ -472,8 +472,8 @@ func (self *Player) String() string {
         "\"id\":\"" + self.ID() + "\"," +
         self.PositionString() + "," +
         fmt.Sprintf(
-            "\"width\":\"%d\"," +
-            "\"height\":\"%d\",",
+            "\"width\":\"%f\"," +
+            "\"height\":\"%f\",",
             width,
             height,
         ) +

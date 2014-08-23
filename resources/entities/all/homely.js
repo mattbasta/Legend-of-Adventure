@@ -30,7 +30,7 @@ define('homely', ['npc', 'sentient'], function() {
     }
 
     function getSize() {
-        return 50;
+        return 1;
     }
 
     return {

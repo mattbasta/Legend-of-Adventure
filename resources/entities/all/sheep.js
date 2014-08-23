@@ -6,7 +6,7 @@ define('sheep', ['peaceful'], function() {
     var moving = false;
 
     function getSize() {
-        return 50;
+        return 1;
     }
 
     function getHealth() {

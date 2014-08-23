@@ -324,11 +324,11 @@ func (self *VirtualEntity) Position() (float64, float64) {
     yF, _ := strconv.ParseFloat(y, 64)
     return xF, yF
 }
-func (self *VirtualEntity) Size() (uint, uint) {
+func (self *VirtualEntity) Size() (float64, float64) {
     width, height := self.Call("getWidth"), self.Call("getHeight")
-    widthUint, _ := strconv.ParseUint(width, 10, 0)
-    heightUint, _ := strconv.ParseUint(height, 10, 0)
-    return uint(widthUint), uint(heightUint)
+    widthUint, _ := strconv.ParseFloat(width, 64)
+    heightUint, _ := strconv.ParseFloat(height, 64)
+    return widthUint, heightUint
 }
 
 func (self *VirtualEntity) Type() string {

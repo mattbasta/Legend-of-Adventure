@@ -36,7 +36,7 @@ type Entity interface {
 
     ID() string
     Position() (float64, float64)
-    Size() (uint, uint)
+    Size() (float64, float64)
 
     Location() EntityRegion
     Inventory() *Inventory // May return nil

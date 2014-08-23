@@ -12,8 +12,4 @@ const PLAYER_SPEED = 0.0075
 const PLAYER_TICK_FREQ = 250 // in ms
 
 
-const TILE_SIZE = 50
-
-
-
 const SQRT1_2 = 0.70710678118

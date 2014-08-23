@@ -65,6 +65,14 @@ define('entities',
             delete data.nametag;
         }
 
+        if ('width' in data) {
+            data.width *= settings.tilesize;
+        }
+
+        if ('height' in data) {
+            data.height *= settings.tilesize;
+        }
+
         for (var key in data) {
             if (!data.hasOwnProperty(key)) continue;
             entity[key] = data[key];
@@ -95,6 +103,9 @@ define('entities',
         props.hitmap = props.hitmap || [0, Infinity, Infinity, 0];
         props.cycle_position = 0;
         props.sprite_cycle = 0;
+
+        props.width *= settings.tilesize;
+        props.height *= settings.tilesize;
 
         props.clip = props.clip || false;
 

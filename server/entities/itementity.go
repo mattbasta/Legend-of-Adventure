@@ -113,8 +113,7 @@ func (self *ItemEntity) handle(event *events.Event) {
 }
 
 
-func (self *ItemEntity) Clipping() (uint, uint, uint, uint) {
-    width, height := self.Size()
+func (self *ItemEntity) Clipping() (uint, uint) {
     var clipX, clipY uint
 
     if self.itemCode[0] == 'w' {
@@ -127,12 +126,12 @@ func (self *ItemEntity) Clipping() (uint, uint, uint, uint) {
         clipY = uint(code) / 5 * 24
     }
 
-    return clipX, clipY, width, height
+    return clipX, clipY
 }
 
 func (self *ItemEntity) String() string {
     width, height := self.Size()
-    clipX, clipY, _, _ := self.Clipping()
+    clipX, clipY := self.Clipping()
     return (
         "{\"proto\":\"item\"," +
         "\"id\":\"" + self.ID() + "\"," +
@@ -140,8 +139,8 @@ func (self *ItemEntity) String() string {
         fmt.Sprintf(
             "\"x\":\"%f\"," +
             "\"y\":\"%f\"," +
-            "\"width\":\"%d\"," +
-            "\"height\":\"%d\",",
+            "\"width\":\"%f\"," +
+            "\"height\":\"%f\",",
             self.x,
             self.y,
             width,
@@ -181,7 +180,7 @@ func (self *ItemEntity) Killer(in chan bool) {
 
 func (self ItemEntity) ID() string                   { return self.id }
 func (self ItemEntity) Position() (float64, float64) { return self.x, self.y }
-func (self ItemEntity) Size() (uint, uint)           { return 24, 24 }
+func (self ItemEntity) Size() (float64, float64)     { return 0.45, 0.45 }
 func (self ItemEntity) Type() string                 { return "item" }
 func (self ItemEntity) Location() EntityRegion       { return self.location }
 func (self ItemEntity) Inventory() *Inventory        { return nil }

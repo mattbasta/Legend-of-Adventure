@@ -10,7 +10,7 @@ define('trader', ['npc', 'peaceful'], function() {
     var name = 'Trader ' + names[Math.random() * names.length | 0];
 
     function getSize() {
-        return 50;
+        return 1;
     }
 
     function getHealth() {
