@@ -178,6 +178,16 @@ define('sentient', ['harmable', 'animat'], function() {
 
         getDirectionToBestTile: function() {
             return getDirectionToBestTile();
+        },
+
+        wasHurt: function(sup) {
+            sup();
+            sendEvent(
+                'snd',
+                'hit_grunt' + (Math.random() * 4 | 0) + ':' +
+                    trigger('getX') + ':' +
+                    trigger('getY')
+            );
         }
     };
 });

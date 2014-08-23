@@ -57,6 +57,7 @@ not present in the Go port.
 
 ### Audio
 
+* Evil Mind Entertainment
 * Josh Stitt - Music Composition
 * Ralph Hinkle - Sounds
 * Ron Corbin - Zombie SFX (youtube.com/mrontheborder)

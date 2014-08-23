@@ -46,7 +46,7 @@ define('zombie', ['hostile'], function() {
             sup();
         },
 
-        bloodSpatter: function() {
+        wasHurt: function() {
             sendEvent('pma', '0.5 0 zombiesquish 5 ' + ID);
         }
     };

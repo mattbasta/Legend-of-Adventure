@@ -82,7 +82,7 @@ define('death_waker', ['peaceful'], function() {
             }
         },
 
-        bloodSpatter: function() {
+        wasHurt: function() {
             sendEvent('pma',  '0.5 0 deathwakersquish 5 ' + ID);
         }
     };

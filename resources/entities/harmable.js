@@ -12,7 +12,7 @@ define('harmable', [], function() {
         attacked: function(sup, origin, damage) {
             var x = trigger('getX');
             var y = trigger('getY');
-            trigger('bloodSpatter');
+            trigger('wasHurt');
             accumulatedDamage += damage;
             say("I have " + (health - accumulatedDamage) + " health remaining!");
             if (accumulatedDamage >= health) {
@@ -26,7 +26,12 @@ define('harmable', [], function() {
             return 20;
         },
 
-        bloodSpatter: function() {
+        wasHurt: function(sup) {
+            trigger('bloodspatter');
+            sup();
+        },
+
+        bloodspatter: function() {
             sendEvent('pma',  '0.5 0 bloodspatter 5 ' + ID);
         }
     };

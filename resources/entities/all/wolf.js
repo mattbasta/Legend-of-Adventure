@@ -1,5 +1,10 @@
 define('wolf', ['hostile'], function() {
 
+    var MIN_HOWL = 15;
+    var MAX_HOWL = 30;
+
+    var chasing;
+
     function getSize() {
         return 1;
     }
@@ -8,12 +13,26 @@ define('wolf', ['hostile'], function() {
         return 10;
     }
 
+    function scheduleHowl() {
+        trigger('schedule', function() {
+            if (chasing) {
+                scheduleHowl();
+                return;
+            }
+            trigger('stopWandering');
+            sendEvent('snd', 'wolf_howl:' + trigger('getX') + ':' + trigger('getY'));
+            trigger('schedule', function() {
+                scheduleHowl();
+                trigger('wander');
+            }, 4000);
+        }, (Math.random() * (MAX_HOWL - MIN_HOWL) + MIN_HOWL) * 1000);
+    }
+
     return {
         setup: function(sup) {
             sup();
-            trigger('schedule', function() {
-                trigger('wander');
-            }, 100);
+            scheduleHowl();
+            trigger('wander');
         },
 
         getData: function(sup) {
@@ -31,6 +50,16 @@ define('wolf', ['hostile'], function() {
         },
         getWidth: getSize,
         getHeight: getSize,
-        getHealth: getHealth
+        getHealth: getHealth,
+        chase: function(sup, id) {
+            chasing = id;
+            sup();
+        },
+        forget: function(sup, id) {
+            if (chasing === id) {
+                chasing = false;
+            }
+            sup();
+        }
     };
 });

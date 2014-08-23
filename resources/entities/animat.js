@@ -97,13 +97,17 @@ define('animat', [], function() {
             for (var i = schedule.length - 1; i >= 0; i--) {
                 if (schedule[i][1] < now) {
                     try {
-                        schedule[i][0]();
-                        schedule.splice(i, 1);
+                        if (typeof schedule[i][0] === 'string') {
+                            trigger(schedule[i][0]);
+                        } else {
+                            schedule[i][0]();
+                        }
                     } catch (e) {
                         log('Error running scheduled entity event');
                         log(schedule[i][0].toString());
                         log(e);
                     }
+                    schedule.splice(i, 1);
                 }
             }
             calculateLocation();

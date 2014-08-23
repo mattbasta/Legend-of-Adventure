@@ -22,17 +22,17 @@ define('particles', [], function() {
     }
 
     var constructors = {
-        bloodspatter: function(self) {
+        'bloodspatter': function(self) {
             self.velX = (Math.random() - 0.5) * 3;
             self.velY = 7 * Math.random() + 5;
             self.accY = -1;
             self.floor = self.y;
         },
-        godmode: function(self) {
+        'godmode': function(self) {
             self.velX = (Math.random() - 0.5) * 2;
             self.velY = (Math.random() - 0.5) * 2;
         },
-        deathFlake: function(self) {
+        'deathFlake': function(self) {
             self.velY = Math.random() * 2;
             self.accY = Math.random() * 0.25;
         }
@@ -52,7 +52,7 @@ define('particles', [], function() {
     };
 
     var movements = {
-        spiralup: function(self) {
+        'spiralup': function(self) {
             var cone = Math.max((self.y - self.origY) + 15, 0);
             self.x = Math.sin(self.ticksTillDeath / 3) * (20 - cone) + self.origX + 25;
         }
