@@ -65,12 +65,12 @@ define('timing',
                     level.load(level.getX(), level.getY() - 1);
                     return;
                 } else if(_y > 0 && avatar.y >= level.getH() - 0.5) {
-                    avatar.y = settings.entityPrototypes.avatar.height / settings.tilesize + 0.5;
+                    avatar.y = settings.entityPrototypes.avatar.height + 0.5;
                     updateLocation();
                     level.load(level.getX(), level.getY() + 1);
                     return;
                 } else if(_x < 0 && avatar.x < 0.25) {
-                    avatar.x = level.getW() - settings.entityPrototypes.avatar.width / settings.tilesize - 0.5;
+                    avatar.x = level.getW() - settings.entityPrototypes.avatar.width - 0.5;
                     updateLocation();
                     level.load(level.getX() - 1, level.getY());
                     return;
@@ -93,9 +93,9 @@ define('timing',
             var hitmap = avatar.hitmap;
             if (_x) {
                 // Are we hitting the right hitmap?
-                if (_x > 0 && avatar.x + adjustedX + settings.entityPrototypes.avatar.width / tilesize >= hitmap[1]) {
+                if (_x > 0 && avatar.x + adjustedX + settings.entityPrototypes.avatar.width >= hitmap[1]) {
                     adjustedX = 0;
-                    avatar.x = hitmap[1] - settings.entityPrototypes.avatar.width / tilesize;
+                    avatar.x = hitmap[1] - settings.entityPrototypes.avatar.width;
                     _x = 0;
                     doSetCenter = true;
                 }
@@ -121,8 +121,8 @@ define('timing',
                     doSetCenter = true;
                 }
                 // What about the top hitmap?
-                else if(_y < 0 && avatar.y + adjustedY - (settings.entityPrototypes.avatar.height) / tilesize <= hitmap[0]) {
-                    avatar.y = hitmap[0] + (settings.entityPrototypes.avatar.height) / tilesize;
+                else if(_y < 0 && avatar.y + adjustedY - settings.entityPrototypes.avatar.height <= hitmap[0]) {
+                    avatar.y = hitmap[0] + settings.entityPrototypes.avatar.height;
                     adjustedY = 0;
                     _y = 0;
                     doSetCenter = true;
