@@ -212,15 +212,20 @@ func (self *Player) handleOutbound(evt *events.Event) bool {
 
     case events.DIRECT_ATTACK:
         split := strings.Split(evt.Body, " ")
-        x, _ := strconv.ParseFloat(split[0], 10)
-        y, _ := strconv.ParseFloat(split[1], 10)
+        x, _ := strconv.ParseFloat(split[0], 64)
+        y, _ := strconv.ParseFloat(split[1], 64)
         // item := split[2]
 
         entX, entY := self.Position()
-        // entW, entH := self.Size()
-        entW, entH := 1, 1
+        entW, entH := self.Size()
 
-        if x < entX || x > entX + float64(entW) || y < entY - float64(entH) || y > entY { return true }
+
+        if x < entX - entities.ATTACK_WIGGLE_ROOM ||
+           x > entX + entW + entities.ATTACK_WIGGLE_ROOM ||
+           y < entY - entH - entities.ATTACK_WIGGLE_ROOM ||
+           y > entY + entities.ATTACK_WIGGLE_ROOM {
+            return true
+        }
 
         // TODO: Figure out how to calculate this
         damage := 10

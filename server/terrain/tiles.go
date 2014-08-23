@@ -106,12 +106,12 @@ func GetFeatureTiles(setName string) *FeatureTiles {
                 log.Println(err)
                 break
             }
-            destX, err := strconv.ParseFloat(pVals[5], 32)
+            destX, err := strconv.ParseFloat(pVals[5], 64)
             if err != nil {
                 log.Println(err)
                 break
             }
-            destY, err := strconv.ParseFloat(pVals[6], 32)
+            destY, err := strconv.ParseFloat(pVals[6], 64)
             if err != nil {
                 log.Println(err)
                 break

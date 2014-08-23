@@ -259,13 +259,12 @@ func (self *VirtualEntity) handle(event *events.Event) {
 
     case events.DIRECT_ATTACK:
         split := strings.Split(event.Body, " ")
-        x, _ := strconv.ParseFloat(split[0], 10)
-        y, _ := strconv.ParseFloat(split[1], 10)
+        x, _ := strconv.ParseFloat(split[0], 64)
+        y, _ := strconv.ParseFloat(split[1], 64)
         item := split[2]
 
         entX, entY := self.Position()
-        // entW, entH := self.Size()
-        entW, entH := 1, 1
+        entW, entH := self.Size()
 
         // TODO: Figure out how to calculate this
         damage := 10
@@ -273,8 +272,8 @@ func (self *VirtualEntity) handle(event *events.Event) {
         attackDetails := fmt.Sprintf("'%s', %d, '%s'", event.Origin, damage, item)
 
         if x < entX - ATTACK_WIGGLE_ROOM ||
-           x > entX + float64(entW) + ATTACK_WIGGLE_ROOM ||
-           y < entY - float64(entH) - ATTACK_WIGGLE_ROOM ||
+           x > entX + entW + ATTACK_WIGGLE_ROOM ||
+           y < entY - entH - ATTACK_WIGGLE_ROOM ||
            y > entY + ATTACK_WIGGLE_ROOM {
             self.Pass("seenAttack", attackDetails)
             return
@@ -287,8 +286,8 @@ func (self *VirtualEntity) handle(event *events.Event) {
     case events.CHAT:
         split := strings.Split(event.Body, "\n")
         coords := strings.Split(split[0], " ")
-        x, _ := strconv.ParseFloat(coords[0], 10)
-        y, _ := strconv.ParseFloat(coords[1], 10)
+        x, _ := strconv.ParseFloat(coords[0], 64)
+        y, _ := strconv.ParseFloat(coords[1], 64)
         data, _ := json.Marshal(split[1])
         self.Pass("heard", fmt.Sprintf("%f, %f, %s", x, y, data))
     }
