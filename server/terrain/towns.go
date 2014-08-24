@@ -129,8 +129,6 @@ func ApplyTown(terrain *Terrain) {
         availableBuildings[i] = building
     }
 
-    // TODO: Initialize portal slice here
-
     rng := GetCoordRNG(float64(terrain.X), float64(terrain.Y))
 
     centerIndex := rng.Intn(len(townCenters))
@@ -153,8 +151,6 @@ func ApplyTown(terrain *Terrain) {
 
     log.Println("Drawing " + center)
     centerEntity.Apply(terrain, int(centerX), int(centerY))
-
-    // TODO: Add portal overlay code here
 
     delete(buildingEntities, center)
     availableBuildings = append(availableBuildings[:centerIndex], availableBuildings[centerIndex+1:]...)
@@ -227,8 +223,6 @@ func ApplyTown(terrain *Terrain) {
 
                 // Place the building on the grid
                 buildingEntity.Apply(terrain, int(x) + bOffsetX, int(y) + bOffsetY)
-
-                // TODO: Place portal overlay code here
 
                 switch direction {
                 case 0:

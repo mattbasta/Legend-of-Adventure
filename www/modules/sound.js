@@ -61,8 +61,7 @@ define('sound', ['buzz', 'comm', 'entities'], function(buzz, comm, entities) {
         var sc = sound.getStateCode();
         if(sc >= 2) {
             distance /= 2.5;
-            // TODO: Make this a constant somewhere.
-            sound.setVolume(100 - distance * distance);
+            sound.setVolume(Math.max(100 - distance * distance, 0));
             sound.play();
         }
     }

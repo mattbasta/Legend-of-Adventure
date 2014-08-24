@@ -272,9 +272,7 @@ func (self *Region) PopulateEntities() {
 	rng := terrain.GetCoordRNG(float64(self.X), float64(self.Y))
 
 	placeEntity := func(entType string) {
-        // TODO: Make this use real values
-		// entW, entH := ent.Size()
-		entW, entH := 1.0, 1.0
+		entW, entH := ent.Size()
 		for {
 			x := rng.Float64() * float64(self.Terrain.Width - 2 - uint(entW)) + 1
 			y := rng.Float64() * float64(self.Terrain.Height - 2 - uint(entH)) + 1 + entH

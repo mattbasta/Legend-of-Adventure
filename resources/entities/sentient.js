@@ -150,7 +150,7 @@ define('sentient', ['harmable', 'animat'], function() {
             } else if (wandering) {
                 var dirOk = isDirectionOk(
                     trigger('getX'), trigger('getY'),
-                    1, 1, // TODO: Make these use legit values.
+                    trigger('getWidth'), trigger('getHeight'),
                     wanderDir[0], wanderDir[1]
                 );
                 if (!dirOk) {

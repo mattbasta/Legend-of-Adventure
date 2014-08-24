@@ -186,8 +186,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         terrain := self.location.GetTerrain()
         hitmap := terrain.Hitmap
 
-        // TODO: Make this use real values
-        newEntW, newEntH := 1.0, 1.0
+        newEntW, newEntH := self.Size()
 
         for {
             newEntX := entX + (rng.Float64() - 0.5) * radius * 2
