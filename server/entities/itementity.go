@@ -137,10 +137,10 @@ func (self *ItemEntity) String() string {
         "\"id\":\"" + self.ID() + "\"," +
         "\"code\":\"" + self.itemCode + "\"," +
         fmt.Sprintf(
-            "\"x\":\"%f\"," +
-            "\"y\":\"%f\"," +
-            "\"width\":\"%f\"," +
-            "\"height\":\"%f\",",
+            "\"x\":%f," +
+            "\"y\":%f," +
+            "\"width\":%f," +
+            "\"height\":%f,",
             self.x,
             self.y,
             width,
@@ -148,14 +148,14 @@ func (self *ItemEntity) String() string {
         ) +
         "\"clip\": {" +
         fmt.Sprintf(
-            "\"x\":\"%d\"," +
-            "\"y\":\"%d\"," +
-            "\"width\":\"%d\"," +
-            "\"height\":\"%d\"",
+            "\"x\":%d," +
+            "\"y\":%d," +
+            "\"width\":%f," +
+            "\"height\":%f",
             clipX,
             clipY,
-            width,
-            height,
+            width * 50,
+            height * 50,
         ) +
         "}," +
         // "\"\":\"\"," +

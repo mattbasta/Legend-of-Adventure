@@ -24,6 +24,7 @@ type PathingHelper struct {
     attractCoords [][2]float64
 
     lastPath []pathStep
+    lastDirection ventDirection
 }
 
 
@@ -287,8 +288,7 @@ func setUpPathing(ent *VirtualEntity) {
 
     ent.vm.Set("pathToBestTile", func(call otto.FunctionCall) otto.Value {
 
-        // TODO: Replace these!
-        entW, entH := 1.0, 1.0
+        entW, entH := ent.Size()
 
         // log.Println(
         //     ent.lastPath != nil,
@@ -300,14 +300,29 @@ func setUpPathing(ent *VirtualEntity) {
            len(ent.lastPath) > 1 &&
            len(ent.attractCoords) == 0 {
 
+            firstStep := ent.lastPath[0]
+            secondStep := ent.lastPath[1]
+
             firstStepDirection := calculateDirection(
-                float64(ent.lastPath[0].X) + entW / 2,
-                float64(ent.lastPath[0].Y),
+                float64(firstStep.X) + entW / 2,
+                float64(firstStep.Y),
             )
-            result, _ := ent.vm.ToValue(ventDirections[firstStepDirection])
+            secondStepDirection := calculateDirection(
+                float64(secondStep.X) + entW / 2,
+                float64(secondStep.Y),
+            )
+
+            victorDirection := firstStepDirection
+            if firstStepDirection != secondStepDirection && firstStepDirection != ent.lastDirection {
+                victorDirection = secondStepDirection
+                ent.lastPath = ent.lastPath[1:]
+            }
+
+            result, _ := ent.vm.ToValue(ventDirections[victorDirection])
             return result
 
-        } else if len(ent.attractCoords) > 0 && len(ent.repulseCoords) == 0 {
+        }
+        if len(ent.attractCoords) > 0 && len(ent.repulseCoords) == 0 {
             attractMin := 10.0
             for _, coord := range ent.attractCoords {
                 dist := DistanceFromCoords(

@@ -56,7 +56,7 @@ const (
 	//    Body: x y item_code
 	DIRECT_ATTACK EventType = "dak"
 	// A sound command.
-	//   Body: sound_id x y radius spread
+	//   Body: sound_id:x:y
 	//     sound_id: The ID of the sound to play
 	//     (other properties are the same as `SPLASH_ATTACK`)
 	SOUND EventType = "snd"

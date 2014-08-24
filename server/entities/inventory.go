@@ -174,6 +174,16 @@ func (self *Inventory) Use(index uint, holder Animat) {
 			effect = "drained"
 		}
 		holder.SetEffect(effect, rand.Intn(10) + 10)
+
+
+		x, y := holder.Position()
+		holder.Location().Broadcast(
+			holder.Location().GetEvent(
+				events.SOUND,
+				fmt.Sprintf("potion%d:%f:%f", rand.Intn(2), x, y),
+				nil,
+			),
+		)
 	}
 
 }
