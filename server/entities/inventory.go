@@ -12,6 +12,8 @@ import (
 type InventoryOwner interface {
 	UpdateInventory()
 	SetEffect(effect string, ttl int)
+	ID() string
+	Receive() chan<- *events.Event
 }
 
 
@@ -139,6 +141,8 @@ func (self *Inventory) Use(index uint, holder Animat) {
 
 	log.Println(holder.ID() + " using " + self.inv[index])
 
+	x, y := holder.Position()
+
 	switch self.inv[index][0] {
 	case 'f':
 		// Don't let the player waste the food.
@@ -148,8 +152,19 @@ func (self *Inventory) Use(index uint, holder Animat) {
 		holder.IncrementHealth(FOOD_HEALTH_INCREASE)
 		self.Remove(index)
 
+		holder.Receive() <- holder.Location().GetEvent(
+			events.PARTICLE_MACRO, "0.5 -0.5 eatfood 10 local", holder,
+		)
+
+		holder.Location().Broadcast(
+			holder.Location().GetEvent(
+				events.PARTICLE_MACRO,
+				fmt.Sprintf("0.5 -0.5 eatfood 10 %s", holder.ID()),
+				holder,
+			),
+		)
+
 	case 'w':
-		x, y := holder.Position()
 		holder.Location().Broadcast(
 			holder.Location().GetEvent(
 				events.DIRECT_ATTACK,
@@ -176,7 +191,6 @@ func (self *Inventory) Use(index uint, holder Animat) {
 		holder.SetEffect(effect, rand.Intn(10) + 10)
 
 
-		x, y := holder.Position()
 		holder.Location().Broadcast(
 			holder.Location().GetEvent(
 				events.SOUND,

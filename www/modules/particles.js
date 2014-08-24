@@ -28,6 +28,12 @@ define('particles', [], function() {
             self.accY = -1;
             self.floor = self.y;
         },
+        'eatfood': function(self) {
+            self.velX = (Math.random() - 0.5) * 2.5;
+            self.velY = 5 * Math.random() + 4;
+            self.accY = -1;
+            self.floor = self.y;
+        },
         'godmode': function(self) {
             self.velX = (Math.random() - 0.5) * 2;
             self.velY = (Math.random() - 0.5) * 2;
@@ -91,6 +97,9 @@ define('particles', [], function() {
         switch (command) {
             case 'bloodspatter':
                 par = new Particle(25, 5, 'red');
+                break;
+            case 'eatfood':
+                par = new Particle(15, 5, '#BDA469');
                 break;
             case 'zombiesquish':
                 par = new Particle(25, 5, '#7DCD77');
