@@ -36,7 +36,7 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
     ent.id = NextEntityID()
     ent.closing = make(chan bool, 1)
 
-    ent.receiver = make(chan *events.Event, 128)
+    ent.receiver = make(chan *events.Event, VIRTUAL_ENTITY_QUEUE_SIZE)
 
     ent.EntityVM = *GetEntityVM(entityName)
     ent.vm.Set("ID", ent.id)

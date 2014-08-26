@@ -52,6 +52,7 @@ not present in the Go port.
 ### Graphics
 
 * [Henrique Lazarini](http://7soul1.deviantart.com/) - Some item sprites
+* [RATED-RKOFRANKLIN](http://www.gdunlimited.net/forums/user/10621-rated-rkofranklin/) - Some sprites
 * LordBagardo - Mob Sprites
 * Kazzador - Zombie Sprite
 

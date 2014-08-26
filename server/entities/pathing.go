@@ -364,7 +364,7 @@ func setUpPathing(ent *VirtualEntity) {
         // If the entity has nowhere to go, choose some random paths that the
         // entity can go.
         if len(viablePaths) == 0 {
-            log.Println("No viable paths")
+            // log.Println("No viable paths")
 
             terrain := ent.location.GetTerrain()
             hitmap := terrain.Hitmap
@@ -441,18 +441,20 @@ func setUpPathing(ent *VirtualEntity) {
             return otto.Value {}
         }
 
-        for _, step := range mostViablePath {
-            ent.location.Broadcast(
-                ent.location.GetEvent(
-                    events.PARTICLE,
-                    fmt.Sprintf(
-                        "%d %d red 10 20",
-                        step.X,
-                        step.Y,
+        if ASTAR_DRAW_PARTICLES {
+            for _, step := range mostViablePath {
+                ent.location.Broadcast(
+                    ent.location.GetEvent(
+                        events.PARTICLE,
+                        fmt.Sprintf(
+                            "%d %d red 10 20",
+                            step.X,
+                            step.Y,
+                        ),
+                        nil,
                     ),
-                    nil,
-                ),
-            )
+                )
+            }
         }
 
         firstStep := mostViablePath[0]

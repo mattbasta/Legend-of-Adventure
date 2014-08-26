@@ -309,6 +309,13 @@ func (self *Region) PopulateEntities() {
 			// placeEntity("trader")
 
 			self.Spawn("test", 50, 50)
+
+			chest := entities.NewChestEntity(self, 52, 50)
+			chest.AddItem("f1")
+			chest.AddItem("f1")
+			chest.AddItem("f1")
+			chest.AddItem("f1")
+			self.AddEntity(chest)
 		}
 
 	case terrain.REGIONTYPE_SHOP:

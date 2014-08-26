@@ -6,9 +6,11 @@ const ITEM_PICK_UP_DIST = 0.5
 const ENTITY_VISION = 20
 
 const INV_MAX_STACK = 32
+const CHEST_INV_SIZE = 10
 
 const ATTACK_WIGGLE_ROOM = 0.5
 
+const VIRTUAL_ENTITY_QUEUE_SIZE = 256
 const VIRTUAL_ENTITY_TICK_MS = 200
 
 // This constant is the number of random paths that will be generated when a
@@ -23,3 +25,5 @@ const ASTAR_RANDOM_MAX_TRIES = 25
 // Within this distance, we fall back on naive pathing instead of full-on
 // A* pathing.
 const ASTAR_NAIVE_FALLBACK_DIST = 2.5
+
+const ASTAR_DRAW_PARTICLES = false

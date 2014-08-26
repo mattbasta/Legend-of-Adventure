@@ -59,6 +59,10 @@ define('settings', [], function() {
                 xOffset: 0,
                 movement: 'item_hover'
             },
+            chest: {
+                image: "chest",
+                xOffset: 0
+            },
             animal: {
                 sprite: {
                     left: [
