@@ -43,10 +43,11 @@ func TerrainRounding(terrain [][]uint, tileset Tileset) {
             here := terrain[y][x]
 
             // Weed out any single dots or vertical tips
-            if y > 0 && x < 0 && y < rowCount - 1 && x < colCount - 1 && here != terrain[y][x - 1] && here != terrain[y - 1][x] && here != terrain[y][x + 1] {
+            if y > 0 && x > 0 && y < rowCount - 1 && x < colCount - 1 && here != terrain[y][x - 1] && here != terrain[y - 1][x] && here != terrain[y][x + 1] {
                 temp := terrain[y - 1][x]
                 terrain[y][x] = temp
                 fillTile(&base[y][x], temp)
+                continue
             }
 
             // Second column and up, test for horiz gradient.
@@ -104,7 +105,7 @@ func TerrainRounding(terrain [][]uint, tileset Tileset) {
                 continue
             }
 
-            if hLeftC && base[y - 1][x][2] == base[y - 1][x][0] && base[y - 1][x][3] == base[y][x - 1][3] {
+            if hLeftC && base[y - 1][x][2] == base[y][x - 1][0] && base[y - 1][x][3] == base[y][x - 1][3] {
                 temp1, temp2 := base[y - 1][x][2], base[y - 1][x][3]
                 // TODO: Make this recycle the old Tile?
                 base[y][x] = Tile{temp1, temp2, temp2, temp2}
