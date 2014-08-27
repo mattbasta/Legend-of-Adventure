@@ -124,6 +124,30 @@ func TerrainRounding(terrain [][]uint, tileset Tileset) {
     // Third pass is done above: intersection handling.
 
     // Fourth pass, perform final step corner matching.
+    for y := 0; y < rowCount; y++ {
+        for x := 0; x < colCount; x++ {
+            // Ignore corners and edges.
+            if isHorizontalGradient(base[y][x]) || isVerticalGradient(base[y][x]) { continue }
+
+            if y == 0 || base[y - 1][x][2] == base[y - 1][x][3] { continue }
+
+            hLeftC := x > 0 && base[y][x - 1][1] != base[y][x - 1][3]
+
+            if hLeftC && base[y][x - 1][1] == base[y - 1][x][2] && base[y][x - 1][3] == base[y - 1][x][3] {
+                temp := base[y - 1][x][3]
+                base[y][x] = Tile{base[y][x - 1][1], temp, temp, temp}
+                continue
+            }
+
+            hRightC := x < colCount - 1 && base[y][x + 1][0] != base[y][x + 1][2]
+
+            if hRightC && base[y][x + 1][0] == base[y - 1][x][3] && base[y][x + 1][2] == base[y - 1][x][2] {
+                temp := base[y - 1][x][2]
+                base[y][x] = Tile{temp, base[y - 1][x][3], temp, temp}
+            }
+
+        }
+    }
 
     // Perform final tile replacement
     for i, row := range base {
