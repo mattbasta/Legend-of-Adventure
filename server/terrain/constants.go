@@ -23,6 +23,8 @@ const (
     DUNGEON_BOSS_ODDS = 3 // out of 10
     DUNGEON_ANGEL_ODDS = 3 // out of 10
 
+    DUNGEON_STATUE_ODDS = 6 // out of 10
+
     WORLD_OVERWORLD = "overworld"
     WORLD_ETHER     = "ether"
 

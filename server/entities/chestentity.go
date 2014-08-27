@@ -95,7 +95,6 @@ func (self *ChestEntity) String() string {
             width,
             height,
         ) +
-        // "\"\":\"\"," +
         "\"type\":\"chest\"" +
         "}")
 }

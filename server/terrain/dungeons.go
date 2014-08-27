@@ -257,4 +257,31 @@ func ApplyDungeon(parent string, terrain *Terrain) {
         )
     }
 
+    rng := GetCoordRNG(float64(terrain.X), float64(terrain.Y))
+
+    // Randomly crack some of the tiles in a dungeon
+    i := 15
+    for i > 0 {
+        x, y := rng.Intn(int(terrain.Width)), rng.Intn(int(terrain.Height))
+        if terrain.Tiles[y][x] == 0 {
+            terrain.Tiles[y][x] = 5
+            i--
+        }
+    }
+
+    // Randomly place statues
+    if room.Type == "room" && rng.Intn(10) > DUNGEON_STATUE_ODDS {
+        for {
+            x, y := rng.Intn(int(terrain.Width)), rng.Intn(int(terrain.Height) - 1) + 1
+            if terrain.Tiles[y][x] == 0 && terrain.Tiles[y - 1][x] == 0 {
+                statue := rng.Intn(3)
+                terrain.Tiles[y - 1][x] = uint(statue + 2)
+                terrain.Hitmap[y - 1][x] = true
+                terrain.Tiles[y][x] = uint(statue + 7)
+                terrain.Hitmap[y][x] = true
+                break
+            }
+        }
+    }
+
 }
