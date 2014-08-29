@@ -33,3 +33,8 @@ func GetNameChance(name string, oneInXChance int) bool {
     return GetNameInt(name) % oneInXChance == 0
 }
 
+
+func Chance(rng *rand.Rand) bool {
+    return rng.Intn(2) == 0
+}
+

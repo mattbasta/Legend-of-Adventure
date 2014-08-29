@@ -39,6 +39,9 @@ func fillArea(terrain *Terrain, x, y, w, h, material uint) {
         }
     }
 }
+func fillAreaInt(terrain *Terrain, x, y, w, h, material int) {
+    fillArea(terrain, uint(x), uint(y), uint(w), uint(h), uint(material))
+}
 
 func fillHitmap(terrain *Terrain, x, y, w, h uint) {
     for i := uint(0); i < h; i++ {
@@ -53,4 +56,10 @@ func clearHitmap(terrain *Terrain, x, y, w, h uint) {
             terrain.Hitmap[i + y][j + x] = false
         }
     }
+}
+func fillHitmapInt(terrain *Terrain, x, y, w, h int) {
+    fillHitmap(terrain, uint(x), uint(y), uint(w), uint(h))
+}
+func clearHitmapInt(terrain *Terrain, x, y, w, h int) {
+    clearHitmap(terrain, uint(x), uint(y), uint(w), uint(h))
 }

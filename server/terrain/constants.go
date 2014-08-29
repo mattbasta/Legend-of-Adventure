@@ -34,12 +34,18 @@ const (
     REGIONTYPE_HOUSE   = "house"
 )
 
+var buildingStairsOdds = map[string]int { // out of 10
+    REGIONTYPE_HOUSE: 3,
+    REGIONTYPE_SHOP: 2,
+}
+
+
 var regionSizes = map[string][2]uint {
     REGIONTYPE_FIELD: [2]uint{100, 100},
     REGIONTYPE_DUNGEON: [2]uint{28, 28},
     // Building interiors
-    REGIONTYPE_SHOP: [2]uint{10, 11},
-    REGIONTYPE_HOUSE: [2]uint{10, 25},
+    REGIONTYPE_SHOP: [2]uint{52, 52},
+    REGIONTYPE_HOUSE: [2]uint{52, 52},
 }
 
 

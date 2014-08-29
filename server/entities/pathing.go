@@ -400,7 +400,6 @@ func setUpPathing(ent *VirtualEntity) {
                 )
                 if temp == nil {
                     tries++
-                    log.Println("No path produced")
                     continue
                 }
                 viablePaths = append(viablePaths, temp)
