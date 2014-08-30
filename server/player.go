@@ -497,6 +497,9 @@ func (self *Player) IncrementHealth(amount int) {
             self.death()
         }
     } else {
+        if uint(newHealth) < self.health {
+            self.outbound_raw <- fmt.Sprintf("sndhit_grunt%d:%f:%f", rand.Intn(3), self.x, self.y)
+        }
         self.health = uint(newHealth)
     }
     self.outbound_raw <- "hea" + strconv.Itoa(int(self.health))
