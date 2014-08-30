@@ -373,7 +373,6 @@ func setUpPathing(ent *VirtualEntity) {
             for i := 0; i < ASTAR_FLEE_PATH_SAMPLE; i++ {
 
                 if tries > ASTAR_RANDOM_MAX_TRIES {
-                    log.Println("Gave up")
                     return otto.Value {}
                 }
 

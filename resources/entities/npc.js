@@ -40,10 +40,13 @@ define('npc', ['animat'], function() {
         },
 
         getDirectionToBestTile: function(sup, wandering) {
-            if (wandering)
-                return getDirectionToBestTile();
-            else
-                return pathToBestTile();
+            if (!wandering) {
+                var path = pathToBestTile();
+                if (path) {
+                    return path;
+                }
+            }
+            return getDirectionToBestTile();
         },
         chase: clearPath,
         stopChasing: clearPath,
