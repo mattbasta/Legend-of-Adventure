@@ -7,22 +7,13 @@ import (
 )
 
 type positionedEntity interface {
-    Position() (float64, float64)
+    BlockingPosition() (float64, float64)
     Size() (float64, float64)
 }
 
 
-func Distance(e1 positionedEntity, e2 positionedEntity) float64 {
-    e1X, e1Y := e1.Position()
-    e2X, e2Y := e2.Position()
-    return math.Hypot(
-        e1X - e2X,
-        e1Y - e2Y,
-    )
-}
-
 func DistanceFrom(e1 positionedEntity, x, y float64) float64 {
-    e1X, e1Y := e1.Position()
+    e1X, e1Y := e1.BlockingPosition()
     return math.Hypot(
         e1X - x,
         e1Y - y,
@@ -37,7 +28,7 @@ func DistanceFromCoords(x1, y1, x2, y2 float64) float64 {
 }
 
 func IsEntityCollidingWithPortal(portal terrain.Portal, entity positionedEntity) bool {
-    ex, ey := entity.Position()
+    ex, ey := entity.BlockingPosition()
     ew, eh := entity.Size()
     return (ex + ew >= float64(portal.X) &&
             float64(portal.X + portal.W) >= ex &&

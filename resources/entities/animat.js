@@ -68,7 +68,7 @@ define('animat', [], function() {
         },
         getData: getLocationUpdate,
         getLocationUpdate: function() {
-            return JSON.stringify(getLocationUpdate());
+            return JSON.stringify(getLocationUpdate()) + '\n' + x + ' ' + y;
         },
         startMoving: function(sup, newDirX, newDirY) {
             calculateLocation();

@@ -49,7 +49,7 @@ type ItemEntity struct {
 type EntityThatCanThrow interface {
     ID() string
     Location() EntityRegion
-    Position() (float64, float64)
+    Position() <-chan [2]float64
     Direction() (int, int)
 }
 
@@ -57,7 +57,7 @@ func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
     item := NewItemEntityInstance(code)
     item.location = from.Location()
 
-    fromX, fromY := from.Position()
+    fromX, fromY := UnpackCoords(<-(from.Position()))
     fromDirX, fromDirY := from.Direction()
     item.x, item.y = fromX + float64(fromDirX), fromY + float64(fromDirY)
 
@@ -97,7 +97,14 @@ func (self *ItemEntity) handle(event *events.Event) {
         entity := self.location.GetEntity(event.Origin)
         if entity == nil { return }
 
-        dist := Distance(self, entity)
+        coodsStr := strings.Split(
+            strings.Split(event.Body, "\n")[1],
+            " ",
+        )
+        coordX, _ := strconv.ParseFloat(coodsStr[0], 64)
+        coordY, _ := strconv.ParseFloat(coodsStr[1], 64)
+
+        dist := DistanceFrom(self, coordX, coordY)
         if dist > ITEM_PICK_UP_DIST { return }
 
         eInv := entity.(Entity).Inventory()
@@ -124,12 +131,19 @@ func (self *ItemEntity) Clipping() (uint, uint) {
         code, _ := strconv.ParseUint(self.itemCode[1:], 10, 0)
         clipX = uint(code) % 5 * 24
         clipY = uint(code) / 5 * 24
+
+        if self.itemCode[0] == 'p' {
+            clipY += 5 * 24
+        }
     }
 
     return clipX, clipY
 }
 
-func (self *ItemEntity) String() string {
+func (self *ItemEntity) String() <-chan string {
+    return StringAsChan(self.BlockingString())
+}
+func (self ItemEntity) BlockingString() string {
     width, height := self.Size()
     clipX, clipY := self.Clipping()
     return (
@@ -179,8 +193,11 @@ func (self *ItemEntity) Killer(in chan bool) {
 }
 
 func (self ItemEntity) ID() string                   { return self.id }
-func (self ItemEntity) Position() (float64, float64) { return self.x, self.y }
+func (self ItemEntity) BlockingPosition() (float64, float64)  { return self.x, self.y }
+func (self ItemEntity) Position() <-chan [2]float64  { return CoordsAsChan(self.x, self.y) }
+func (self ItemEntity) BlockingSize() (float64, float64)  { return 0.45, 0.45 }
 func (self ItemEntity) Size() (float64, float64)     { return 0.45, 0.45 }
-func (self ItemEntity) Type() string                 { return "item" }
+func (self ItemEntity) BlockingType() string         { return "type" }
+func (self ItemEntity) Type() <-chan string          { return StringAsChan(self.BlockingType()) }
 func (self ItemEntity) Location() EntityRegion       { return self.location }
 func (self ItemEntity) Inventory() *Inventory        { return nil }

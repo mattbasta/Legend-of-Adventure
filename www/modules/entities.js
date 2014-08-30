@@ -13,6 +13,11 @@ define('entities',
 
     // Add entity
     comm.messages.on('add', function(body) {
+        var break_ = body.indexOf('\n');
+        if (break_ !== -1) {
+            body = body.substr(0, break_);
+        }
+
         register(JSON.parse(body));
     });
 
@@ -25,6 +30,12 @@ define('entities',
     // Change entity properties
     comm.messages.on('epu', function(body, origin) {
         if (!origin || !(origin in registry)) return;
+
+        var break_ = body.indexOf('\n');
+        if (break_ !== -1) {
+            body = body.substr(0, break_);
+        }
+
         var data = JSON.parse(body);
         var entity = registry[origin];
         if ('x' in data) {

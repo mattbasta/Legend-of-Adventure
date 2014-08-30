@@ -22,7 +22,7 @@ define('death_waker', ['peaceful'], function() {
         }
         shaking = true;
         trigger('stopWandering');
-        sendEvent('epu', '{"movement":"shake"}');
+        sendEvent('epu', '{"movement":"shake"}\n' + trigger('getX') + ' ' + trigger('getY'));
         trigger('schedule', function() {
             var numEnts = Math.random() * 3 + 1 | 0;
             for (var i = 0; i < numEnts; i++) {
@@ -30,7 +30,7 @@ define('death_waker', ['peaceful'], function() {
             }
 
             shaking = false;
-            sendEvent('epu', '{"movement":null}');
+            sendEvent('epu', '{"movement":null}\n' + trigger('getX') + ' ' + trigger('getY'));
             trigger('wander');
             scheduleWake();
         }, 2500);

@@ -35,14 +35,17 @@ type Entity interface {
     Killer(chan bool) // Used to notify entity it is being destroyed
 
     ID() string
-    Position() (float64, float64)
     Size() (float64, float64)
 
     Location() EntityRegion
     Inventory() *Inventory // May return nil
 
-    Type() string
-    String() string
+    BlockingPosition() (float64, float64)
+    Position() <-chan [2]float64
+    BlockingType() string
+    Type() <-chan string
+    BlockingString() string
+    String() <-chan string
 }
 
 type Animat interface {

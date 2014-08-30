@@ -25,6 +25,7 @@ type VirtualEntity struct {
     id         string
     closing    chan bool
     receiver   chan *events.Event
+    taskQueue  chan func()
 
     location   EntityRegion
 
@@ -34,9 +35,10 @@ type VirtualEntity struct {
 func NewVirtualEntity(entityName string) *VirtualEntity {
     ent := new(VirtualEntity)
     ent.id = NextEntityID()
-    ent.closing = make(chan bool, 1)
 
+    ent.closing = make(chan bool, 1)
     ent.receiver = make(chan *events.Event, VIRTUAL_ENTITY_QUEUE_SIZE)
+    ent.taskQueue = make(chan func(), VIRTUAL_ENTITY_TASK_QUEUE_SIZE)
 
     ent.EntityVM = *GetEntityVM(entityName)
     ent.vm.Set("ID", ent.id)
@@ -76,9 +78,9 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
     self.vm.Set("getDistance", func(call otto.FunctionCall) otto.Value {
         entity := self.location.GetEntity(call.Argument(0).String())
         if entity == nil { return otto.Value {} }
-        // TODO: This might be really costly if it has to look up the
-        // position from the VM
-        dist := Distance(self, entity)
+
+        x, y := self.internalPosition()
+        dist := DistanceFrom(entity, x, y)
         result, _ := self.vm.ToValue(dist)
         return result
     })
@@ -130,7 +132,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
 
     self.vm.Set("say", func(call otto.FunctionCall) otto.Value {
         message := call.Argument(0).String()
-        x, y := self.Position()
+        x, y := self.internalPosition()
 
         nametag := self.Call("nametag")
         if nametag != "undefined" {
@@ -158,7 +160,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         itemCodes := self.Call("getDrops")
         if itemCodes != "\"\"" && itemCodes != "undefined" {
             items := strings.Split(itemCodes, "\n")
-            posX, posY := self.Position()
+            posX, posY := self.internalPosition()
             for _, item := range items {
                 item = item[1:len(item) - 1]
                 log.Println(self.id + " is dropping " + item)
@@ -181,7 +183,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         entType := call.Argument(0).String()
         radius, _ := call.Argument(1).ToFloat()
 
-        entX, entY := self.Position()
+        entX, entY := self.internalPosition()
         rng := terrain.GetCoordRNG(entX, entY)
         terrain := self.location.GetTerrain()
         hitmap := terrain.Hitmap
@@ -224,6 +226,8 @@ func (self *VirtualEntity) gameTick() {
                 self.lastTick = now
             case event := <-self.receiver:
                 self.handle(event)
+            case task := <-self.taskQueue:
+                task()
             case <-self.closing:
                 self.closing <- true
                 return
@@ -242,14 +246,35 @@ func (self *VirtualEntity) handle(event *events.Event) {
     case events.SPAWN:
         fallthrough
     case events.REGION_ENTRANCE:
-        self.Pass("entered", event.Body)
+        splitBody := strings.Split(event.Body, "\n")
+        self.Pass("entered", splitBody[0])
         fallthrough
     case events.ENTITY_UPDATE:
         ent := self.location.GetEntity(event.Origin)
         if ent == nil { return }
-        dist := Distance(ent, self)
+
+        splitBody := strings.Split(event.Body, "\n")
+        coodsStr := strings.Split(
+            splitBody[1],
+            " ",
+        )
+        coordX, _ := strconv.ParseFloat(coodsStr[0], 64)
+        coordY, _ := strconv.ParseFloat(coodsStr[1], 64)
+
+        x, y := self.internalPosition()
+        dist := DistanceFromCoords(x, y, coordX, coordY)
+
         if dist > ENTITY_VISION { return }
-        self.Pass("seenEntity", fmt.Sprintf("'%s', %s, %f", event.Origin, event.Body, dist))
+
+        self.Pass(
+            "seenEntity",
+            fmt.Sprintf(
+                "'%s', %s, %f",
+                event.Origin,
+                splitBody[0],
+                dist,
+            ),
+        )
 
     case events.DEATH:
         fallthrough
@@ -262,7 +287,7 @@ func (self *VirtualEntity) handle(event *events.Event) {
         y, _ := strconv.ParseFloat(split[1], 64)
         item := split[2]
 
-        entX, entY := self.Position()
+        entX, entY := self.internalPosition()
         entW, entH := self.Size()
 
         // TODO: Figure out how to calculate this
@@ -293,12 +318,21 @@ func (self *VirtualEntity) handle(event *events.Event) {
 }
 
 
-func (self *VirtualEntity) String() string {
-    data := self.Call("getData")
+func (self *VirtualEntity) BlockingString() string {
+    return <-(self.String())
+}
+func (self *VirtualEntity) String() <-chan string {
+    out := make(chan string, 1)
 
-    return (
-        "{\"id\":\"" + self.ID() + "\"," +
-        data[1:])
+    self.taskQueue <- func() {
+        data := self.Call("getData")
+
+        out <- (
+            "{\"id\":\"" + self.ID() + "\"," +
+            data[1:])
+    }
+
+    return out
 }
 
 func (self *VirtualEntity) Killer(in chan bool) {
@@ -315,13 +349,28 @@ func (self *VirtualEntity) Killer(in chan bool) {
     }()
 }
 
-
-func (self *VirtualEntity) Position() (float64, float64) {
+func (self *VirtualEntity) internalPosition() (float64, float64) {
     x, y := self.Call("getX"), self.Call("getY")
     xF, _ := strconv.ParseFloat(x, 64)
     yF, _ := strconv.ParseFloat(y, 64)
     return xF, yF
 }
+
+func (self *VirtualEntity) BlockingPosition() (float64, float64) {
+    return UnpackCoords(<-(self.Position()))
+}
+func (self *VirtualEntity) Position() <-chan [2]float64 {
+    out := make(chan [2]float64, 1)
+
+    self.taskQueue <- func() {
+        xF, yF := self.internalPosition()
+        out <- [2]float64 {xF, yF}
+    }
+
+    return out
+
+}
+
 func (self *VirtualEntity) Size() (float64, float64) {
     width, height := self.Call("getWidth"), self.Call("getHeight")
     widthUint, _ := strconv.ParseFloat(width, 64)
@@ -329,13 +378,24 @@ func (self *VirtualEntity) Size() (float64, float64) {
     return widthUint, heightUint
 }
 
-func (self *VirtualEntity) Type() string {
-    eType := self.Call("type")
-    if eType == "" {
-        return "generic"
+
+func (self *VirtualEntity) BlockingType() string {
+    return <-(self.Type())
+}
+func (self *VirtualEntity) Type() <-chan string {
+    out := make(chan string, 1)
+
+    self.taskQueue <- func() {
+        eType := self.Call("type")
+        if eType == "" {
+            out <- "generic"
+        }
+        eType = eType[1:len(eType)-1]
+        out <- eType
     }
-    eType = eType[1:len(eType)-1]
-    return eType
+
+    return out
+
 }
 
 func (self VirtualEntity) ID() string                   { return self.id }

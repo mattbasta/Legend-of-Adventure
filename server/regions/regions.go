@@ -1,6 +1,7 @@
 package regions
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -183,12 +184,33 @@ func (self *Region) AddEntity(entity entities.Entity) {
 	self.entities = append(self.entities, &entity)
 
 	// Tell everyone else that the entity is here.
-	self.Broadcast(self.GetEvent(events.REGION_ENTRANCE, entity.String(), entity))
+	x, y := entity.BlockingPosition()
+	self.Broadcast(
+		self.GetEvent(
+			events.REGION_ENTRANCE,
+			fmt.Sprintf(
+				"%s\n%f %f",
+				entity.BlockingString(),
+				x, y,
+			),
+			entity,
+		),
+	)
 
 	// Tell the entity about everyone else.
 	for _, regEnt := range self.entities {
 		if regEnt == &entity { continue }
-		entity.Receive() <- self.GetEvent(events.REGION_ENTRANCE, (*regEnt).String(), *regEnt)
+
+		x, y := (*regEnt).BlockingPosition()
+		entity.Receive() <- self.GetEvent(
+			events.REGION_ENTRANCE,
+			fmt.Sprintf(
+				"%s\n%f %f",
+				<-((*regEnt).String()),
+				x, y,
+			),
+			*regEnt,
+		)
 	}
 
 }
@@ -273,6 +295,7 @@ func (self *Region) PopulateEntities() {
 	rng := terrain.GetCoordRNG(float64(self.X), float64(self.Y))
 
 	placeEntity := func(entType string) {
+		// TODO: Find a way to figure this out.
 		entW, entH := 1.0, 1.0
 		for {
 			x := rng.Float64() * float64(self.Terrain.Width - 2 - uint(entW)) + 1

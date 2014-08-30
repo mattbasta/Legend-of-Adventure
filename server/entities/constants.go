@@ -11,6 +11,7 @@ const CHEST_INV_SIZE = 10
 const ATTACK_WIGGLE_ROOM = 0.5
 
 const VIRTUAL_ENTITY_QUEUE_SIZE = 256
+const VIRTUAL_ENTITY_TASK_QUEUE_SIZE = 64
 const VIRTUAL_ENTITY_TICK_MS = 200
 
 // This constant is the number of random paths that will be generated when a

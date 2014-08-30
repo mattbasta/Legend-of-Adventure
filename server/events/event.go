@@ -1,24 +1,9 @@
 package events
 
 import (
-	"os"
-	"strconv"
+	"fmt"
 )
 
-var server_id = ""
-
-func GetOriginServerID() string {
-	if server_id != "" {
-		return server_id
-	}
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "unknown"
-	}
-	pid := strconv.Itoa(os.Getpid())
-	server_id = hostname + "." + pid
-	return server_id
-}
 
 type EventType string
 
@@ -87,11 +72,12 @@ type Event struct {
 }
 
 func (self *Event) String() string {
-	// XXX: This might someday need to include the location.
-	return (
-		string(self.Type) + "evt:" +
-		self.Origin + "\n" +
-		self.Body)
+	return fmt.Sprintf(
+		"%sevt:%s\n%s",
+		self.Type,
+		self.Origin,
+		self.Body,
+	)
 }
 
 

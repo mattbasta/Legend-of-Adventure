@@ -65,7 +65,7 @@ func (self *ChestEntity) handle(event *events.Event) {
         x, _ := strconv.ParseFloat(split[0], 64)
         y, _ := strconv.ParseFloat(split[1], 64)
 
-        entX, entY := self.Position()
+        entX, entY := UnpackCoords(<-(self.Position()))
         entW, entH := self.Size()
 
         if x < entX - ATTACK_WIGGLE_ROOM ||
@@ -80,9 +80,11 @@ func (self *ChestEntity) handle(event *events.Event) {
     }
 }
 
-func (self *ChestEntity) String() string {
+func (self *ChestEntity) String() <-chan string {
     width, height := self.Size()
-    return (
+
+    out := make(chan string, 1)
+    out <- (
         "{\"proto\":\"chest\"," +
         "\"id\":\"" + self.ID() + "\"," +
         fmt.Sprintf(
@@ -97,6 +99,7 @@ func (self *ChestEntity) String() string {
         ) +
         "\"type\":\"chest\"" +
         "}")
+    return out
 }
 
 
@@ -105,9 +108,12 @@ func (self ChestEntity) UpdateInventory()             { return }
 func (self ChestEntity) SetEffect(effect string, ttl int) { return }
 
 func (self ChestEntity) ID() string                   { return self.id }
-func (self ChestEntity) Position() (float64, float64) { return self.x, self.y }
+func (self ChestEntity) BlockingPosition() (float64, float64)  { return self.x, self.y }
+func (self ChestEntity) Position() <-chan [2]float64  { return CoordsAsChan(self.x, self.y) }
+func (self ChestEntity) BlockingSize() (float64, float64)  { return 1, 1 }
 func (self ChestEntity) Size() (float64, float64)     { return 1, 1 }
-func (self ChestEntity) Type() string                 { return "chest" }
+func (self ChestEntity) BlockingType() string         { return "chest" }
+func (self ChestEntity) Type() <-chan string          { return StringAsChan(self.BlockingType()) }
 func (self ChestEntity) Location() EntityRegion       { return self.location }
 func (self ChestEntity) Inventory() *Inventory        { return self.inventory }
 func (self ChestEntity) Direction() (int, int)        { return 0, 1 }

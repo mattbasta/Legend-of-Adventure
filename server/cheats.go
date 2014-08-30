@@ -1,6 +1,7 @@
 package server
 
 import (
+    "fmt"
     "log"
     "os"
     "regexp"
@@ -108,8 +109,18 @@ func HandleCheat(message string, player *Player) bool {
             return true
         }
         player.nametag = spl[1]
+        pX, pY := player.BlockingPosition()
         player.location.Broadcast(
-            player.location.GetEvent(events.ENTITY_UPDATE, player.String(), player),
+            player.location.GetEvent(
+                events.ENTITY_UPDATE,
+                fmt.Sprintf(
+                    "%s\n%f %f",
+                    player.BlockingString(),
+                    pX,
+                    pY,
+                ),
+                player,
+            ),
         )
 
         player.outbound_raw <- "epuevt:local\n{\"nametag\":\"" + spl[1] + "\"}"
@@ -125,10 +136,17 @@ func HandleCheat(message string, player *Player) bool {
             sayToPlayer("Invalid entity value", player)
             return true
         }
+        pX, pY := player.BlockingPosition()
         player.location.Broadcast(
             player.location.GetEvent(
                 events.ENTITY_UPDATE,
-                "{\"" + epuSplit[0] + "\":\"" + epuSplit[1] + "\"}",
+                fmt.Sprintf(
+                    "{\"%s\":\"%s\"}\n%f %f",
+                    epuSplit[0],
+                    epuSplit[1],
+                    pX,
+                    pY,
+                ),
                 player,
             ),
         )

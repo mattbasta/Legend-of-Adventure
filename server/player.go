@@ -216,7 +216,7 @@ func (self *Player) handleOutbound(evt *events.Event) bool {
         y, _ := strconv.ParseFloat(split[1], 64)
         // item := split[2]
 
-        entX, entY := self.Position()
+        entX, entY := self.BlockingPosition()
         entW, entH := self.Size()
 
 
@@ -335,7 +335,12 @@ func (self *Player) handle(msg string) {
         self.location.Broadcast(
             self.location.GetEvent(
                 events.ENTITY_UPDATE,
-                "{" + self.PositionString() + "}",
+                fmt.Sprintf(
+                    "{%s}\n%f %f",
+                    self.PositionString(),
+                    self.x,
+                    self.y,
+                ),
                 self,
             ),
         )
@@ -380,7 +385,12 @@ func (self *Player) sendToLocation(parentID, type_ string, x, y int, newX, newY 
         self.location.Broadcast(
             self.location.GetEvent(
                 events.ENTITY_UPDATE,
-                "{" + self.PositionString() + "}",
+                fmt.Sprintf(
+                    "{%s}\n%f %f",
+                    self.PositionString(),
+                    self.x,
+                    self.y,
+                ),
                 self,
             ),
         )
@@ -443,8 +453,10 @@ func (self Player) IsAtMaxHealth() bool          { return self.health == PLAYER_
 func (self Player) Killer(in chan bool)          { return }
 func (self Player) Location() entities.EntityRegion { return self.location }
 func (self Player) MovementEffect() string       { return "" }
-func (self Player) Position() (float64, float64) { return self.x, self.y }
-func (self Player) Type() string                 { return "player" }
+func (self Player) BlockingPosition() (float64, float64)  { return self.x, self.y }
+func (self Player) Position() <-chan [2]float64  { return entities.CoordsAsChan(self.x, self.y) }
+func (self Player) BlockingType() string         { return "player" }
+func (self Player) Type() <-chan string          { return entities.StringAsChan(self.BlockingType()) }
 func (self Player) Size() (float64, float64)     { return 1, 1 }
 func (self Player) Velocity() (int, int)         { return self.velX, self.velY }
 
@@ -463,7 +475,7 @@ func (self *Player) PositionString() string {
     )
 }
 
-func (self *Player) String() string {
+func (self *Player) BlockingString() string {
     width, height := self.Size()
 
     nametagData := ""
@@ -485,6 +497,9 @@ func (self *Player) String() string {
         // "\"\":\"\"," +
         "\"type\":\"person\"" +
         "}")
+}
+func (self *Player) String() <-chan string {
+    return entities.StringAsChan(self.BlockingString())
 }
 
 func (self *Player) IncrementHealth(amount int) {

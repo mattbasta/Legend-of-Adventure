@@ -1,13 +1,15 @@
 package terrain
 
 
-// import "log"
+import "math/rand"
 
 
 const (
     ROOM_LOBBY = "lobby"
     ROOM_STAIRS = "stairs"
     ROOM_PLAIN = "room"
+    ROOM_BED = "bedroom"
+    ROOM_STORAGE = "bedroom"
 
     ROOMSIZE_WIDTH = 15
     ROOMSIZE_HEIGHT = 15
@@ -36,27 +38,40 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
     layout := make([]string, 9)
     connections := make([]roomConnections, 9)
 
+    var availableRooms []string
+
     setRoom := func(x, y int, value string) {
         layout[y * 3 + x] = value
     }
     filled := func(x, y int) bool {
         return layout[y * 3 + x] != ""
     }
+    getRoomType := func() string {
+        return availableRooms[rng.Intn(len(availableRooms))]
+    }
 
     if buildingType == REGIONTYPE_SHOP {
+        availableRooms = []string {
+            ROOM_PLAIN,
+            ROOM_STORAGE,
+        }
         setRoom(1, 2, ROOM_LOBBY)
     } else {
+        availableRooms = []string {
+            ROOM_PLAIN,
+            ROOM_BED,
+        }
         setRoom(1, 2, ROOM_PLAIN)
     }
 
-    if Chance(rng) { setRoom(0, 2, ROOM_PLAIN) }
-    if Chance(rng) || !filled(0, 2) { setRoom(2, 2, ROOM_PLAIN) }
-    if buildingType != REGIONTYPE_SHOP && Chance(rng) { setRoom(1, 1, ROOM_PLAIN) }
-    if (filled(0, 2) || filled(1, 1)) && Chance(rng) { setRoom(0, 1, ROOM_PLAIN) }
-    if (filled(2, 2) || filled(1, 1)) && Chance(rng) { setRoom(2, 1, ROOM_PLAIN) }
-    if filled(0, 1) && Chance(rng) { setRoom(0, 0, ROOM_PLAIN) }
-    if filled(2, 1) && Chance(rng) { setRoom(2, 0, ROOM_PLAIN) }
-    if (filled(0, 0) || filled(2, 0)) && Chance(rng) { setRoom(2, 0, ROOM_PLAIN) }
+    if Chance(rng) { setRoom(0, 2, getRoomType()) }
+    if Chance(rng) || !filled(0, 2) { setRoom(2, 2, getRoomType()) }
+    if buildingType != REGIONTYPE_SHOP && Chance(rng) { setRoom(1, 1, getRoomType()) }
+    if (filled(0, 2) || filled(1, 1)) && Chance(rng) { setRoom(0, 1, getRoomType()) }
+    if (filled(2, 2) || filled(1, 1)) && Chance(rng) { setRoom(2, 1, getRoomType()) }
+    if filled(0, 1) && Chance(rng) { setRoom(0, 0, getRoomType()) }
+    if filled(2, 1) && Chance(rng) { setRoom(2, 0, getRoomType()) }
+    if (filled(0, 0) || filled(2, 0)) && Chance(rng) { setRoom(2, 0, getRoomType()) }
 
     if hasStairs {
         for i := 0; i < 9; i++ {
@@ -107,15 +122,10 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
             fillAreaInt(terrain, rX + 1, rY + 5, ROOMSIZE_WIDTH - 2, ROOMSIZE_HEIGHT - 6, 1)
             clearHitmapInt(terrain, rX + 1, rY + 5, ROOMSIZE_WIDTH - 2, ROOMSIZE_HEIGHT - 6)
 
-            // Randomly draw a carpet
-            if Chance(rng) {
-                fillAreaInt(terrain, rX + 3, rY + 6, ROOMSIZE_WIDTH - 5, ROOMSIZE_HEIGHT - 9, 44)
-            }
-
             // If this is the lobby, draw the entrance and add the exit portal
             if y == 2 && x == 1 {
                 terrain.Tiles[rY + ROOMSIZE_HEIGHT - 2][rX + ROOMSIZE_WIDTH / 2] = 42
-                terrain.Tiles[rY + ROOMSIZE_HEIGHT - 2][rX + ROOMSIZE_WIDTH / 2 + 1] = 43
+                terrain.Tiles[rY + ROOMSIZE_HEIGHT - 2][rX + ROOMSIZE_WIDTH / 2 + 1] = 44
 
                 terrain.Portals = append(
                     terrain.Portals,
@@ -127,6 +137,8 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
                         0, 0,
                     ),
                 )
+            } else if Chance(rng) {
+                drawCarpet(terrain, rX, rY)
             }
         }
     }
@@ -172,13 +184,65 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
         }
     }
 
+    // Draw room furnishings
+    for y := 0; y < 3; y++ {
+        for x := 0; x < 3; x++ {
+            if layout[y * 3 + x] == "" { continue }
+
+            rX, rY := x * (ROOMSIZE_WIDTH + HORIZ_HALLWAYSIZE_WIDTH), y * (ROOMSIZE_HEIGHT + VERT_HALLWAYSIZE_HEIGHT)
+
+            if buildingType == REGIONTYPE_SHOP && y == 2 && x == 1 {
+                drawShopLobby(terrain, rX, rY, rng)
+            }
+
+        }
+    }
+
 }
 
+func drawCarpet(terrain *Terrain, x, y int) {
+    fillAreaInt(terrain, x + 3, y + 7, ROOMSIZE_WIDTH - 6, ROOMSIZE_HEIGHT - 10, 48)
 
-func ApplyInteriorShop(terrain *Terrain) {
-    GetFeatureTiles("interiors/shop").Apply(terrain, 0, 0)
+    terrain.Tiles[x + 3][y + 7] = 42
+    terrain.Tiles[x + 3 + ROOMSIZE_WIDTH - 6][y + 7] = 44
+    terrain.Tiles[x + 3][y + ROOMSIZE_HEIGHT - 3] = 52
+    terrain.Tiles[x + 3 + ROOMSIZE_WIDTH - 6][y + ROOMSIZE_HEIGHT - 3] = 54
 }
 
-func ApplyInteriorHouse(terrain *Terrain) {
-    GetFeatureTiles("interiors/house").Apply(terrain, 0, 0)
+func drawShopLobby(terrain *Terrain, x, y int, rng *rand.Rand) {
+
+    halfRoom := ROOMSIZE_WIDTH / 2
+
+    fillHitmapInt(
+        terrain,
+        x + halfRoom - 2,
+        y + 5,
+        5,
+        3,
+    )
+    clearHitmapInt(
+        terrain,
+        x + halfRoom - 1,
+        y + 5,
+        3,
+        2,
+    )
+    terrain.Tiles[y + 5][x + halfRoom - 2] = 60
+    terrain.Tiles[y + 5][x + halfRoom - 1] = 61
+    terrain.Tiles[y + 5][x + halfRoom] = 64
+    terrain.Tiles[y + 5][x + halfRoom + 1] = 62
+    terrain.Tiles[y + 5][x + halfRoom + 2] = 63
+
+    terrain.Tiles[y + 6][x + halfRoom - 2] = 65
+    terrain.Tiles[y + 6][x + halfRoom - 1] = 66
+    terrain.Tiles[y + 6][x + halfRoom] = 66
+    terrain.Tiles[y + 6][x + halfRoom + 1] = 67
+    terrain.Tiles[y + 6][x + halfRoom + 2] = 68
+
+    terrain.Tiles[y + 7][x + halfRoom - 2] = 70
+    terrain.Tiles[y + 7][x + halfRoom - 1] = 71
+    terrain.Tiles[y + 7][x + halfRoom] = 71
+    terrain.Tiles[y + 7][x + halfRoom + 1] = 72
+    terrain.Tiles[y + 7][x + halfRoom + 2] = 73
+
 }

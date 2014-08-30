@@ -156,7 +156,7 @@ func setUpPathing(ent *VirtualEntity) {
         eid, _ := call.Argument(0).ToString()
         stagedEntity := ent.location.GetEntity(eid)
         if stagedEntity == nil { return otto.Value {} }
-        eX, eY := stagedEntity.Position()
+        eX, eY := UnpackCoords(<-(stagedEntity.Position()))
 
         ent.repulseDirections = append(
             ent.repulseDirections,
@@ -172,7 +172,7 @@ func setUpPathing(ent *VirtualEntity) {
         eid, _ := call.Argument(0).ToString()
         stagedEntity := ent.location.GetEntity(eid)
         if stagedEntity == nil { return otto.Value {} }
-        eX, eY := stagedEntity.Position()
+        eX, eY := UnpackCoords(<-(stagedEntity.Position()))
 
         ent.attractDirections = append(
             ent.attractDirections,
