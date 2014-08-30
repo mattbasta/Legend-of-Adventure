@@ -32,6 +32,8 @@ const (
     REGIONTYPE_DUNGEON = "dungeon"
     REGIONTYPE_SHOP    = "shop"
     REGIONTYPE_HOUSE   = "house"
+
+    SHOP_LOBBY_CRATE_ODDS = 3 // out of 10
 )
 
 var buildingStairsOdds = map[string]int { // out of 10

@@ -245,4 +245,16 @@ func drawShopLobby(terrain *Terrain, x, y int, rng *rand.Rand) {
     terrain.Tiles[y + 7][x + halfRoom + 1] = 72
     terrain.Tiles[y + 7][x + halfRoom + 2] = 73
 
+    for i := x; i < x + ROOMSIZE_WIDTH; i++ {
+        if terrain.Tiles[y + 5][i] != 1 { continue }
+        if rng.Intn(10) < SHOP_LOBBY_CRATE_ODDS {
+            if Chance(rng) {
+                terrain.Tiles[y + 5][i] = uint(75 + rng.Intn(5))
+            } else {
+                terrain.Tiles[y + 5][i] = uint(56 + rng.Intn(3))
+            }
+            terrain.Hitmap[y + 5][i] = true
+        }
+    }
+
 }
