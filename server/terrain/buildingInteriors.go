@@ -112,10 +112,21 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
                 fillAreaInt(terrain, rX + 3, rY + 6, ROOMSIZE_WIDTH - 5, ROOMSIZE_HEIGHT - 9, 44)
             }
 
-            // If this is the lobby, draw the entrance
+            // If this is the lobby, draw the entrance and add the exit portal
             if y == 2 && x == 1 {
                 terrain.Tiles[rY + ROOMSIZE_HEIGHT - 2][rX + ROOMSIZE_WIDTH / 2] = 42
                 terrain.Tiles[rY + ROOMSIZE_HEIGHT - 2][rX + ROOMSIZE_WIDTH / 2 + 1] = 43
+
+                terrain.Portals = append(
+                    terrain.Portals,
+                    NewPortal(
+                        uint(rX + ROOMSIZE_WIDTH / 2),
+                        uint(rY + ROOMSIZE_HEIGHT - 1),
+                        2, 1,
+                        "..",
+                        0, 0,
+                    ),
+                )
             }
         }
     }
