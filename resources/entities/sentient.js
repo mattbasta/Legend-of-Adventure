@@ -19,11 +19,10 @@ define('sentient', ['harmable', 'animat'], function() {
     ];
 
     function getBestDirection(wandering) {
-        var x = trigger('getX');
-        var y = trigger('getY');
+        var x = getX();
+        var y = getY();
 
-        // TODO: Set real values for size
-        stageAvailableTiles(x, y, 1, 1);
+        stageAvailableTiles(x, y, trigger('getWidth'), trigger('getHeight'));
         trigger('stagePathElements', x, y);
         var bestDirection = trigger('getDirectionToBestTile', wandering);
         if (bestDirection === null) return null;
@@ -59,7 +58,7 @@ define('sentient', ['harmable', 'animat'], function() {
                 if (trigger('doesAttack') && dist <= HURT_DISTANCE) {
                     sendEvent(
                         'dak',
-                        trigger('getX') + ' ' + trigger('getY') + ' ' + (
+                        getX() + ' ' + getY() + ' ' + (
                             trigger('holdingWeapon') || 'null'
                         )
                     );
@@ -149,7 +148,7 @@ define('sentient', ['harmable', 'animat'], function() {
                 reevaluateBehavior();
             } else if (wandering) {
                 var dirOk = isDirectionOk(
-                    trigger('getX'), trigger('getY'),
+                    getX(), getY(),
                     trigger('getWidth'), trigger('getHeight'),
                     wanderDir[0], wanderDir[1]
                 );
@@ -184,9 +183,7 @@ define('sentient', ['harmable', 'animat'], function() {
             sup();
             sendEvent(
                 'snd',
-                'hit_grunt' + (Math.random() * 4 | 0) + ':' +
-                    trigger('getX') + ':' +
-                    trigger('getY')
+                'hit_grunt' + (Math.random() * 4 | 0) + ':' + getX() + ':' + getY()
             );
         }
     };

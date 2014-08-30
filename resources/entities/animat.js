@@ -28,9 +28,10 @@ define('animat', [], function() {
         x += vX * speed * delta;
         y += vY * speed * delta;
 
-        // TODO: make these use real dimensions
         x = Math.min(levWidth - 2, Math.max(x, 1));
         y = Math.min(levHeight - 1, Math.max(y, 2));
+
+        setCoords(x, y);
 
     }
 
@@ -53,11 +54,17 @@ define('animat', [], function() {
             speed = data.speed || speed;
             levHeight = getLevHeight();
             levWidth = getLevWidth();
+
+            setSize(
+                trigger('getWidth'),
+                trigger('getHeight')
+            );
         },
 
         setPosition: function(sup, newX, newY) {
             x = newX;
             y = newY;
+            setCoords(newX, newY);
             lastCalculation = Date.now();
         },
         getX: function() {

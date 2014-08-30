@@ -20,7 +20,7 @@ define('wolf', ['hostile'], function() {
                 return;
             }
             trigger('stopWandering');
-            sendEvent('snd', 'wolf_howl:' + trigger('getX') + ':' + trigger('getY'));
+            sendEvent('snd', 'wolf_howl:' + getX() + ':' + getY());
             trigger('schedule', function() {
                 scheduleHowl();
                 trigger('wander');

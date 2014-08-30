@@ -30,6 +30,9 @@ type VirtualEntity struct {
     location   EntityRegion
 
     lastTick   int64
+
+    x, y            float64
+    width, height   float64
 }
 
 func NewVirtualEntity(entityName string) *VirtualEntity {
@@ -39,6 +42,8 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
     ent.closing = make(chan bool, 1)
     ent.receiver = make(chan *events.Event, VIRTUAL_ENTITY_QUEUE_SIZE)
     ent.taskQueue = make(chan func(), VIRTUAL_ENTITY_TASK_QUEUE_SIZE)
+
+    ent.width, ent.height = 1, 1
 
     ent.EntityVM = *GetEntityVM(entityName)
     ent.vm.Set("ID", ent.id)
@@ -52,6 +57,30 @@ func NewVirtualEntity(entityName string) *VirtualEntity {
 
 func (self *VirtualEntity) SetLocation(location EntityRegion) {
     self.location = location
+
+    self.vm.Set("getX", func(call otto.FunctionCall) otto.Value {
+        result, _ := self.vm.ToValue(self.x)
+        return result
+    })
+
+    self.vm.Set("getY", func(call otto.FunctionCall) otto.Value {
+        result, _ := self.vm.ToValue(self.y)
+        return result
+    })
+
+    self.vm.Set("setCoords", func(call otto.FunctionCall) otto.Value {
+        x, _ := call.Argument(0).ToFloat()
+        y, _ := call.Argument(1).ToFloat()
+        self.x, self.y = x, y
+        return otto.Value {}
+    })
+
+    self.vm.Set("setSize", func(call otto.FunctionCall) otto.Value {
+        width, _ := call.Argument(0).ToFloat()
+        height, _ := call.Argument(1).ToFloat()
+        self.width, self.height = width, height
+        return otto.Value {}
+    })
 
     self.vm.Set("sendEvent", func(call otto.FunctionCall) otto.Value {
         if self.location == nil {
@@ -79,7 +108,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         entity := self.location.GetEntity(call.Argument(0).String())
         if entity == nil { return otto.Value {} }
 
-        x, y := self.internalPosition()
+        x, y := self.BlockingPosition()
         dist := DistanceFrom(entity, x, y)
         result, _ := self.vm.ToValue(dist)
         return result
@@ -132,7 +161,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
 
     self.vm.Set("say", func(call otto.FunctionCall) otto.Value {
         message := call.Argument(0).String()
-        x, y := self.internalPosition()
+        x, y := self.BlockingPosition()
 
         nametag := self.Call("nametag")
         if nametag != "undefined" {
@@ -160,15 +189,17 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         itemCodes := self.Call("getDrops")
         if itemCodes != "\"\"" && itemCodes != "undefined" {
             items := strings.Split(itemCodes, "\n")
-            posX, posY := self.internalPosition()
+            posX, posY := self.BlockingPosition()
             for _, item := range items {
                 item = item[1:len(item) - 1]
                 log.Println(self.id + " is dropping " + item)
-                itemEnt := NewItemEntityInstance(item)
-                itemEnt.location = self.location
-                itemEnt.x = posX + (globalEntityRng.Float64() * 3 - 1.5)
-                itemEnt.y = posY + (globalEntityRng.Float64() * 3 - 1.5)
-                self.location.AddEntity(itemEnt)
+                go func() {
+                    itemEnt := NewItemEntityInstance(item)
+                    itemEnt.location = self.location
+                    itemEnt.x = posX + (globalEntityRng.Float64() * 3 - 1.5)
+                    itemEnt.y = posY + (globalEntityRng.Float64() * 3 - 1.5)
+                    self.location.AddEntity(itemEnt)
+                }()
             }
         }
 
@@ -183,7 +214,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
         entType := call.Argument(0).String()
         radius, _ := call.Argument(1).ToFloat()
 
-        entX, entY := self.internalPosition()
+        entX, entY := self.BlockingPosition()
         rng := terrain.GetCoordRNG(entX, entY)
         terrain := self.location.GetTerrain()
         hitmap := terrain.Hitmap
@@ -196,7 +227,7 @@ func (self *VirtualEntity) SetLocation(location EntityRegion) {
             if !hitmap.Fits(newEntX, newEntY, newEntW, newEntH) { continue }
 
             log.Println(self.id + " spawning " + entType, newEntX, newEntY)
-            self.location.Spawn(entType, newEntX, newEntY)
+            go self.location.Spawn(entType, newEntX, newEntY)
             break
         }
 
@@ -261,7 +292,7 @@ func (self *VirtualEntity) handle(event *events.Event) {
         coordX, _ := strconv.ParseFloat(coodsStr[0], 64)
         coordY, _ := strconv.ParseFloat(coodsStr[1], 64)
 
-        x, y := self.internalPosition()
+        x, y := self.BlockingPosition()
         dist := DistanceFromCoords(x, y, coordX, coordY)
 
         if dist > ENTITY_VISION { return }
@@ -287,7 +318,7 @@ func (self *VirtualEntity) handle(event *events.Event) {
         y, _ := strconv.ParseFloat(split[1], 64)
         item := split[2]
 
-        entX, entY := self.internalPosition()
+        entX, entY := self.BlockingPosition()
         entW, entH := self.Size()
 
         // TODO: Figure out how to calculate this
@@ -349,33 +380,15 @@ func (self *VirtualEntity) Killer(in chan bool) {
     }()
 }
 
-func (self *VirtualEntity) internalPosition() (float64, float64) {
-    x, y := self.Call("getX"), self.Call("getY")
-    xF, _ := strconv.ParseFloat(x, 64)
-    yF, _ := strconv.ParseFloat(y, 64)
-    return xF, yF
-}
-
 func (self *VirtualEntity) BlockingPosition() (float64, float64) {
-    return UnpackCoords(<-(self.Position()))
+    return self.x, self.y
 }
 func (self *VirtualEntity) Position() <-chan [2]float64 {
-    out := make(chan [2]float64, 1)
-
-    self.taskQueue <- func() {
-        xF, yF := self.internalPosition()
-        out <- [2]float64 {xF, yF}
-    }
-
-    return out
-
+    return CoordsAsChan(self.x, self.y)
 }
 
 func (self *VirtualEntity) Size() (float64, float64) {
-    width, height := self.Call("getWidth"), self.Call("getHeight")
-    widthUint, _ := strconv.ParseFloat(width, 64)
-    heightUint, _ := strconv.ParseFloat(height, 64)
-    return widthUint, heightUint
+    return self.width, self.height
 }
 
 

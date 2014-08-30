@@ -10,8 +10,6 @@ define('harmable', [], function() {
         },
 
         attacked: function(sup, origin, damage) {
-            var x = trigger('getX');
-            var y = trigger('getY');
             trigger('wasHurt');
             accumulatedDamage += damage;
             say("I have " + (health - accumulatedDamage) + " health remaining!");
