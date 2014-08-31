@@ -187,12 +187,15 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
     // Draw room furnishings
     for y := 0; y < 3; y++ {
         for x := 0; x < 3; x++ {
-            if layout[y * 3 + x] == "" { continue }
+            roomType := layout[y * 3 + x]
+            if roomType == "" { continue }
 
             rX, rY := x * (ROOMSIZE_WIDTH + HORIZ_HALLWAYSIZE_WIDTH), y * (ROOMSIZE_HEIGHT + VERT_HALLWAYSIZE_HEIGHT)
 
             if buildingType == REGIONTYPE_SHOP && y == 2 && x == 1 {
                 drawShopLobby(terrain, rX, rY, rng)
+            } else if roomType == ROOM_STORAGE {
+                drawStorageRoom(terrain, rX, rY, rng)
             }
 
         }
@@ -203,10 +206,14 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
 func drawCarpet(terrain *Terrain, x, y int) {
     fillAreaInt(terrain, x + 3, y + 7, ROOMSIZE_WIDTH - 6, ROOMSIZE_HEIGHT - 10, 48)
 
-    terrain.Tiles[x + 3][y + 7] = 42
-    terrain.Tiles[x + 3 + ROOMSIZE_WIDTH - 6][y + 7] = 44
-    terrain.Tiles[x + 3][y + ROOMSIZE_HEIGHT - 3] = 52
-    terrain.Tiles[x + 3 + ROOMSIZE_WIDTH - 6][y + ROOMSIZE_HEIGHT - 3] = 54
+    terrain.Tiles[y + 7][x + 3] = 42
+    terrain.Tiles[y + 7][x + ROOMSIZE_WIDTH - 4] = 44
+    terrain.Tiles[y + ROOMSIZE_HEIGHT - 4][x + 3] = 52
+    terrain.Tiles[y + ROOMSIZE_HEIGHT - 4][x + ROOMSIZE_WIDTH - 4] = 54
+    fillAreaInt(terrain, x + 4, y + 7, ROOMSIZE_WIDTH - 8, 1, 43)
+    fillAreaInt(terrain, x + 4, y + ROOMSIZE_HEIGHT - 4, ROOMSIZE_WIDTH - 8, 1, 53)
+    fillAreaInt(terrain, x + 3, y + 8, 1, ROOMSIZE_HEIGHT - 12, 47)
+    fillAreaInt(terrain, x + ROOMSIZE_WIDTH - 4, y + 8, 1, ROOMSIZE_HEIGHT - 12, 49)
 }
 
 func drawShopLobby(terrain *Terrain, x, y int, rng *rand.Rand) {
@@ -255,6 +262,23 @@ func drawShopLobby(terrain *Terrain, x, y int, rng *rand.Rand) {
             }
             terrain.Hitmap[y + 5][i] = true
         }
+    }
+
+}
+
+func drawStorageRoom(terrain *Terrain, x, y int, rng *rand.Rand) {
+
+    numChests := rng.Intn(STORAGE_ROOM_MAX_CHESTS)
+    for i := 0; i < numChests; i++ {
+        chestX := rng.Intn(ROOMSIZE_WIDTH - 2)
+        chestY := rng.Intn(ROOMSIZE_HEIGHT - 6)
+
+        if terrain.Tiles[chestY + y][chestX + x] != 1 {
+            i--
+            continue
+        }
+
+        terrain.Tiles[chestY + y][chestX + x] = 58
     }
 
 }
