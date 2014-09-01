@@ -65,8 +65,8 @@ define('settings', [], function() {
                 clip: {
                     x: 0,
                     y: 0,
-                    width: 50,
-                    height: 50
+                    width: 32,
+                    height: 32
                 }
             },
             animal: {

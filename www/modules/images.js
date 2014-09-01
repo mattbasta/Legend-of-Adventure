@@ -22,6 +22,7 @@ define('images', ['promise'], function(promise) {
         'chest': loadImage('/static/images/chest.png'),
         'old_woman1': loadImage('static/images/old_woman1.png'),
         'old_woman2': loadImage('static/images/old_woman2.png'),
+        'pots': loadImage('static/images/pots.png'),
         'homely1': loadImage('static/images/homely1.png'),
         'homely2': loadImage('static/images/homely2.png'),
         'homely3': loadImage('static/images/homely3.png'),

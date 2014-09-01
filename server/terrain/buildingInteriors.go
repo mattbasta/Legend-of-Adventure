@@ -258,9 +258,24 @@ func drawShopLobby(terrain *Terrain, x, y int, rng *rand.Rand) {
             if Chance(rng) {
                 terrain.Tiles[y + 5][i] = uint(75 + rng.Intn(5))
             } else {
-                terrain.Tiles[y + 5][i] = uint(56 + rng.Intn(3))
+                terrain.Tiles[y + 5][i] = uint(56 + rng.Intn(2))
             }
             terrain.Hitmap[y + 5][i] = true
+        }
+    }
+
+    for i := y + 5; i < y + ROOMSIZE_HEIGHT - 2; i++ {
+        if terrain.Tiles[i][x + 1] != 1 { continue }
+        if terrain.Tiles[i][x] == 1 && terrain.Tiles[i][x + 2] == 1 { continue }
+        if rng.Intn(10) < SHOP_LOBBY_POT_ODDS {
+            terrain.Tiles[i][x + 1] = 59
+        }
+    }
+    for i := y + 5; i < y + ROOMSIZE_HEIGHT - 2; i++ {
+        if terrain.Tiles[i][x + ROOMSIZE_WIDTH - 2] != 1 { continue }
+        if terrain.Tiles[i][x + ROOMSIZE_WIDTH - 1] == 1 && terrain.Tiles[i][x + ROOMSIZE_WIDTH - 3] == 1 { continue }
+        if rng.Intn(10) < SHOP_LOBBY_POT_ODDS {
+            terrain.Tiles[i][x + ROOMSIZE_WIDTH - 2] = 59
         }
     }
 

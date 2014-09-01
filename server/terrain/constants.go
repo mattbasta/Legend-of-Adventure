@@ -34,6 +34,7 @@ const (
     REGIONTYPE_HOUSE   = "house"
 
     SHOP_LOBBY_CRATE_ODDS = 3 // out of 10
+    SHOP_LOBBY_POT_ODDS = 6 // out of 10
     STORAGE_ROOM_MAX_CHESTS = 7
 )
 

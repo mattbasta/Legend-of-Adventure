@@ -55,6 +55,7 @@ not present in the Go port.
 * [RATED-RKOFRANKLIN](http://www.gdunlimited.net/forums/user/10621-rated-rkofranklin/) - Some sprites
 * LordBagardo - Mob Sprites
 * Kazzador - Zombie Sprite
+* [Dust Collector](http://www.gdunlimited.net/forums/user/501-dust-collector/) - Various Sprites and Tiles
 
 ### Audio
 

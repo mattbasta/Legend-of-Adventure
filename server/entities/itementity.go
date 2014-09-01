@@ -213,7 +213,7 @@ func (self ItemEntity) BlockingPosition() (float64, float64)  { return self.x, s
 func (self ItemEntity) Position() <-chan [2]float64  { return CoordsAsChan(self.x, self.y) }
 func (self ItemEntity) BlockingSize() (float64, float64)  { return 0.45, 0.45 }
 func (self ItemEntity) Size() (float64, float64)     { return 0.45, 0.45 }
-func (self ItemEntity) BlockingType() string         { return "type" }
+func (self ItemEntity) BlockingType() string         { return "item" }
 func (self ItemEntity) Type() <-chan string          { return StringAsChan(self.BlockingType()) }
 func (self ItemEntity) Location() EntityRegion       { return self.location }
 func (self ItemEntity) Inventory() *Inventory        { return nil }

@@ -3,6 +3,7 @@ package regions
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -354,34 +355,20 @@ func (self *Region) PopulateEntities() {
 		totalTiles := self.Terrain.Width * self.Terrain.Height
 		for i := uint(0); i < totalTiles; i++ {
 			tile := self.Terrain.Tiles[i % self.Terrain.Height][i / self.Terrain.Width]
-			if tile != 58 { continue }
-
-			chest := entities.NewChestEntity(self, float64(i / self.Terrain.Width), float64(i % self.Terrain.Height) + 1.25)
-			self.AddEntity(chest)
-
-			items := rng.Intn(MAX_ITEMS_PER_SHOP_CHEST - MIN_ITEMS_PER_SHOP_CHEST) + MIN_ITEMS_PER_SHOP_CHEST
-			for j := 0; j < items; j++ {
-				var code string
-				if rng.Intn(10) < ODDS_SHOP_CHEST_SWORD {
-					code = fmt.Sprintf(
-						"wsw.%s.%d",
-						entities.WEAPON_RAW_PREFIXES[rng.Intn(len(entities.WEAPON_RAW_PREFIXES))],
-						rng.Intn(SHOP_CHEST_SWORD_MAX_LEV),
-					)
-				} else {
-					var idx int
-					if rng.Intn(10) < ODDS_SHOP_CHEST_POTION {
-						code = "p"
-						idx = rng.Intn(10)
-					} else {
-						code = "f"
-						idx = rng.Intn(9)
-					}
-					code = fmt.Sprintf("%s%d", code, idx)
-				}
-				log.Println("Adding " + code + " to a chest")
-				chest.AddItem(code)
+			if tile == 58 {
+				self.placeChestShop(
+					float64(i / self.Terrain.Width),
+					float64(i % self.Terrain.Height) + 1,
+					rng,
+				)
+			} else if tile == 59 {
+				self.placePotShop(
+					float64(i / self.Terrain.Width),
+					float64(i % self.Terrain.Height) + 1.25,
+					rng,
+				)
 			}
+
 		}
 
 	case terrain.REGIONTYPE_DUNGEON:
@@ -397,6 +384,59 @@ func (self *Region) PopulateEntities() {
 		}
 	}
 
+}
+
+func (self *Region) placeChestShop(x, y float64, rng *rand.Rand) {
+	chest := entities.NewChestEntity(self, x, y)
+	self.AddEntity(chest)
+
+	items := rng.Intn(MAX_ITEMS_PER_SHOP_CHEST - MIN_ITEMS_PER_SHOP_CHEST) + MIN_ITEMS_PER_SHOP_CHEST
+	for j := 0; j < items; j++ {
+		var code string
+		if rng.Intn(10) < ODDS_SHOP_CHEST_SWORD {
+			code = fmt.Sprintf(
+				"wsw.%s.%d",
+				entities.WEAPON_RAW_PREFIXES[rng.Intn(len(entities.WEAPON_RAW_PREFIXES))],
+				rng.Intn(SHOP_CHEST_SWORD_MAX_LEV),
+			)
+		} else {
+			var idx int
+			if rng.Intn(10) < ODDS_SHOP_CHEST_POTION {
+				code = "p"
+				idx = rng.Intn(10)
+			} else {
+				code = "f"
+				idx = rng.Intn(9)
+			}
+			code = fmt.Sprintf("%s%d", code, idx)
+		}
+		chest.AddItem(code)
+	}
+}
+
+func (self *Region) placePotShop(x, y float64, rng *rand.Rand) {
+	pot := entities.NewPotEntity(self, rng.Intn(3), x, y)
+	self.AddEntity(pot)
+
+	var code string
+	if rng.Intn(10) < ODDS_SHOP_CHEST_SWORD {
+		code = fmt.Sprintf(
+			"wsw.%s.%d",
+			entities.WEAPON_RAW_PREFIXES[rng.Intn(len(entities.WEAPON_RAW_PREFIXES))],
+			rng.Intn(SHOP_CHEST_SWORD_MAX_LEV),
+		)
+	} else {
+		var idx int
+		if rng.Intn(10) < ODDS_SHOP_CHEST_POTION {
+			code = "p"
+			idx = rng.Intn(10)
+		} else {
+			code = "f"
+			idx = rng.Intn(9)
+		}
+		code = fmt.Sprintf("%s%d", code, idx)
+	}
+	pot.AddItem(code)
 }
 
 func (self *Region) Spawn(entType string, x, y float64) {
