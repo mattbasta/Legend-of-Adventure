@@ -17,6 +17,22 @@ var WEAPONS = map[string]uint {
     "ha": 4,
     "st": 5,
 }
+var WEAPON_RAW_PREFIXES = []string {
+    "plain",
+    "forged",
+    "sharp",
+    "broad",
+    "old",
+    "leg",
+    "fla",
+    "agile",
+    "bane",
+    "ench",
+    "evil",
+    "spite",
+    "ether",
+    "ancie",
+}
 var WEAPON_PREFIXES = map[string]uint {
     "plain": 0,
     "forged": 1,

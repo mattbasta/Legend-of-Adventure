@@ -337,6 +337,7 @@ func (self *Region) PopulateEntities() {
 
 	case terrain.REGIONTYPE_SHOP:
 		placeEntity("homely")
+		placeEntity("homely")
 
 		fallthrough
 	case terrain.REGIONTYPE_HOUSE:
@@ -348,6 +349,39 @@ func (self *Region) PopulateEntities() {
 		}
 		if rng.Intn(TRADER_IN_HOUSE_ODDS) == 0 {
 			placeEntity("trader")
+		}
+
+		totalTiles := self.Terrain.Width * self.Terrain.Height
+		for i := uint(0); i < totalTiles; i++ {
+			tile := self.Terrain.Tiles[i % self.Terrain.Height][i / self.Terrain.Width]
+			if tile != 58 { continue }
+
+			chest := entities.NewChestEntity(self, float64(i / self.Terrain.Width), float64(i % self.Terrain.Height) + 1.25)
+			self.AddEntity(chest)
+
+			items := rng.Intn(MAX_ITEMS_PER_SHOP_CHEST - MIN_ITEMS_PER_SHOP_CHEST) + MIN_ITEMS_PER_SHOP_CHEST
+			for j := 0; j < items; j++ {
+				var code string
+				if rng.Intn(10) < ODDS_SHOP_CHEST_SWORD {
+					code = fmt.Sprintf(
+						"wsw.%s.%d",
+						entities.WEAPON_RAW_PREFIXES[rng.Intn(len(entities.WEAPON_RAW_PREFIXES))],
+						rng.Intn(SHOP_CHEST_SWORD_MAX_LEV),
+					)
+				} else {
+					var idx int
+					if rng.Intn(10) < ODDS_SHOP_CHEST_POTION {
+						code = "p"
+						idx = rng.Intn(10)
+					} else {
+						code = "f"
+						idx = rng.Intn(9)
+					}
+					code = fmt.Sprintf("%s%d", code, idx)
+				}
+				log.Println("Adding " + code + " to a chest")
+				chest.AddItem(code)
+			}
 		}
 
 	case terrain.REGIONTYPE_DUNGEON:

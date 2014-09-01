@@ -2,6 +2,7 @@ package entities
 
 import (
     "fmt"
+    "log"
     "strconv"
     "strings"
 
@@ -18,9 +19,14 @@ type ChestEntity struct {
     x, y       float64
     location   EntityRegion
 
+    hasAddedItems bool
+
     receiver   chan *events.Event
 }
 
+
+const CHEST_HIT_WIGGLE_ROOM_X = 0.35
+const CHEST_HIT_WIGGLE_ROOM_Y = 1.25
 
 
 func NewChestEntity(location EntityRegion, x, y float64) *ChestEntity {
@@ -50,7 +56,11 @@ func NewChestEntity(location EntityRegion, x, y float64) *ChestEntity {
 }
 
 func (self *ChestEntity) AddItem(code string) {
-    self.inventory.Give(code)
+    self.hasAddedItems = true
+    ok, _ := self.inventory.Give(code)
+    if !ok {
+        log.Println("Could not add item to chest entity")
+    }
 }
 
 
@@ -68,23 +78,41 @@ func (self *ChestEntity) handle(event *events.Event) {
         entX, entY := UnpackCoords(<-(self.Position()))
         entW, entH := self.Size()
 
-        if x < entX - ATTACK_WIGGLE_ROOM ||
-           x > entX + entW + ATTACK_WIGGLE_ROOM ||
-           y < entY - entH - ATTACK_WIGGLE_ROOM ||
-           y > entY + ATTACK_WIGGLE_ROOM {
+        if x < entX - CHEST_HIT_WIGGLE_ROOM_X ||
+           x > entX + entW + CHEST_HIT_WIGGLE_ROOM_X ||
+           y < entY - entH - CHEST_HIT_WIGGLE_ROOM_Y ||
+           y > entY + CHEST_HIT_WIGGLE_ROOM_Y {
+
+            log.Println("Attack too far away")
             return
         }
 
+        log.Println("Dropping item")
         self.inventory.Drop(self)
+
+        if self.inventory.NumItems() == 0 {
+            self.location.Broadcast(
+                self.location.GetEvent(
+                    events.SOUND,
+                    fmt.Sprintf(
+                        "chest_smash:%f:%f",
+                        self.x,
+                        self.y,
+                    ),
+                    self,
+                ),
+            )
+
+            self.location.RemoveEntity(self)
+            self.closing <- true
+        }
 
     }
 }
 
-func (self *ChestEntity) String() <-chan string {
+func (self *ChestEntity) BlockingString() string {
     width, height := self.Size()
-
-    out := make(chan string, 1)
-    out <- (
+    return (
         "{\"proto\":\"chest\"," +
         "\"id\":\"" + self.ID() + "\"," +
         fmt.Sprintf(
@@ -99,19 +127,23 @@ func (self *ChestEntity) String() <-chan string {
         ) +
         "\"type\":\"chest\"" +
         "}")
+}
+func (self *ChestEntity) String() <-chan string {
+
+    out := make(chan string, 1)
+    out <- self.BlockingString()
     return out
 }
 
-
 func (self ChestEntity) Killer(in chan bool)          { return }
-func (self ChestEntity) UpdateInventory()             { return }
 func (self ChestEntity) SetEffect(effect string, ttl int) { return }
+func (self ChestEntity) UpdateInventory()             { return }
 
 func (self ChestEntity) ID() string                   { return self.id }
 func (self ChestEntity) BlockingPosition() (float64, float64)  { return self.x, self.y }
 func (self ChestEntity) Position() <-chan [2]float64  { return CoordsAsChan(self.x, self.y) }
 func (self ChestEntity) BlockingSize() (float64, float64)  { return 1, 1 }
-func (self ChestEntity) Size() (float64, float64)     { return 1, 1 }
+func (self ChestEntity) Size() (float64, float64)     { return 1.5, 1.5 }
 func (self ChestEntity) BlockingType() string         { return "chest" }
 func (self ChestEntity) Type() <-chan string          { return StringAsChan(self.BlockingType()) }
 func (self ChestEntity) Location() EntityRegion       { return self.location }

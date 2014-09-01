@@ -62,3 +62,4 @@ not present in the Go port.
 * Josh Stitt - Music Composition
 * Ralph Hinkle - Sounds
 * Ron Corbin - Zombie SFX (youtube.com/mrontheborder)
+* Texaveryjr - Wood crate smashing

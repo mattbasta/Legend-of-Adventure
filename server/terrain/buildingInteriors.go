@@ -279,6 +279,7 @@ func drawStorageRoom(terrain *Terrain, x, y int, rng *rand.Rand) {
         }
 
         terrain.Tiles[chestY + y][chestX + x] = 58
+        terrain.Hitmap[chestY + y][chestX + x] = true
     }
 
 }

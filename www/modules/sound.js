@@ -29,10 +29,13 @@ define('sound', ['buzz', 'comm', 'entities'], function(buzz, comm, entities) {
     });
 
     loadSound('bleat', 'static/sounds/bleat');
+    loadSound('chest_smash', 'static/sounds/chest_smash');
     loadSound('hit_grunt0', 'static/sounds/hit_grunt0');
     loadSound('hit_grunt1', 'static/sounds/hit_grunt1');
     loadSound('hit_grunt2', 'static/sounds/hit_grunt2');
     loadSound('hit_grunt3', 'static/sounds/hit_grunt3');
+    loadSound('pot_smash', 'static/sounds/pot_smash');
+    loadSound('pot_smash', 'static/sounds/pot_smash');
     loadSound('potion0', 'static/sounds/potion0');
     loadSound('potion1', 'static/sounds/potion1');
     loadSound('wolf_howl', 'static/sounds/wolf_howl');

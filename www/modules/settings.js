@@ -61,7 +61,13 @@ define('settings', [], function() {
             },
             chest: {
                 image: "chest",
-                xOffset: 0
+                xOffset: 0,
+                clip: {
+                    x: 0,
+                    y: 0,
+                    width: 50,
+                    height: 50
+                }
             },
             animal: {
                 sprite: {
