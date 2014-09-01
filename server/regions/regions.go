@@ -364,7 +364,7 @@ func (self *Region) PopulateEntities() {
 			} else if tile == 59 {
 				self.placePotShop(
 					float64(i / self.Terrain.Width),
-					float64(i % self.Terrain.Height) + 1.25,
+					float64(i % self.Terrain.Height) + 1,
 					rng,
 				)
 			}

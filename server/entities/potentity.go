@@ -2,7 +2,6 @@ package entities
 
 import (
     "fmt"
-    "log"
     "strconv"
     "strings"
 
@@ -16,6 +15,7 @@ type PotEntity struct {
 
     inventory *Inventory
     type_      int
+    item       string
 
     x, y       float64
     location   EntityRegion
@@ -36,8 +36,7 @@ func NewPotEntity(location EntityRegion, type_ int, x, y float64) *PotEntity {
     pot.receiver = make(chan *events.Event, 128)
     pot.location = location
     pot.type_ = type_
-
-    pot.inventory = NewInventory(pot, CHEST_INV_SIZE)
+    pot.item = ""
 
     pot.x, pot.y = x, y
 
@@ -61,10 +60,7 @@ func (self *PotEntity) AddItem(code string) {
         return
     }
     self.hasAddedItem = true
-    ok, _ := self.inventory.Give(code)
-    if !ok {
-        log.Println("Could not add item to pot entity")
-    }
+    self.item = code
 }
 
 
@@ -90,32 +86,34 @@ func (self *PotEntity) handle(event *events.Event) {
             return
         }
 
-        log.Println("Dropping item")
-        self.inventory.Drop(self)
 
-        if self.inventory.NumItems() == 0 {
+        item := NewItemEntityInstance(self.item)
+        item.location = self.location
+        itemW, _ := item.Size()
+        w, _ := self.Size()
+        item.x, item.y = self.x + (w - itemW) / 2, self.y
+        self.location.AddEntity(item)
 
-            sound := "pot_smash"
-            if self.type_ > 1 {
-                sound = "chest_smash"
-            }
-
-            self.location.Broadcast(
-                self.location.GetEvent(
-                    events.SOUND,
-                    fmt.Sprintf(
-                        "%s:%f:%f",
-                        sound,
-                        self.x,
-                        self.y,
-                    ),
-                    self,
-                ),
-            )
-
-            self.location.RemoveEntity(self)
-            self.closing <- true
+        sound := "pot_smash"
+        if self.type_ > 1 {
+            sound = "chest_smash"
         }
+
+        self.location.Broadcast(
+            self.location.GetEvent(
+                events.SOUND,
+                fmt.Sprintf(
+                    "%s:%f:%f",
+                    sound,
+                    self.x,
+                    self.y,
+                ),
+                self,
+            ),
+        )
+
+        self.location.RemoveEntity(self)
+        self.closing <- true
 
     }
 }
@@ -164,5 +162,5 @@ func (self PotEntity) Size() (float64, float64)     { return 1, 1 }
 func (self PotEntity) BlockingType() string         { return "pot" }
 func (self PotEntity) Type() <-chan string          { return StringAsChan(self.BlockingType()) }
 func (self PotEntity) Location() EntityRegion       { return self.location }
-func (self PotEntity) Inventory() *Inventory        { return self.inventory }
+func (self PotEntity) Inventory() *Inventory        { return nil }
 func (self PotEntity) Direction() (int, int)        { return 0, 1 }
