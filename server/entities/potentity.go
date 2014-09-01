@@ -16,6 +16,7 @@ type PotEntity struct {
     inventory *Inventory
     type_      int
     item       string
+    entity     string
 
     x, y       float64
     location   EntityRegion
@@ -37,6 +38,7 @@ func NewPotEntity(location EntityRegion, type_ int, x, y float64) *PotEntity {
     pot.location = location
     pot.type_ = type_
     pot.item = ""
+    pot.entity = ""
 
     pot.x, pot.y = x, y
 
@@ -63,6 +65,14 @@ func (self *PotEntity) AddItem(code string) {
     self.item = code
 }
 
+func (self *PotEntity) AddEntity(entType string) {
+    if self.hasAddedItem {
+        return
+    }
+    self.hasAddedItem = true
+    self.entity = entType
+}
+
 
 func (self *PotEntity) Receive() chan<- *events.Event {
     return self.receiver
@@ -86,13 +96,18 @@ func (self *PotEntity) handle(event *events.Event) {
             return
         }
 
-
-        item := NewItemEntityInstance(self.item)
-        item.location = self.location
-        itemW, _ := item.Size()
-        w, _ := self.Size()
-        item.x, item.y = self.x + (w - itemW) / 2, self.y
-        self.location.AddEntity(item)
+        if self.hasAddedItem {
+            if self.item != "" {
+                item := NewItemEntityInstance(self.item)
+                item.location = self.location
+                itemW, _ := item.Size()
+                w, _ := self.Size()
+                item.x, item.y = self.x + (w - itemW) / 2, self.y
+                self.location.AddEntity(item)
+            } else {
+                self.location.Spawn(self.entity, self.x, self.y)
+            }
+        }
 
         sound := "pot_smash"
         if self.type_ > 1 {

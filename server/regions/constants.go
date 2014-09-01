@@ -15,6 +15,8 @@ const ODDS_TOWN = 14
 
 const MAX_ITEMS_PER_SHOP_CHEST = 10
 const MIN_ITEMS_PER_SHOP_CHEST = 1
+const ODDS_SHOP_CHEST_EMPTY = 2 // out of 10
 const ODDS_SHOP_CHEST_POTION = 2 // out of 10
-const ODDS_SHOP_CHEST_SWORD = 3 // out of 10
+const ODDS_SHOP_CHEST_SWORD = 2 // out of 10
+const ODDS_SHOP_CHEST_GUARD = 1 // out of 10
 const SHOP_CHEST_SWORD_MAX_LEV = 10

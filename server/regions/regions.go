@@ -358,7 +358,7 @@ func (self *Region) PopulateEntities() {
 			if tile == 58 {
 				self.placeChestShop(
 					float64(i / self.Terrain.Width),
-					float64(i % self.Terrain.Height) + 1,
+					float64(i % self.Terrain.Height) + 0.75,
 					rng,
 				)
 			} else if tile == 59 {
@@ -419,7 +419,12 @@ func (self *Region) placePotShop(x, y float64, rng *rand.Rand) {
 	self.AddEntity(pot)
 
 	var code string
-	if rng.Intn(10) < ODDS_SHOP_CHEST_SWORD {
+	if rng.Intn(10) < ODDS_SHOP_CHEST_EMPTY {
+		return
+	} else if rng.Intn(10) < ODDS_SHOP_CHEST_GUARD {
+		pot.AddEntity("soldier")
+		return
+	} else if rng.Intn(10) < ODDS_SHOP_CHEST_SWORD {
 		code = fmt.Sprintf(
 			"wsw.%s.%d",
 			entities.WEAPON_RAW_PREFIXES[rng.Intn(len(entities.WEAPON_RAW_PREFIXES))],

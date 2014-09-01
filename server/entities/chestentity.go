@@ -115,13 +115,12 @@ func (self *ChestEntity) BlockingString() string {
             "\"x\":%f," +
             "\"y\":%f," +
             "\"width\":%f," +
-            "\"height\":%f",
+            "\"height\":%f,",
             self.x,
             self.y,
             width,
             height,
         ) +
-        "}," +
         "\"type\":\"chest\"" +
         "}")
 }
