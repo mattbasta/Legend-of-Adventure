@@ -1,6 +1,7 @@
 package terrain
 
 
+import "log"
 import "math/rand"
 
 
@@ -142,6 +143,7 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
             }
         }
     }
+    drawWindows(terrain, layout)
 
     for y := 0; y < 3; y++ {
         for x := 0; x < 3; x++ {
@@ -201,6 +203,39 @@ func ApplyBuildingInterior(terrain *Terrain, buildingType, parent string) {
         }
     }
 
+}
+
+func drawWindows(terrain *Terrain, layout []string) {
+    for i := 0; i < 3; i++ {
+        Outer:
+        for j := 0; j < 3; j++ {
+            room := layout[i * 3 + j]
+
+            // First, test that the room is windowable
+            if room == "" || room == ROOM_STAIRS {
+                log.Println("Skipping room at ", j, i, room)
+                continue
+            }
+            if i != 0 {
+                for k := 0; k < i; k++ {
+                    if layout[k * 3 + j] != "" {
+                        log.Println("Not drawing windows at ", j, i)
+                        continue Outer
+                    }
+                }
+            }
+
+            log.Println("Drawing windows at ", j, i)
+            // Draw windows
+            y := i * (ROOMSIZE_HEIGHT + VERT_HALLWAYSIZE_HEIGHT) + 2
+            xOffset := j * (ROOMSIZE_WIDTH + HORIZ_HALLWAYSIZE_WIDTH)
+            for x := 4; x < ROOMSIZE_WIDTH - 2; x += 3 {
+                terrain.Tiles[y][x + xOffset] = 41
+                terrain.Tiles[y + 1][x + xOffset] = 46
+            }
+
+        }
+    }
 }
 
 func drawCarpet(terrain *Terrain, x, y int) {
