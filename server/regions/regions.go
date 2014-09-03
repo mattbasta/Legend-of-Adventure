@@ -48,7 +48,6 @@ func startRegionGetter() {
 				reg.Type = regType
 				reg.X = x
 				reg.Y = y
-				reg.killer = make(chan bool, 1)
 				reg.doTTL()
 
 				reg.entities = make([]*entities.Entity, 0, 32)
@@ -128,7 +127,6 @@ type Region struct {
 
 	// Bits and pieces to clean up the region.
 	KeepAlive chan bool
-	killer    chan bool
 
 	Terrain  *terrain.Terrain
 	entities []*entities.Entity
@@ -156,7 +154,9 @@ func (self *Region) doTTL() {
 				// Remove references to the region from the region cache.
 				delete(regionCache, self.ID())
 				// Tell the entities that are listening that they need to clean up.
-				self.killer <- true
+				for _, ent := range self.entities {
+					(*ent).Kill()
+				}
 				close(self.KeepAlive)
 
 				return
@@ -179,7 +179,6 @@ func (self *Region) GetEvent(evt_type events.EventType, body string, origin enti
 }
 
 func (self *Region) AddEntity(entity entities.Entity) {
-	entity.Killer(self.killer)
 
 	// Add the entity to the list of entities.
 	self.entities = append(self.entities, &entity)
@@ -217,8 +216,6 @@ func (self *Region) AddEntity(entity entities.Entity) {
 }
 
 func (self *Region) RemoveEntity(entity entities.Entity) {
-	entity.Killer(self.killer)
-
 	// Tell everyone else that the entity is leaving.
 	self.Broadcast(self.GetEvent(events.REGION_EXIT, entity.ID(), entity))
 

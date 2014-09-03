@@ -12,7 +12,7 @@ const ATTACK_WIGGLE_ROOM = 0.5
 
 const VIRTUAL_ENTITY_QUEUE_SIZE = 1024
 const VIRTUAL_ENTITY_TASK_QUEUE_SIZE = 64
-const VIRTUAL_ENTITY_TICK_MS = 200
+const VIRTUAL_ENTITY_TICK_MS = 150
 
 // This constant is the number of random paths that will be generated when a
 // pathing entity has no attractors and one or more repulsors in order to find

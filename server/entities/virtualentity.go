@@ -366,18 +366,9 @@ func (self *VirtualEntity) String() <-chan string {
     return out
 }
 
-func (self *VirtualEntity) Killer(in chan bool) {
-    go func() {
-        select {
-        case <- in:
-            log.Println("Destroying entity " + self.ID())
-            self.closing <- true
-            in <- true
-        case <- self.closing:
-            log.Println("Closing entity " + self.ID())
-            self.closing <- true
-        }
-    }()
+func (self *VirtualEntity) Kill() {
+    log.Println("Destroying entity " + self.ID())
+    self.closing <- true
 }
 
 func (self *VirtualEntity) BlockingPosition() (float64, float64) {

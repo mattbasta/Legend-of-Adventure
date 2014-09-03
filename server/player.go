@@ -450,7 +450,7 @@ func (self Player) GetHealth() uint              { return self.health }
 func (self Player) ID() string                   { return self.name }
 func (self Player) Inventory() *entities.Inventory  { return self.inventory }
 func (self Player) IsAtMaxHealth() bool          { return self.health == PLAYER_MAX_HEALTH }
-func (self Player) Killer(in chan bool)          { return }
+func (self Player) Kill()                        { return }
 func (self Player) Location() entities.EntityRegion { return self.location }
 func (self Player) MovementEffect() string       { return "" }
 func (self Player) BlockingPosition() (float64, float64)  { return self.x, self.y }

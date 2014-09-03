@@ -165,7 +165,7 @@ func (self *PotEntity) String() <-chan string {
     return out
 }
 
-func (self PotEntity) Killer(in chan bool)          { return }
+func (self *PotEntity) Kill()                       { self.closing <- true }
 func (self PotEntity) SetEffect(effect string, ttl int) { return }
 func (self PotEntity) UpdateInventory()             { return }
 

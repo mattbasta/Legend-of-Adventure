@@ -2,7 +2,6 @@ package entities
 
 import (
     "fmt"
-    "log"
     "strconv"
     "strings"
 
@@ -194,20 +193,7 @@ func (self ItemEntity) BlockingString() string {
 }
 
 
-func (self *ItemEntity) Killer(in chan bool) {
-    go func() {
-        select {
-        case <- in:
-            log.Println("Destroying item entity " + self.ID())
-            self.closing <- true
-            in <- true
-        case <- self.closing:
-            log.Println("Closing item entity " + self.ID())
-            self.closing <- true
-        }
-    }()
-}
-
+func (self *ItemEntity) Kill()                       { self.closing <- true }
 func (self ItemEntity) ID() string                   { return self.id }
 func (self ItemEntity) BlockingPosition() (float64, float64)  { return self.x, self.y }
 func (self ItemEntity) Position() <-chan [2]float64  { return CoordsAsChan(self.x, self.y) }

@@ -131,7 +131,7 @@ func (self *ChestEntity) String() <-chan string {
     return out
 }
 
-func (self ChestEntity) Killer(in chan bool)          { return }
+func (self *ChestEntity) Kill()                       { self.closing <- true }
 func (self ChestEntity) SetEffect(effect string, ttl int) { return }
 func (self ChestEntity) UpdateInventory()             { return }
 
