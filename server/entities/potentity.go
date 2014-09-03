@@ -105,7 +105,16 @@ func (self *PotEntity) handle(event *events.Event) {
                 item.x, item.y = self.x + (w - itemW) / 2, self.y
                 self.location.AddEntity(item)
             } else {
-                self.location.Spawn(self.entity, self.x, self.y)
+                newEntID := self.location.Spawn(self.entity, self.x, self.y)
+                newEnt := self.location.GetEntity(newEntID)
+                oldEnt := self.location.GetEntity(event.Origin)
+                if newEnt != nil && oldEnt != nil {
+                    newEnt.Receive() <- self.location.GetEvent(
+                        events.DIRECT_ATTACK,
+                        event.Body,
+                        oldEnt,
+                    )
+                }
             }
         }
 

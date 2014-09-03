@@ -26,7 +26,7 @@ type EntityRegion interface {
 
     GetTerrain() *terrain.Terrain
 
-    Spawn(entityType string, x, y float64)
+    Spawn(entityType string, x, y float64) string
 }
 
 

@@ -441,11 +441,12 @@ func (self *Region) placePotShop(x, y float64, rng *rand.Rand) {
 	pot.AddItem(code)
 }
 
-func (self *Region) Spawn(entType string, x, y float64) {
+func (self *Region) Spawn(entType string, x, y float64) string {
 	ent := entities.NewVirtualEntity(entType)
 	ent.SetLocation(self)
 	ent.SetPosition(x, y)
 	self.AddEntity(ent)
+	return ent.ID()
 }
 
 
