@@ -85,10 +85,14 @@ define('playerStatsOverlay',
 
         function draw_item(x, y, h, w, code) {
             var sy = 0, sx = 0;
+            var modifier;
             if (code[0] == 'w') {  // Weapons have special codes to allow modifiers
                 var attributes = code.substr(1).split('.');
                 sx = weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
                 sy = weapon_order.indexOf(attributes[0]) * 24;
+
+                modifier = attributes[2];
+
             } else {
                 var c = parseInt(code.substr(1), 10);
                 sx = c % 5 * 24;
@@ -98,6 +102,14 @@ define('playerStatsOverlay',
                 }
             }
             ctx.drawImage(itemsImg, sx, sy, 24, 24, x, y, w, h);
+
+            if (modifier) {
+                var modifierWidth = ctx.measureText(modifier);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                ctx.fillRect(34 + i * 64 - modifierWidth.width - 9, 51, modifierWidth.width + 10, 19);
+                ctx.fillStyle = '#fff';
+                ctx.fillText(modifier, 34 + i * 64 - modifierWidth.width - 4, 66);
+            }
         }
 
         var slots = inventory.getContents();
