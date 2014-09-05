@@ -106,9 +106,9 @@ define('playerStatsOverlay',
             if (modifier) {
                 var modifierWidth = ctx.measureText(modifier);
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-                ctx.fillRect(34 + i * 64 - modifierWidth.width - 9, 51, modifierWidth.width + 10, 19);
+                ctx.fillRect(34 + x - modifierWidth.width - 19, 51, modifierWidth.width + 9, 19);
                 ctx.fillStyle = '#fff';
-                ctx.fillText(modifier, 34 + i * 64 - modifierWidth.width - 4, 66);
+                ctx.fillText(modifier, 34 + x - modifierWidth.width - 15, 66);
             }
         }
 
@@ -139,9 +139,9 @@ define('playerStatsOverlay',
                     draw_item(10, 10, 60, 60, slots[i]);
                     if (count && count !== 1) {
                         ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-                        ctx.fillRect(10 + 80 - countWidth.width - 25, 5, countWidth.width + 10, 19);
+                        ctx.fillRect(10 + 76 - countWidth.width - 25, 9, countWidth.width + 10, 19);
                         ctx.fillStyle = '#fff';
-                        ctx.fillText(count, 10 + 80 - countWidth.width - 20, 20);
+                        ctx.fillText(count, 10 + 76 - countWidth.width - 20, 24);
                     }
                 }
             } else {
@@ -157,9 +157,9 @@ define('playerStatsOverlay',
                     draw_item(34 + i * 64, 22, 48, 48, slots[i]);
                     if (count && count !== 1) {
                         ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-                        ctx.fillRect((34 + i * 64) + 64 - countWidth.width - 20, 15, countWidth.width + 10, 19);
+                        ctx.fillRect((34 + i * 64) + 64 - countWidth.width - 20, 19, countWidth.width + 10, 19);
                         ctx.fillStyle = '#fff';
-                        ctx.fillText(count, (34 + i * 64) + 64 - countWidth.width - 15, 30);
+                        ctx.fillText(count, (34 + i * 64) + 64 - countWidth.width - 15, 34);
                     }
                 }
             }
