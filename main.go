@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
-	"legend-of-adventure/server"
 )
 
 var HTTP_PORT int
@@ -32,7 +30,7 @@ func main() {
 
 	http.HandleFunc("/", httphandler)
 	http.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("www/"))))
-	http.Handle("/socket", server.GetWSHandler())
+	http.Handle("/socket", GetWSHandler())
 
 	http.ListenAndServe(":"+strconv.Itoa(HTTP_PORT), nil)
 

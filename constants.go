@@ -1,5 +1,4 @@
-package server
-
+package main
 
 const MAX_CONNECTED_PLAYERS = 256
 
@@ -10,6 +9,5 @@ const PLAYER_INV_SIZE = 5
 const PLAYER_MAX_HEALTH = 100
 const PLAYER_SPEED = 0.0075
 const PLAYER_TICK_FREQ = 250 // in ms
-
 
 const SQRT1_2 = 0.70710678118
