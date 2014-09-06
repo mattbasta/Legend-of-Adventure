@@ -15,3 +15,4 @@ clean:
 	go clean
 	rm -f server.exe server.o
 	go fmt
+	for i in $(ls -d */); do go fmt legend-of-adventure/${i%%/}; done

@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"legend-of-adventure/server/entities"
-	"legend-of-adventure/server/events"
-	"legend-of-adventure/server/regions"
-	"legend-of-adventure/server/terrain"
+	"legend-of-adventure/entities"
+	"legend-of-adventure/events"
+	"legend-of-adventure/regions"
+	"legend-of-adventure/terrain"
 )
 
 var playerCounter = 0
@@ -376,8 +376,11 @@ func (self *Player) handle(msg string) {
 			return
 		}
 
-		if Iabs(self.location.X-int(xPos)) > 1 ||
-			Iabs(self.location.Y-int(yPos)) > 1 {
+		iXPos, iYPos = int(xPos), int(yPos)
+		iXPos = self.location.X - iXPos
+		iYPos = self.location.Y - iXPos
+
+		if iYPos > 1 || iYPos < -1 || iXPos > 1 || iXPos < -1 {
 			return
 		}
 

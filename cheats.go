@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"legend-of-adventure/server/events"
-	"legend-of-adventure/server/regions"
+	"legend-of-adventure/events"
+	"legend-of-adventure/regions"
 )
 
 func sayToPlayer(message string, player *Player) {
