@@ -139,7 +139,7 @@ func (self *Inventory) Use(index uint, holder Animat) {
 
 	log.Println(holder.ID() + " using " + self.inv[index])
 
-	x, y := UnpackCoords(<-(holder.Position()))
+	x, y := holder.BlockingPosition()
 
 	switch self.inv[index][0] {
 	case 'f':

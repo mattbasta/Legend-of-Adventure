@@ -63,7 +63,7 @@ type ItemEntity struct {
 type EntityThatCanThrow interface {
 	ID() string
 	Location() EntityRegion
-	Position() <-chan [2]float64
+	BlockingPosition() (float64, float64)
 	Direction() (int, int)
 }
 
@@ -71,7 +71,7 @@ func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
 	item := NewItemEntityInstance(code)
 	item.location = from.Location()
 
-	fromX, fromY := UnpackCoords(<-(from.Position()))
+	fromX, fromY := from.BlockingPosition()
 	fromDirX, fromDirY := from.Direction()
 	item.x, item.y = fromX+float64(fromDirX), fromY+float64(fromDirY)
 

@@ -82,7 +82,7 @@ func (self *PotEntity) handle(event *events.Event) {
 		x, _ := strconv.ParseFloat(split[0], 64)
 		y, _ := strconv.ParseFloat(split[1], 64)
 
-		entX, entY := UnpackCoords(<-(self.Position()))
+		entX, entY := self.BlockingPosition()
 		entW, entH := self.Size()
 
 		if x < entX-POT_HIT_WIGGLE_ROOM_X ||

@@ -376,7 +376,7 @@ func (self *Player) handle(msg string) {
 			return
 		}
 
-		iXPos, iYPos = int(xPos), int(yPos)
+		iXPos, iYPos := int(xPos), int(yPos)
 		iXPos = self.location.X - iXPos
 		iYPos = self.location.Y - iXPos
 
