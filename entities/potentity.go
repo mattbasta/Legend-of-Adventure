@@ -6,9 +6,12 @@ import (
 	"strings"
 
 	"legend-of-adventure/events"
+	"legend-of-adventure/performance"
 )
 
 type PotEntity struct {
+	performance.PerformanceMixin
+
 	id      string
 	closing chan bool
 
@@ -30,6 +33,7 @@ const POT_HIT_WIGGLE_ROOM_Y = 0.4
 
 func NewPotEntity(location EntityRegion, type_ int, x, y float64) *PotEntity {
 	pot := new(PotEntity)
+	pot.PerformanceMixin = *performance.NewPerfMixin()
 	pot.id = NextEntityID()
 	pot.closing = make(chan bool, 1)
 	pot.receiver = make(chan *events.Event, 128)

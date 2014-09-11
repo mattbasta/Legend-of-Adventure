@@ -7,9 +7,12 @@ import (
 	"strings"
 
 	"legend-of-adventure/events"
+	"legend-of-adventure/performance"
 )
 
 type ChestEntity struct {
+	performance.PerformanceMixin
+
 	id      string
 	closing chan bool
 
@@ -28,6 +31,7 @@ const CHEST_HIT_WIGGLE_ROOM_Y = 1.25
 
 func NewChestEntity(location EntityRegion, x, y float64) *ChestEntity {
 	chest := new(ChestEntity)
+	chest.PerformanceMixin = *performance.NewPerfMixin()
 	chest.id = NextEntityID()
 	chest.closing = make(chan bool, 1)
 	chest.receiver = make(chan *events.Event, 128)

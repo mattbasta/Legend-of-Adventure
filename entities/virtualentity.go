@@ -12,12 +12,15 @@ import (
 	"github.com/robertkrimen/otto"
 
 	"legend-of-adventure/events"
+	"legend-of-adventure/performance"
 	"legend-of-adventure/terrain"
 )
 
 var globalEntityRng = rand.New(rand.NewSource(38503))
 
 type VirtualEntity struct {
+	performance.PerformanceMixin
+
 	PathingHelper
 	EntityVM
 
@@ -36,6 +39,8 @@ type VirtualEntity struct {
 
 func NewVirtualEntity(entityName string) *VirtualEntity {
 	ent := new(VirtualEntity)
+	ent.PerformanceMixin = *performance.NewPerfMixin()
+
 	ent.id = NextEntityID()
 
 	ent.closing = make(chan bool, 1)

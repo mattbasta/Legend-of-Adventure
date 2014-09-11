@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"legend-of-adventure/events"
+	"legend-of-adventure/performance"
 )
 
 var WEAPONS = map[string]uint{
@@ -50,6 +51,8 @@ var WEAPON_PREFIXES = map[string]uint{
 }
 
 type ItemEntity struct {
+	performance.PerformanceMixin
+
 	id      string
 	closing chan bool
 
@@ -69,6 +72,8 @@ type EntityThatCanThrow interface {
 
 func NewItemEntity(code string, from EntityThatCanThrow) *ItemEntity {
 	item := NewItemEntityInstance(code)
+	item.PerformanceMixin = *performance.NewPerfMixin()
+
 	item.location = from.Location()
 
 	fromX, fromY := from.BlockingPosition()

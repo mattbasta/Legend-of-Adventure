@@ -5,6 +5,8 @@ import (
 
 	"legend-of-adventure/events"
 	"legend-of-adventure/terrain"
+
+	"github.com/mattbasta/sojourner"
 )
 
 var entityNameCounter = 0
@@ -45,6 +47,8 @@ type Entity interface {
 	Type() <-chan string
 	BlockingString() string
 	String() <-chan string
+
+	GetSnapshot() *sojourner.PerformanceSnapshot
 }
 
 type Animat interface {

@@ -11,6 +11,7 @@ import (
 
 	"legend-of-adventure/entities"
 	"legend-of-adventure/events"
+	"legend-of-adventure/performance"
 	"legend-of-adventure/regions"
 	"legend-of-adventure/terrain"
 )
@@ -18,6 +19,8 @@ import (
 var playerCounter = 0
 
 type Player struct {
+	performance.PerformanceMixin
+
 	connection *websocket.Conn
 	location   *regions.Region
 
@@ -58,8 +61,12 @@ func NewPlayer(conn *websocket.Conn) *Player {
 	// Let the region know to stay alive.
 	reg.KeepAlive <- true
 
-	player := Player{conn, reg,
+	player := Player{
+		*performance.NewPerfMixin(),
+
+		conn, reg,
 		outbound, outbound_raw, closing,
+
 		entities.NextEntityID(),
 		float64(reg.Terrain.Width) / 2, float64(reg.Terrain.Height) / 2, 0, 0, 0, 1,
 		time.Now().UnixNano(),
