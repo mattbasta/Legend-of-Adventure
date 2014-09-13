@@ -75,17 +75,17 @@ define('sound', ['buzz', 'comm', 'entities'], function(buzz, comm, entities) {
     return {
         loadLoop: loadLoop,
         playLoop: function(name) {
-            if(playing_loop == name)
+            if(playingLoop == name)
                 return;
 
-            if(!playing_loop) {
+            if(!playingLoop) {
                 loops[name].play().setVolume(0).fadeTo(10, 1000);
-                playing_loop = name;
+                playingLoop = name;
                 return;
             }
 
-            loops[playing_loop].fadeOut(2000, function() {
-                playing_loop = name;
+            loops[playingLoop].fadeOut(2000, function() {
+                playingLoop = name;
                 // FIXME: Bad things might happen if playLoop is called again
                 // within four seconds of it being called once.
                 loops[name].play().setVolume(0).fadeTo(20, 2000);
