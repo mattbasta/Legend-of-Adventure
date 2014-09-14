@@ -31,7 +31,7 @@ define('keys', ['events'], function(events) {
                 break;
 
             default:
-                (set ? keyDownHandler: keyUpHandler).fire(e.keyCode);
+                (set ? keyDownHandler : keyUpHandler).fire(e.keyCode);
         }
     }
     window.addEventListener('keydown', function(e) {
