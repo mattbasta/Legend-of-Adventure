@@ -25,7 +25,7 @@ define('comm',
         var origin;
         if (subheader === 'evt') {
             var linebreak = message.data.indexOf('\n');
-            origin = message.data.substr(7, message.data.indexOf('\n') - 7);
+            origin = message.data.substr(7, linebreak - 7);
             body = message.data.substr(linebreak + 1);
         } else {
             body = message.data.substr(3);

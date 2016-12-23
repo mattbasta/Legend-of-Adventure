@@ -1,0 +1,30 @@
+{
+  "name": "legend-of-adventure",
+  "version": "1.0.0",
+  "description": "A procedurally generated MMO",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --recursive",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattbasta/Legend-of-Adventure.git"
+  },
+  "author": "Matt Basta <me@mattbasta.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mattbasta/Legend-of-Adventure/issues"
+  },
+  "homepage": "https://github.com/mattbasta/Legend-of-Adventure#readme",
+  "dependencies": {
+    "crc32": "^0.2.2",
+    "express": "^4.14.0",
+    "rng": "^0.2.2",
+    "websocket": "^1.0.23",
+    "ws": "^1.1.1"
+  },
+  "devDependencies": {
+    "mocha": "^3.2.0"
+  }
+}

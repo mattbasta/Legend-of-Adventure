@@ -2,8 +2,8 @@
 *.swp
 .DS_Store
 config.conf
-src/
 *.exe
-vendor
 server.o
 node_modules/
+vendor/*/
+npm-debug.log

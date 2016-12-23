@@ -148,14 +148,30 @@ define('level',
             registerLevel(x + ':' + y);
         },
         setCenterPosition: setCenterPosition,
-        canSlide: function() {return !!levelData.can_slide;},
-        getTileset: function() {return levelData.tileset;},
-        getHitmap: function() {return levelData.hitmap;},
-        getTerrain: function() {return levelData.level;},
-        getX: function() {return levelData.x;},
-        getY: function() {return levelData.y;},
-        getH: function() {return levelData.h;},
-        getW: function() {return levelData.w;},
+        canSlide: function() {
+            return !!levelData.can_slide;
+        },
+        getTileset: function() {
+            return levelData.tileset;
+        },
+        getHitmap: function() {
+            return levelData.hitmap;
+        },
+        getTerrain: function() {
+            return levelData.level;
+        },
+        getX: function() {
+            return levelData.x;
+        },
+        getY: function() {
+            return levelData.y;
+        },
+        getH: function() {
+            return levelData.h;
+        },
+        getW: function() {
+            return levelData.w;
+        },
         on: levelEvents.on
     };
 });
