@@ -128,12 +128,11 @@ class Terrain {
         this.y * this.height,
         this.tiles,
         this.width,
-        this.height,
-        exports.TERRAIN_PERLIN_MAX
+        this.height
       );
 
-      const tileset = require('./terrainGen/tilesets').FIELD;
-      rounding.round(this, tileset);
+      // const tileset = require('./terrainGen/tilesets').FIELD;
+      // rounding.round(this, tileset);
     }
 
     if (region.isTown()) {

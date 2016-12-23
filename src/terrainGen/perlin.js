@@ -43,13 +43,13 @@ function seededPermutation(rng, maxExclusive) {
 exports.NoiseGenerator = class NoiseGenerator {
   constructor(seed) {
     this.seed = seed;
-    this.rng = new rng.MT(seed);
+    const r = new rng.MT(seed);
 
-    this.permutations = seededPermutation(this.rng, TERRAIN_PERLIN_PERIOD);
+    this.permutations = seededPermutation(r, TERRAIN_PERLIN_PERIOD);
 
     this.rgradients = new Array(TERRAIN_PERLIN_PERIOD);
     for (let i = 0; i < TERRAIN_PERLIN_PERIOD; i++) {
-      this.rgradients[i] = randomGradient(this.rng);
+      this.rgradients[i] = randomGradient(r);
     }
   }
 
@@ -74,10 +74,11 @@ exports.NoiseGenerator = class NoiseGenerator {
     const v2 = gradient(x0, y0 + 1, gradients2, x, y);
     const v3 = gradient(x0 + 1, y0 + 1, gradients3, x, y);
     const fx = smooth(x - x0);
-    const vx0 = lerp(v0, v1, fx);
-    const vx1 = lerp(v2, v3, fx);
-    const fy = smooth(y - y0);
-    return lerp(vx0, vx1, fy);
+    return lerp(
+      lerp(v0, v1, fx),
+      lerp(v2, v3, fx),
+      smooth(y - y0)
+    );
   }
 
   get2dNormal(x, y, max) {
@@ -89,7 +90,7 @@ exports.NoiseGenerator = class NoiseGenerator {
     return this.get2d(x * freq, y * freq) * bounds;
   }
 
-  fillGrid(x, y, grid, width, height, max) {
+  fillGrid(x, y, grid, width, height, max = TERRAIN_PERLIN_MAX) {
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {
         grid[i * width + j] = (
