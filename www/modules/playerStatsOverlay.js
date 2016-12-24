@@ -8,7 +8,6 @@ define('playerStatsOverlay',
     var ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
-    ctx.webkitImageSmoothingEnabled = false;
     ctx.font = '20px VT323';
     ctx.fillStyle = 'white';
 

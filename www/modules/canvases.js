@@ -16,7 +16,6 @@ define('canvases', ['settings'], function(settings) {
     function prepareContext(context) {
         context.imageSmoothingEnabled = false;
         context.mozImageSmoothingEnabled = false;
-        context.webkitImageSmoothingEnabled = false;
         return context;
     }
 
