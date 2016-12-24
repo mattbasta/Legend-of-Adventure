@@ -131,8 +131,8 @@ class Terrain {
         this.height
       );
 
-      // const tileset = require('./terrainGen/tilesets').FIELD;
-      // rounding.round(this, tileset);
+      const tileset = require('./terrainGen/tilesets').FIELD;
+      rounding.round(this, tileset);
     }
 
     if (region.isTown()) {

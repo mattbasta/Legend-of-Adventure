@@ -110,7 +110,6 @@ class Region {
       while (true) {
         const x = rng.uniform() * (this.terrain.width - 2 - entW) + 1;
         const y = rng.uniform() * (this.terrain.height - 2 - entH) + 1;
-        console.log(entType, x, y);
         if (!this.terrain.hitmap.fits(x, y, entW, entH)) {
           continue;
         }
