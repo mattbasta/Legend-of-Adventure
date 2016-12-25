@@ -4,12 +4,8 @@ const rng = require('rng');
 const pairing = require('./terrainGen/pairing')
 const perlin = require('./terrainGen/perlin');
 const rounding = require('./terrainGen/rounding');
+const townGen = require('./terrainGen/towns');
 
-
-exports.BUILDINGS_MIN = 9;
-exports.BUILDINGS_MAX = 15;
-exports.TOWN_MIN_EDGE = 10;
-exports.TOWN_MAX_EDGE = 190;
 
 exports.DUNGEON_MIN_SIZE         = 3;
 exports.DUNGEON_MAX_SIZE         = 7;
@@ -72,6 +68,13 @@ class Hitmap {
     this.body[index] = this.body[index] | offset;
   }
 
+  unset(x, y) {
+    const linearIndex = y * this.width + x;
+    const index = linearIndex / 8 | 0;
+    const offset = 1 << (linearIndex % 8 | 0);
+    this.body[index] = this.body[index] & (~offset);
+  }
+
   get(x, y) {
     const linearIndex = y * this.width + x;
     return Boolean(this.body[linearIndex / 8 | 0] & (1 << (linearIndex % 8)));
@@ -93,6 +96,18 @@ class Hitmap {
       this.get(y - HM_BUFF_DIST, x + w - HM_BUFF_DIST) ||
       this.get(y - h + HM_BUFF_DIST, x + w - HM_BUFF_DIST)
     );
+  }
+
+  apply(hitmap, x, y) {
+    for (let i = 0; i < this.height; i++) {
+      for (let j = 0; j < this.width; j++) {
+        if (this.get(j, i)) {
+          hitmap.set(x + j, i + y);
+        } else {
+          hitmap.unset(x + j, i + y);
+        }
+      }
+    }
   }
 
   toArray() {
@@ -132,11 +147,12 @@ class Terrain {
       );
 
       const tileset = require('./terrainGen/tilesets').FIELD;
-      rounding.round(this, tileset);
+      const roundingOut = rounding.round(this, tileset);
+      // this.roundingOut = roundingOut;
     }
 
     if (region.isTown()) {
-      this.applyTown();
+      townGen(this);
     } else if (region.isDungeonEntrance()) {
       this.applyDungeonEntrance();
     } else if (region.type === exports.REGIONTYPE_DUNGEON) {
@@ -150,7 +166,6 @@ class Terrain {
 
   }
 
-  applyTown() {}
   applyDungeonEntrance() {}
   applyDungeon() {}
   applyBuildingInterior() {}

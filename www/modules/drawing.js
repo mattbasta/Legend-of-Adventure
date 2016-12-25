@@ -189,18 +189,18 @@ define('drawing',
             var buffer;
             var bufferCtx;
             var cell;
-            for (var y = 0; y < Math.ceil(terrainH / terrainChunkSize); y++) {
+            for (let y = 0; y < Math.ceil(terrainH / terrainChunkSize); y++) {
                 terrainBuffers[y] = [];
-                for (var x = 0; x < Math.ceil(terrainW / terrainChunkSize); x++) {
+                for (let x = 0; x < Math.ceil(terrainW / terrainChunkSize); x++) {
                     terrainBuffers[y][x] = buffer = document.createElement('canvas');
                     buffer.height = bufferSize;
                     buffer.width = bufferSize;
                     bufferCtx = canvases.prepareContext(buffer.getContext('2d'));
-                    for (var i = 0; i < terrainChunkSize; i++) {
+                    for (let i = 0; i < terrainChunkSize; i++) {
                         if (y * terrainChunkSize + i >= terrain.length) continue;
-                        for (var j = 0; j < terrainChunkSize; j++) {
+                        for (let j = 0; j < terrainChunkSize; j++) {
                             if (x * terrainChunkSize + j >= terrain[y * terrainChunkSize + i].length) continue;
-                            var cell = terrain[y * terrainChunkSize + i][x * terrainChunkSize + j];
+                            const cell = terrain[y * terrainChunkSize + i][x * terrainChunkSize + j];
                             bufferCtx.drawImage(
                                 tileset,
                                 (cell % tilesPerRow) * tileSize,

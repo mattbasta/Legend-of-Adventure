@@ -8,4 +8,16 @@ module.exports = class Portal {
     this.destX = destX;
     this.destY = destY;
   }
+
+  offset(x, y) {
+    return new Portal(
+      x + this.x,
+      y + this.y,
+      this.width,
+      this.height,
+      this.target,
+      this.destX,
+      this.destY
+    );
+  }
 };

@@ -265,4 +265,6 @@ exports.round = function(terrain, tileset) {
     }
   }
 
+  return clone;
+
 };

@@ -312,6 +312,7 @@ class Region {
     return JSON.stringify({
       level: this.terrain.renderDownTilemap(),
       hitmap: this.terrain.hitmap.toArray(),
+      rd: this.terrain.roundingOut && [...this.terrain.roundingOut],
       tileset: terrain.getTileset(this.getRoot(), this.type),
       can_slide: true,
       h: this.terrain.height,

@@ -28,6 +28,25 @@ describe('Hitmap', () => {
       }
     }
   });
+  it('should unset properly', () => {
+    const h = new terrain.Hitmap(10, 10);
+    for (let i = 0; i < 8; i++) {
+      h.set(0, i);
+    }
+
+    // Sanity testing
+    assert.ok(!h.get(0, 8));
+    for (let i = 0; i < 8; i++) {
+      assert.ok(h.get(0, i));
+    }
+
+    for (let i = 0; i < 8; i++) {
+      h.unset(0, i);
+    }
+    for (let i = 0; i < 8; i++) {
+      assert.ok(!h.get(0, i));
+    }
+  });
 
   it('should convert to an array with toArray', () => {
     const h = new terrain.Hitmap(4, 4);
