@@ -71,7 +71,7 @@ exports.getFeatureTiles = function(name) {
     return acc;
   }, []);
 
-  const hitmapParsed = tileData.split(/\n/g).reduce((acc, cur) => {
+  const hitmapParsed = hitmapData.split(/\n/g).reduce((acc, cur) => {
     if (!cur.trim()) {
       return acc;
     }

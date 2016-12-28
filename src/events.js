@@ -58,4 +58,8 @@ exports.Event = class Event {
     this.body = body;
     this.origin = origin;
   }
+
+  toString() {
+    return `${this.type}evt:${this.origin ? this.origin.eid : ''}\n${this.body}`;
+  }
 };

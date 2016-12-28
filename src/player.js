@@ -1,3 +1,4 @@
+const BaseEntity = require('./entities/BaseEntity');
 const cheats = require('./cheats');
 const entity = require('./entity');
 const events = require('./events');
@@ -11,8 +12,10 @@ const PLAYER_INVENTORY_SIZE = 5;
 const PLAYER_SPEED = 0.0075;
 
 
-exports.Player = class Player {
+exports.Player = class Player extends BaseEntity {
   constructor(connection) {
+    super('player');
+
     this.ws = connection;
 
     connection.on('message', this.onMessage.bind(this));
@@ -20,23 +23,12 @@ exports.Player = class Player {
 
     this.send('haldo');
 
-    this.eid = entity.nextEntityID();
     this.name = 'Player';
     this.health = MAX_HEALTH;
     this.lastUpdate = Date.now();
 
     this.effectTTL = 0;
     this.movementEffect = null;
-
-    this.width = 1;
-    this.height = 1;
-
-    this.x = 0;
-    this.y = 0;
-    this.velX = 0;
-    this.velY = 0;
-    this.dirX = 0;
-    this.dirY = 0;
 
     this.godMode = false;
 
@@ -53,6 +45,7 @@ exports.Player = class Player {
     this.inventory.give('f5');
     this.inventory.give('f5');
 
+    this.region.addEntity(this);
     this.send(`lev${this.region}`);
   }
 
@@ -60,7 +53,7 @@ exports.Player = class Player {
     if (!message) {
       return;
     }
-    console.log('> ' + message)
+    // console.log('> ' + message)
 
     const split = message.split(/\s/g);
     switch (split[0]) {
@@ -164,7 +157,7 @@ exports.Player = class Player {
           return;
         }
 
-        console.log(`${this.eid} sliding to ${x}:${y}`);
+        // console.log(`${this.eid} sliding to ${x}:${y}`);
         this.sendToLocation(
           this.region.parentID,
           this.region.type,
@@ -221,6 +214,8 @@ exports.Player = class Player {
   }
 
   tick() {
+    super.tick();
+
     if (!this.region) {
       return;
     }
@@ -297,41 +292,17 @@ exports.Player = class Player {
   }
 
   sendToLocation(parentID, type, x, y, newX, newY) {
-    const newRegion = regions.getRegion(parentID, type, x, y);
-    this.x = newX;
-    this.y = newY;
+    const oldRegion = this.region;
+    super.sendToLocation(parentID, type, x, y, newX, newY);
 
-    if (newRegion === this.region) {
-      this.region.broadcast(
-        new events.Event(
-          events.ENTITY_UPDATE,
-          `${JSON.stringify({
-            x: this.x,
-            y: this.y,
-            velocity: [this.velX, this.velY],
-            direction: [this.dirX, this.dirY],
-          })}\n${this.x} ${this.y}`,
-          this
-        )
-      );
-      this.send(`epuevt:local\n${JSON.stringify({x: newX, y: newY})}`);
+    if (this.region === oldRegion) {
+      this.send(`epuevt:local\n${JSON.stringify({x: this.x, y: this.y})}`);
       return;
     }
 
-    if (!newRegion) {
-      console.error('Requested region that does not exist', parentID, type, x);
-      return;
-    }
-
-    if (this.region) {
-      this.region.removeEntity(this);
-    }
-
-    this.region = newRegion;
     this.send('flv');
-    this.send(`epuevt:local\n${JSON.stringify({x: newX, y: newY})}`);
-    newRegion.addEntity(this);
-    this.send(`lev${newRegion.toString()}`);
+    this.send(`epuevt:local\n${JSON.stringify({x: this.x, y: this.y})}`);
+    this.send(`lev${this.region.toString()}`);
   }
   incrementHealth(amount) {
     const newHealth = this.health + amount;
@@ -372,22 +343,10 @@ exports.Player = class Player {
     this.send(`inv${inv.slots.map((x, i) => `${i}:${x}:${inv.counts[i]}`).join('\n')}`);
   }
 
-  toString() {
-    return JSON.stringify({
-      id: this.eid,
-      nametag: this.name || null,
-      proto: 'avatar',
-
-      x: this.x,
-      y: this.y,
-      velocity: [this.velX, this.velY],
-      direction: [this.dirX, this.dirY],
-
-      width: this.width,
-      height: this.height,
-
-      type: 'player',
-    });
+  getMetadata() {
+    return {
+      nametag: this.name,
+    };
   }
 
 };

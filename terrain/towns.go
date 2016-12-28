@@ -253,7 +253,8 @@ func ApplyTown(terrain *Terrain) {
 						terrain,
 						oldBoundaries[1],
 						oldBoundaries[0],
-						roadWidth, y-oldBoundaries[0],
+						roadWidth,
+						y-oldBoundaries[0],
 						roadMaterial,
 					)
 					if y < townBoundaries[2] {

@@ -5,7 +5,7 @@ define('settings', [], function() {
         init_module: 'game',
         port: 80,
         fps: 30,
-        speed: 0.0075,
+        speed: 0.075,
         tilesize: 50,
         tilesPerRow: 5,
         tilesetTileSize: 16, // The size of a tile in the tileset
@@ -13,7 +13,7 @@ define('settings', [], function() {
 
         show_epu: false,
         show_fps: false,
-        show_hitmap: false,
+        show_hitmap: true,
         show_hitmappings: false,
 
         scales: {

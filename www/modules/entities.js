@@ -212,6 +212,8 @@ define('entities',
     });
 
     return {
+        registry,
+
         getLocal: function() {
             return registry.local;
         },

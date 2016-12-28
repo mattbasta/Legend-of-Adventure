@@ -1,5 +1,12 @@
-// Cantor pairing function
-exports.getCoordInt = (x, y) => (x + y) * (x + y + 1) / 2 + y;
+const bijective = z => z < 0 ? z * -2 - 1 : z * 2;
+
+// Szudzik's pairing function
+exports.getCoordInt = (x, y) => {
+  const bx = bijective(x);
+  const by = bijective(y);
+  console.log(bx >= by ? bx * bx + bx + by : bx + by * by);
+  return bx >= by ? bx * bx + bx + by : bx + by * by;
+}
 
 const mask = 0b1111111111111;
 const half = 67108864;

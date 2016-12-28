@@ -45,9 +45,6 @@ exports.WEAPON_PREFIXES = {
   'ancie':  13,
 };
 
-let eid = 0;
-exports.nextEntityID = () => `e${eid++}`;
-
 
 exports.isEntityCollidingWithPortal = function(portal, entity) {
   const {x, y, width, height} = entity;

@@ -6,7 +6,7 @@ const terrain = require('./terrain');
 
 const DEFAULT_REGION_DATA = [terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0];
 const ODDS_DUNGEON = 14;
-const ODDS_TOWN = 14;
+const ODDS_TOWN = 9;
 const CLEANUP_TTL = 60 * 1000;
 
 const MAX_ENTITIES_PER_FIELD = 5;
@@ -249,6 +249,7 @@ class Region {
   }
 
   addEntity(entity) {
+    // console.log(`Adding ${entity.eid} (${entity.type}) to ${this.id}`);
     this.entities.add(entity);
     this.entityMap.set(entity.eid, entity);
 

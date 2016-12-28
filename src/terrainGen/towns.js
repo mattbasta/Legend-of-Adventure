@@ -8,8 +8,8 @@ const utils = require('./utils');
 const roadWidth = 4;
 const roadMaterial = 81;
 
-const BUILDINGS_MIN = 1;
-const BUILDINGS_MAX = 2;
+const BUILDINGS_MIN = 9;
+const BUILDINGS_MAX = 15;
 // const BUILDINGS_MIN = 9;
 // const BUILDINGS_MAX = 15;
 const TOWN_MIN_EDGE = 10;
@@ -57,6 +57,7 @@ module.exports = function(terrain) {
 
   const availableBuildings = [...buildings];
 
+  console.log('xxx',terrain.x, terrain.y, pairing.getCoordInt(terrain.x, terrain.y));
   const r = new rng.MT(pairing.getCoordInt(terrain.x, terrain.y));
 
   const centerIndex = r.range(0, townCenters.length);
@@ -80,7 +81,7 @@ module.exports = function(terrain) {
   delete buildingEntities[center];
   availableBuildings.splice(availableBuildings.indexOf(center), 1);
 
-  let buildingLimit = r.range(BUILDINGS_MIN, BUILDINGS_MAX + 1);
+  const buildingLimit = r.range(BUILDINGS_MIN, BUILDINGS_MAX + 1);
   let buildingCount = 0;
 
   // The internal position is represented with a point that's located
@@ -230,7 +231,7 @@ module.exports = function(terrain) {
             utils.fillArea(
               terrain,
               x,
-              Math.min(y, oldBoundaries[0]) | 0,
+              Math.min(y, oldBoundaries[0]) - roadWidth,
               roadWidth,
               Math.max(oldBoundaries[2] - y, oldBoundaries[2] - oldBoundaries[0]),
               roadMaterial
@@ -255,6 +256,7 @@ module.exports = function(terrain) {
             if (x > townBoundaries[1]) {
               townBoundaries[1] = x;
             }
+            townBoundaries[0] = y - widestBuilding;
             break;
         }
 
