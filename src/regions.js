@@ -1,3 +1,4 @@
+const terrainConstants = require('./terrainGen/constants');
 const entity = require('./entity');
 const events = require('./events');
 const player = require('./player');
@@ -84,7 +85,7 @@ class Region {
   }
 
   isDungeonEntrance() {
-    if (this.parentID !== terrain.WORLD_OVERWORLD && this.parentID !== terrain.WORLD_ETHER) {
+    if (this.parentID !== terrainConstants.WORLD_OVERWORLD && this.parentID !== terrainConstants.WORLD_ETHER) {
       return false;
     }
 
@@ -92,9 +93,9 @@ class Region {
   }
   isTown() {
     if (
-      this.parentID !== terrain.WORLD_OVERWORLD &&
-      this.parentID !== terrain.WORLD_ETHER &&
-      this.type !== terrain.REGIONTYPE_FIELD
+      this.parentID !== terrainConstants.WORLD_OVERWORLD &&
+      this.parentID !== terrainConstants.WORLD_ETHER &&
+      this.type !== terrainConstants.REGIONTYPE_FIELD
     ) {
       return false;
     }
@@ -119,21 +120,21 @@ class Region {
     };
 
     switch (this.type) {
-      case terrain.REGIONTYPE_FIELD:
+      case terrainConstants.REGIONTYPE_FIELD:
         this.populateFieldEntities(rng, placeEntity);
         break;
 
-      case terrain.REGIONTYPE_SHOP:
+      case terrainConstants.REGIONTYPE_SHOP:
         placeEntity('homely');
         placeEntity('homely');
 
-      case terrain.REGIONTYPE_HOUSE:
+      case terrainConstants.REGIONTYPE_HOUSE:
         placeEntity('homely');
         placeEntity('homely');
         this.populateHouseEntities(rng, placeEntity);
         break;
 
-      case terrain.REGIONTYPE_DUNGEON:
+      case terrainConstants.REGIONTYPE_DUNGEON:
         this.populateDungeonEntities(rng, placeEntity);
         break;
     }
@@ -303,7 +304,7 @@ class Region {
 
   getRoot() {
     let parent = this.parentID;
-    while (parent !== terrain.WORLD_OVERWORLD && parent !== terrain.WORLD_ETHER) {
+    while (parent !== terrainConstants.WORLD_OVERWORLD && parent !== terrainConstants.WORLD_ETHER) {
       parent = exports.getRegionData(parent)[0];
     }
     return parent;
@@ -377,8 +378,8 @@ function isTownPos(x, y) {
 
 function isValidRegionID(id) {
   const [parent, type] = getRegionData(id);
-  if (parent === terrain.WORLD_OVERWORLD || parent === terrain.WORLD_ETHER) {
-    return type === terrain.REGIONTYPE_FIELD;
+  if (parent === terrainConstants.WORLD_OVERWORLD || parent === terrainConstants.WORLD_ETHER) {
+    return type === terrainConstants.REGIONTYPE_FIELD;
   }
 
   if (!isValidRegionID(parent)) {
@@ -386,11 +387,11 @@ function isValidRegionID(id) {
   }
 
   const [, parentType, parentX, parentY] = getRegionData(parent);
-  if (type === terrain.REGIONTYPE_DUNGEON) {
-    return parentType === terrain.REGIONTYPE_DUNGEON || parentType === terrain.REGIONTYPE_FIELD && isDungeonPos(parentX, parentY);
+  if (type === terrainConstants.REGIONTYPE_DUNGEON) {
+    return parentType === terrainConstants.REGIONTYPE_DUNGEON || parentType === terrainConstants.REGIONTYPE_FIELD && isDungeonPos(parentX, parentY);
   }
-  if (type === terrain.REGIONTYPE_FIELD) {
-    return parentType === terrain.WORLD_OVERWORLD || parentType === terrain.WORLD_ETHER;
+  if (type === terrainConstants.REGIONTYPE_FIELD) {
+    return parentType === terrainConstants.WORLD_OVERWORLD || parentType === terrainConstants.WORLD_ETHER;
   }
 
   return true;

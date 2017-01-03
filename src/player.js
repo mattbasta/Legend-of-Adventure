@@ -5,6 +5,7 @@ const events = require('./events');
 const Inventory = require('./inventory');
 const regions = require('./regions');
 const terrain = require('./terrain');
+const terrainConstants = require('./terrainGen/constants');
 
 
 const MAX_HEALTH = 100;
@@ -24,7 +25,6 @@ exports.Player = class Player extends BaseEntity {
     this.send('haldo');
 
     this.name = 'Player';
-    this.health = MAX_HEALTH;
     this.lastUpdate = Date.now();
 
     this.effectTTL = 0;
@@ -33,12 +33,11 @@ exports.Player = class Player extends BaseEntity {
     this.godMode = false;
 
     this.region = regions.getRegion(
-      terrain.WORLD_OVERWORLD,
-      terrain.REGIONTYPE_FIELD,
+      terrainConstants.WORLD_OVERWORLD,
+      terrainConstants.REGIONTYPE_FIELD,
       0,
       0
     );
-    this.coordStack = [[this.x, this.y]];
 
     this.inventory = new Inventory(this, PLAYER_INVENTORY_SIZE);
     this.inventory.give('wsw.sharp.12');
@@ -129,7 +128,8 @@ exports.Player = class Player extends BaseEntity {
               y: this.y,
               velocity: [this.velX, this.velY],
               direction: [this.dirX, this.dirY],
-            })}\n${this.x} ${this.y}`
+            })}\n${this.x} ${this.y}`,
+            this
           )
         );
 
@@ -168,6 +168,10 @@ exports.Player = class Player extends BaseEntity {
         );
         return;
     }
+  }
+
+  get maxHealth() {
+    return MAX_HEALTH;
   }
 
   onClose() {
@@ -253,31 +257,6 @@ exports.Player = class Player extends BaseEntity {
       );
     }
 
-    for (let portal of this.region.terrain.portals) {
-      if (!entity.isEntityCollidingWithPortal(portal, this)) {
-        continue;
-      }
-
-      console.log(`${this.eid} in contact with portal`);
-      const currentCoords = [this.x, this.y];
-      let {destX, destY, target} = portal;
-
-      if (target === '..') {
-        target = this.region.parentID;
-        [destX, destY] = this.coordStack.pop();
-      } else if (target === '.') {
-        target = this.region.id;
-        this.coordStack.pop();
-        this.coordStack.push(currentCoords);
-      } else {
-        target = this.region.id + ':' + target;
-        this.coordStack.push(currentCoords);
-      }
-
-      this.sendToLocation(...regions.getRegionData(target), destX, destY);
-      break;
-    }
-
     if (this.effectTTL) {
       this.effectTTL -= 1;
       if (!this.effectTTL) {
@@ -304,21 +283,9 @@ exports.Player = class Player extends BaseEntity {
     this.send(`epuevt:local\n${JSON.stringify({x: this.x, y: this.y})}`);
     this.send(`lev${this.region.toString()}`);
   }
+
   incrementHealth(amount) {
-    const newHealth = this.health + amount;
-    if (newHealth > MAX_HEALTH) {
-      this.health = MAX_HEALTH;
-    } else if (newHealth <= 0) {
-      this.health = 0;
-      if (!this.godMode) {
-        this.death();
-      }
-    } else {
-      if (newHealth < this.health) {
-        this.send(`sndhit_grunt${Math.random() * 3 | 0}:${this.x}:${this.y}`);
-      }
-      this.health = newHealth;
-    }
+    super.incrementHealth(amount);
     this.send(`hea${this.health}`);
   }
   death() {
@@ -330,14 +297,11 @@ exports.Player = class Player extends BaseEntity {
       this.inventory.drop();
     }
 
-    this.sendToLocation(terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0, 50, 50);
+    this.sendToLocation(terrainConstants.WORLD_OVERWORLD, terrainConstants.REGIONTYPE_FIELD, 0, 0, 50, 50);
     this.health = MAX_HEALTH;
     this.send('dea');
   }
 
-  isAtMaxHealth() {
-    return this.health === MAX_HEALTH;
-  }
   updateInventory() {
     const inv = this.inventory;
     this.send(`inv${inv.slots.map((x, i) => `${i}:${x}:${inv.counts[i]}`).join('\n')}`);

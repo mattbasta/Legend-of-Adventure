@@ -20,4 +20,22 @@ module.exports = class Portal {
       this.destY
     );
   }
+
+  collidingWithEntity({x, y, width, height}) {
+    return (
+      x + width >= this.x &&
+      this.x + this.width >= x &&
+      y >= this.y &&
+      this.y + this.height >= y - height
+    );
+  }
+
+  toString() {
+    return JSON.stringify({
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+    });
+  }
 };

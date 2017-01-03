@@ -1,10 +1,12 @@
+const crc32 = require('crc32');
+
+
 const bijective = z => z < 0 ? z * -2 - 1 : z * 2;
 
 // Szudzik's pairing function
 exports.getCoordInt = (x, y) => {
   const bx = bijective(x);
   const by = bijective(y);
-  console.log(bx >= by ? bx * bx + bx + by : bx + by * by);
   return bx >= by ? bx * bx + bx + by : bx + by * by;
 }
 
@@ -21,3 +23,6 @@ exports.unpairTileset = input => {
   const left = (input - (input & halfMinusOne)) / half;
   return [(left & cMask) >> 13, left & mask, (input & cMask) >> 13, input & mask];
 };
+
+
+exports.getNameInt = name => parseInt(crc32(name), 16);

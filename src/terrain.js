@@ -1,6 +1,7 @@
-const crc32 = require('crc32');
 const rng = require('rng');
 
+const buildingGen = require('./terrainGen/buildings');
+const constants = require('./terrainGen/constants');
 const pairing = require('./terrainGen/pairing')
 const perlin = require('./terrainGen/perlin');
 const rounding = require('./terrainGen/rounding');
@@ -15,39 +16,25 @@ exports.DUNGEON_ANGEL_ODDS       = 3; // out of 10
 
 exports.DUNGEON_STATUE_ODDS = 6; // out of 10
 
-exports.WORLD_OVERWORLD = "overworld";
-exports.WORLD_ETHER     = "ether";
-
-exports.REGIONTYPE_FIELD   = "field";
-exports.REGIONTYPE_DUNGEON = "dungeon";
-exports.REGIONTYPE_SHOP    = "shop";
-exports.REGIONTYPE_HOUSE   = "house";
-
 exports.SHOP_LOBBY_CRATE_ODDS   = 3; // out of 10
 exports.SHOP_LOBBY_POT_ODDS     = 6; // out of 10
-exports.STORAGE_ROOM_MAX_CHESTS = 7;
 
-
-function getNameInt(name) {
-  const hash = crc32(name);
-  return parseInt(hash, 16);
-}
 
 
 exports.getCoordOption = (x, y, odds) => pairing.getCoordInt(x, y) % odds === 0;
 exports.getCoordRNG = (x, y) => new rng.MT(pairing.getCoordInt(x, y));
 
-exports.getNameRNG = name => new rng.MT(getNameInt(name));
-exports.getNameChance = (name, odds) => getNameInt(name) % odds === 0;
+exports.getNameRNG = name => new rng.MT(pairing.getNameInt(name));
+exports.getNameChance = (name, odds) => pairing.getNameInt(name) % odds === 0;
 
 exports.chance = rng => rng.uniform() < 0.5;
 
 
 const regionSizes = {
-  [exports.REGIONTYPE_FIELD]: [100, 100],
-  [exports.REGIONTYPE_DUNGEON]: [28, 28],
-  [exports.REGIONTYPE_SHOP]: [52, 52],
-  [exports.REGIONTYPE_HOUSE]: [52, 52],
+  [constants.REGIONTYPE_FIELD]: [100, 100],
+  [constants.REGIONTYPE_DUNGEON]: [28, 28],
+  [constants.REGIONTYPE_SHOP]: [52, 52],
+  [constants.REGIONTYPE_HOUSE]: [52, 52],
 };
 
 
@@ -73,6 +60,25 @@ class Hitmap {
     const index = linearIndex / 8 | 0;
     const offset = 1 << (linearIndex % 8 | 0);
     this.body[index] = this.body[index] & (~offset);
+  }
+
+  fillArea(x, y, width, height) {
+    const ey = y + height;
+    const ex = x + width;
+    for (let i = y; i < ey; i++) {
+      for (let j = x; j < ex; j++) {
+        this.set(j, i);
+      }
+    }
+  }
+  clearArea(x, y, width, height) {
+    const ey = y + height;
+    const ex = x + width;
+    for (let i = y; i < ey; i++) {
+      for (let j = x; j < ex; j++) {
+        this.unset(j, i);
+      }
+    }
   }
 
   get(x, y) {
@@ -136,7 +142,7 @@ class Terrain {
 
     this.portals = new Set();
 
-    if (region.type === exports.REGIONTYPE_FIELD) {
+    if (region.type === constants.REGIONTYPE_FIELD) {
       const ng = new perlin.NoiseGenerator(125);
       ng.fillGrid(
         this.x * this.width,
@@ -155,20 +161,19 @@ class Terrain {
       townGen(this);
     } else if (region.isDungeonEntrance()) {
       this.applyDungeonEntrance();
-    } else if (region.type === exports.REGIONTYPE_DUNGEON) {
+    } else if (region.type === constants.REGIONTYPE_DUNGEON) {
       this.applyDungeon();
     } else if (
-      region.type === exports.REGIONTYPE_HOUSE ||
-      region.type === exports.REGIONTYPE_SHOP
+      region.type === constants.REGIONTYPE_HOUSE ||
+      region.type === constants.REGIONTYPE_SHOP
     ) {
-      this.applyBuildingInterior();
+      buildingGen(this, region.type, region.parentID);
     }
 
   }
 
   applyDungeonEntrance() {}
   applyDungeon() {}
-  applyBuildingInterior() {}
 
   renderDownTilemap() {
     const output = new Array(this.height);
@@ -182,21 +187,28 @@ class Terrain {
     return output;
   }
 
+  fillArea(x, y, width, height, material) {
+    for (let i = y; i < y + height; i++) {
+      for (let j = x; j < x + width; j++) {
+        this.tiles[i * this.width + j] = material;
+      }
+    }
+  }
 }
 exports.Terrain = Terrain;
 
 exports.getTileset = function(world, type) {
-  if (world !== exports.WORLD_OVERWORLD) {
+  if (world !== constants.WORLD_OVERWORLD) {
     throw new Error('not implemented');
   }
 
   switch (type) {
-    case exports.REGIONTYPE_SHOP:
-    case exports.REGIONTYPE_HOUSE:
+    case constants.REGIONTYPE_SHOP:
+    case constants.REGIONTYPE_HOUSE:
       return 'tileset_interiors';
-    case exports.REGIONTYPE_DUNGEON:
+    case constants.REGIONTYPE_DUNGEON:
       return 'tileset_dungeons';
-    case exports.REGIONTYPE_FIELD:
+    case constants.REGIONTYPE_FIELD:
       return 'tileset_default';
   }
 };

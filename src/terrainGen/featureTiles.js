@@ -86,7 +86,7 @@ exports.getFeatureTiles = function(name) {
   const portalPath = `${prefix}/${name}.portals`;
   if (fs.existsSync(portalPath)) {
     const portalsData = fs.readFileSync(portalPath, 'utf-8');
-    for (let portalLine in portalsData.split(/\n/g)) {
+    for (let portalLine of portalsData.split('\n')) {
       if (!portalLine.trim()) {
         continue;
       }

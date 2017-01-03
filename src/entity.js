@@ -46,18 +46,6 @@ exports.WEAPON_PREFIXES = {
 };
 
 
-exports.isEntityCollidingWithPortal = function(portal, entity) {
-  const {x, y, width, height} = entity;
-
-  return (
-    x + width >= portal.x &&
-    portal.x + portal.width >= x &&
-    y >= portal.y &&
-    portal.y + portal.height >= y - height
-  );
-};
-
-
 exports.ChestEntity = class ChestEntity extends BaseEntity {
   constructor(region, x, y) {
     super('chest', region, x, y);

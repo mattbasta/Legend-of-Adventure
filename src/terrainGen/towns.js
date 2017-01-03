@@ -2,7 +2,6 @@ const rng = require('rng');
 
 const featureTiles = require('./featureTiles');
 const pairing = require('./pairing');
-const utils = require('./utils');
 
 
 const roadWidth = 4;
@@ -57,7 +56,6 @@ module.exports = function(terrain) {
 
   const availableBuildings = [...buildings];
 
-  console.log('xxx',terrain.x, terrain.y, pairing.getCoordInt(terrain.x, terrain.y));
   const r = new rng.MT(pairing.getCoordInt(terrain.x, terrain.y));
 
   const centerIndex = r.range(0, townCenters.length);
@@ -178,8 +176,7 @@ module.exports = function(terrain) {
 
         switch (direction) {
           case 0:
-            utils.fillArea(
-              terrain,
+            terrain.fillArea(
               oldBoundaries[1],
               oldBoundaries[0],
               roadWidth,
@@ -193,8 +190,7 @@ module.exports = function(terrain) {
             break;
           case 1:
             if (iteration === 1) {
-              utils.fillArea(
-                terrain,
+              terrain.fillArea(
                 x - buildingEntity.width,
                 oldBoundaries[2] - roadWidth,
                 Math.max(
@@ -205,8 +201,7 @@ module.exports = function(terrain) {
                 roadMaterial
               );
             }
-            utils.fillArea(
-              terrain,
+            terrain.fillArea(
               x - buildingEntity.width,
               y + widestBuilding,
               oldBoundaries[1] - x + buildingEntity.width,
@@ -218,8 +213,7 @@ module.exports = function(terrain) {
             }
             townBoundaries[2] = y + widestBuilding + roadWidth;
             // Draw the extension of the road to the right
-            utils.fillArea(
-              terrain,
+            terrain.fillArea(
               oldBoundaries[1],
               oldBoundaries[2],
               roadWidth,
@@ -228,8 +222,7 @@ module.exports = function(terrain) {
             );
             break;
           case 2:
-            utils.fillArea(
-              terrain,
+            terrain.fillArea(
               x,
               Math.min(y, oldBoundaries[0]) - roadWidth,
               roadWidth,
@@ -242,8 +235,7 @@ module.exports = function(terrain) {
             }
             break;
           case 3:
-            utils.fillArea(
-              terrain,
+            terrain.fillArea(
               oldBoundaries[3],
               y,
               Math.max(
