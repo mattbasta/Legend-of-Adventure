@@ -20,14 +20,7 @@ module.exports = class Inventory {
   }
 
   numItems() {
-    let sum = 0;
-    for (let i = 0; i < this.capacity; i++) {
-      if (!this.slots[i]) {
-        continue;
-      }
-      sum += this.counts[i];
-    }
-    return sum;
+    return this.slots.reduce((acc, cur) => acc + (cur ? 1 : 0), 0);
   }
 
   isFull() {
@@ -77,14 +70,15 @@ module.exports = class Inventory {
         continue;
       }
 
-      for (let j = i; j < this.capacity; j++) {
+      for (let j = i + 1; j < this.capacity; j++) {
         if (!this.slots[j]) {
           continue;
         }
 
         this.slots[i] = this.slots[j];
         this.counts[i] = this.counts[j];
-        this.clearSlot(i);
+        this.clearSlot(j);
+        break;
       }
       if (!this.slots[i]) {
         break;
@@ -99,7 +93,7 @@ module.exports = class Inventory {
     if (command === 'b') {
       const firstItem = this.slots[0];
       const firstCount = this.counts[0];
-      for (let i = 0; i < count - 2; i++) {
+      for (let i = 0; i < count - 1; i++) {
         this.slots[i] = this.slots[i + 1];
         this.counts[i] = this.counts[i + 1];
       }
@@ -130,16 +124,18 @@ module.exports = class Inventory {
 
     switch (this.slots[i][0]) {
       case 'f':
+        console.log(holder.eid, holder.health, holder.maxHealth)
         if (holder.isAtMaxHealth()) {
           return;
         }
         holder.incrementHealth(FOOD_HEALTH_INCREASE);
         this.remove(i);
 
-        holder.handleEvent(
-          holder.region.onEvent(events.PARTICLE_MACRO),
-          '0.5 -0.5 eatfood 10 local',
-          holder
+        holder.onEvent(
+          new events.Event(
+            events.PARTICLE_MACRO,
+            '0.5 -0.5 eatfood 10 local'
+          )
         );
         holder.region.broadcast(
           new events.Event(

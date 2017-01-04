@@ -98,38 +98,34 @@ define('entities',
 
 
     function register(props) {
-        if (props.proto) {
-            var eP = settings.entityPrototypes[props.proto]
-            for (var k in eP) {
-                if (!eP.hasOwnProperty(k) || props[k]) continue;
-                props[k] = eP[k];
-            }
-        }
-        props.created = Date.now();
+        const entity = {
+            created: Date.now(),
 
-        props.xOffset = props.xOffset || 0;
-        props.position = props.position || settings.entityPrototypes.avatar.sprite.down[0].position;
-        props.velocity = props.velocity || [0, 0];
-        props.direction = props.direction || [0, 1];
-        props.hitmap = props.hitmap || [0, Infinity, Infinity, 0];
-        props.cycle_position = 0;
-        props.sprite_cycle = 0;
+            position: settings.entityPrototypes.avatar.sprite.down[0].position,
+            xOffset: 0,
+            velocity: [0, 0],
+            direction: [0, 1],
+            hitmap: [0, Infinity, Infinity, 0],
 
-        props.width *= settings.tilesize;
-        props.height *= settings.tilesize;
+            cycle_position: 0,
+            sprite_cycle: 0,
 
-        props.clip = props.clip || false;
+            clip: false,
+            composite: null,
+            particles: [],
+        };
 
-        props.canvas = document.createElement("canvas");
-        props.canvas.width = props.width;
-        props.canvas.height = props.height;
+        Object.assign(entity, props, props.proto ? settings.entityPrototypes[props.proto] : null);
 
-        props.particles = [];
+        entity.width *= settings.tilesize;
+        entity.height *= settings.tilesize;
 
-        props.composite = props.composite || null;
+        entity.canvas = document.createElement('canvas');
+        entity.canvas.width = entity.width;
+        entity.canvas.height = entity.height;
 
-        registry[props.id] = props;
-        draw(props.id);
+        registry[props.eid] = entity;
+        draw(entity.eid);
     }
 
     function draw(id) {
@@ -180,8 +176,8 @@ define('entities',
     }
 
     register({
-        id: "local",
-        proto: "avatar",
+        eid: 'local',
+        proto: 'avatar',
         x: 0,
         y: 0,
         direction: [0, 0],
@@ -303,7 +299,7 @@ define('entities',
                     destY += entitymovement[entity.movement + '_y'](now - entity.created);
                 }
 
-                if (entity.id === 'local') {
+                if (entity.eid === 'local') {
                     if (settings.effect === 'flip') {
                         context.save();
                         context.scale(1, -1);
@@ -325,7 +321,7 @@ define('entities',
                     entity.width, entity.height
                 );
 
-                if (entity.id === 'local') {
+                if (entity.eid === 'local') {
                     if (settings.effect === 'flip') {
                         context.restore();
                     }

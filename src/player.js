@@ -272,6 +272,7 @@ exports.Player = class Player extends BaseEntity {
 
   sendToLocation(parentID, type, x, y, newX, newY) {
     const oldRegion = this.region;
+    this.send('flv');
     super.sendToLocation(parentID, type, x, y, newX, newY);
 
     if (this.region === oldRegion) {
@@ -279,7 +280,6 @@ exports.Player = class Player extends BaseEntity {
       return;
     }
 
-    this.send('flv');
     this.send(`epuevt:local\n${JSON.stringify({x: this.x, y: this.y})}`);
     this.send(`lev${this.region.toString()}`);
   }

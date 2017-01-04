@@ -16,6 +16,10 @@ module.exports = class BaseEntity {
     this.dirX = 0;
     this.dirY = 1;
 
+    if (this.maxHealth) {
+      this.health = this.maxHealth;
+    }
+
     // FIXME: For non-players, this should populate with the full coordstack
     // for the generated entity.
     this.coordStack = [[this.x, this.y]];
@@ -31,9 +35,7 @@ module.exports = class BaseEntity {
     this.y = y;
   }
 
-  onEvent(event) {
-
-  }
+  onEvent(event) {}
 
   tick() {
     if (!this.region) {
@@ -52,6 +54,7 @@ module.exports = class BaseEntity {
       if (target === '..') {
         target = this.region.parentID;
         [destX, destY] = this.coordStack.pop();
+        destY += 1;
       } else if (target === '.') {
         target = this.region.id;
         this.coordStack.pop();
@@ -132,6 +135,8 @@ module.exports = class BaseEntity {
     //
   }
 
+  updateInventory() {} // stub
+
   getMetadata() {
     return null;
   }
@@ -139,7 +144,7 @@ module.exports = class BaseEntity {
     return JSON.stringify(
       Object.assign(
         {
-          id: this.eid,
+          eid: this.eid,
           type: this.type,
           x: this.x,
           y: this.y,

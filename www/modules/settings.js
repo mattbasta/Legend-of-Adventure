@@ -15,6 +15,7 @@ define('settings', [], function() {
         show_fps: false,
         show_hitmap: true,
         show_hitmappings: false,
+        show_tileval: false,
 
         scales: {
             terrain: 16 / 50,
@@ -26,7 +27,7 @@ define('settings', [], function() {
 
         entityPrototypes: {
             avatar: {
-                image: "avatar",
+                image: 'avatar',
                 xOffset: 0,
                 width: 1,
                 height: 1,
@@ -55,12 +56,12 @@ define('settings', [], function() {
                 }
             },
             item: {
-                image: "items",
+                image: 'items',
                 xOffset: 0,
                 movement: 'item_hover'
             },
             chest: {
-                image: "chest",
+                image: 'chest',
                 xOffset: 0,
                 clip: {
                     x: 0,
@@ -97,9 +98,7 @@ define('settings', [], function() {
         },
 
         set: function(settings) {
-            for (var setting in settings) {
-                this[setting] = settings[setting];
-            }
+            Object.assign(this, settings, {set: this.set});
         }
     };
 });

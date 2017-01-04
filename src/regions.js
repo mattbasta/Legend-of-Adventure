@@ -1,8 +1,9 @@
-const terrainConstants = require('./terrainGen/constants');
 const entity = require('./entity');
+const entityConstants = require('./entities/constants');
 const events = require('./events');
 const player = require('./player');
 const terrain = require('./terrain');
+const terrainConstants = require('./terrainGen/constants');
 
 
 const DEFAULT_REGION_DATA = [terrain.WORLD_OVERWORLD, terrain.REGIONTYPE_FIELD, 0, 0];
@@ -169,20 +170,20 @@ class Region {
       placeEntity('trader');
     }
 
-    const totalTiles = this.terrain.width * this.terrain.height;
+    const totalTiles = this.terrain.tiles.length;
 
     for (let i = 0; i < totalTiles; i++) {
-      const tile = this.terrain.tiles[i % this.terrain.height][i / this.terrain.width];
+      const tile = this.terrain.tiles[i];
       if (tile === 58) {
         this.placeChestShop(
+          i % this.terrain.height,
           i / this.terrain.width,
-          i % this.terrain.height + 0.75,
           rng
         );
       } else if (tile === 59) {
         this.placePotShop(
+          i % this.terrain.height,
           i / this.terrain.width,
-          i % this.terrain.height + 1,
           rng
         );
       }
@@ -205,9 +206,9 @@ class Region {
       let code;
       if (rng.range(0, 10) < ODDS_SHOP_CHEST_SWORD) {
         code = `wsw.${
-          entity.WEAPON_RAW_PREFIXES[rng.range(0, entities.WEAPON_RAW_PREFIXES.length - 1)]
+          entityConstants.WEAPON_RAW_PREFIXES[rng.range(0, entityConstants.WEAPON_RAW_PREFIXES.length - 1)]
         }.${
-          rng.range(0, SHOP_CHEST_SWORD_MAX_LEV)
+          rng.range(1, SHOP_CHEST_SWORD_MAX_LEV)
         }`;
 
       } else {
@@ -221,10 +222,10 @@ class Region {
     }
   }
   placePotShop(x, y, rng) {
-    const pot = new entity.PotEntity(this, x, y);
+    const pot = new entity.PotEntity(this, x, y, rng.range(3));
     this.addEntity(pot);
 
-    if (rng.rnage(0, 10) < ODDS_SHOP_CHEST_EMPTY) {
+    if (rng.range(0, 10) < ODDS_SHOP_CHEST_EMPTY) {
       return;
 
     } else if (rng.range(0, 10) < ODDS_SHOP_CHEST_GUARD) {
@@ -234,7 +235,7 @@ class Region {
     } else if (rng.range(0, 10) < ODDS_SHOP_CHEST_SWORD) {
       pot.addItem(
         `wsw.${
-          entity.WEAPON_RAW_PREFIXES[rng.range(0, entities.WEAPON_RAW_PREFIXES.length - 1)]
+          entityConstants.WEAPON_RAW_PREFIXES[rng.range(0, entityConstants.WEAPON_RAW_PREFIXES.length - 1)]
         }.${
           rng.range(0, SHOP_CHEST_SWORD_MAX_LEV)
         }`

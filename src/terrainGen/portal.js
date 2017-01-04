@@ -1,9 +1,9 @@
 module.exports = class Portal {
   constructor(x, y, w, h, destination, destX, destY) {
-    this.x = x;
-    this.y = y;
-    this.width = w;
-    this.height = h;
+    this.x = x | 0;
+    this.y = y | 0;
+    this.width = w | 0;
+    this.height = h | 0;
     this.target = destination;
     this.destX = destX;
     this.destY = destY;

@@ -16,11 +16,6 @@ exports.DUNGEON_ANGEL_ODDS       = 3; // out of 10
 
 exports.DUNGEON_STATUE_ODDS = 6; // out of 10
 
-exports.SHOP_LOBBY_CRATE_ODDS   = 3; // out of 10
-exports.SHOP_LOBBY_POT_ODDS     = 6; // out of 10
-
-
-
 exports.getCoordOption = (x, y, odds) => pairing.getCoordInt(x, y) % odds === 0;
 exports.getCoordRNG = (x, y) => new rng.MT(pairing.getCoordInt(x, y));
 
@@ -63,6 +58,10 @@ class Hitmap {
   }
 
   fillArea(x, y, width, height) {
+    x = x | 0;
+    y = y | 0;
+    width = width | 0;
+    height = height | 0;
     const ey = y + height;
     const ex = x + width;
     for (let i = y; i < ey; i++) {
@@ -72,6 +71,10 @@ class Hitmap {
     }
   }
   clearArea(x, y, width, height) {
+    x = x | 0;
+    y = y | 0;
+    width = width | 0;
+    height = height | 0;
     const ey = y + height;
     const ex = x + width;
     for (let i = y; i < ey; i++) {
@@ -188,6 +191,10 @@ class Terrain {
   }
 
   fillArea(x, y, width, height, material) {
+    x = x | 0;
+    y = y | 0;
+    width = width | 0;
+    height = height | 0;
     for (let i = y; i < y + height; i++) {
       for (let j = x; j < x + width; j++) {
         this.tiles[i * this.width + j] = material;
