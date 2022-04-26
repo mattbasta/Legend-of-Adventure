@@ -1,32 +1,26 @@
-const fs = require('fs');
-const http = require('http');
-const path = require('path');
+import * as fs from 'fs';
+import * as http from 'http';
 
-const websocket = require('ws');
+import * as websocket from 'ws';
 
-const player = require('./src/player');
+import * as player from './src/player';
 
 
-const PORT = process.env.PORT || 8080;
+const PORT = Number(process.env.PORT) || 8080;
 
 
 const server = http.createServer((request, response) => {
     // console.log((new Date()) + ' Received request for ' + request.url);
 
     if (request.url === '/') {
-      response.write(fs.readFileSync('www/index.html', 'utf-8').replace('%(port)s', PORT));
+      response.write(fs.readFileSync('www/index.html', 'utf-8').replace('%(port)s', String(PORT)));
       response.end();
       return;
     }
 
-    const url = path.normalize(request.url.slice(1));
-    if (url.indexOf('..') > -1) {
-      response.writeHead(404);
-      response.end();
-      return;
-    }
+    const url = new URL(request.url!).pathname;
 
-    if (url.slice(0, 7) === 'static/') {
+    if (url.startsWith('static/')) {
       const wwwPath = 'www/' + url.slice(7);
       if (!fs.existsSync(wwwPath)) {
         response.writeHead(404);

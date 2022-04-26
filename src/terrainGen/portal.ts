@@ -1,5 +1,24 @@
-module.exports = class Portal {
-  constructor(x, y, w, h, destination, destX, destY) {
+import { Entity } from "../types";
+
+export class Portal {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  destX: number;
+  destY: number;
+
+  target: string;
+
+  constructor(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    destination: string,
+    destX: number,
+    destY: number
+  ) {
     this.x = x | 0;
     this.y = y | 0;
     this.width = w | 0;
@@ -9,7 +28,7 @@ module.exports = class Portal {
     this.destY = destY;
   }
 
-  offset(x, y) {
+  offset(x: number, y: number) {
     return new Portal(
       x + this.x,
       y + this.y,
@@ -21,7 +40,7 @@ module.exports = class Portal {
     );
   }
 
-  collidingWithEntity({x, y, width, height}) {
+  collidingWithEntity({ x, y, width, height }: Entity) {
     return (
       x + width >= this.x &&
       this.x + this.width >= x &&
@@ -38,4 +57,4 @@ module.exports = class Portal {
       height: this.height,
     });
   }
-};
+}

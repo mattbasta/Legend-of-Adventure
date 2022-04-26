@@ -1,63 +1,74 @@
-const rng = require('rng');
+import { Region } from "./regions";
+import * as rng from "./rng";
+import { RegionType, WorldType } from "./terrainGen/constants";
 
-const buildingGen = require('./terrainGen/buildings');
-const constants = require('./terrainGen/constants');
-const pairing = require('./terrainGen/pairing')
-const perlin = require('./terrainGen/perlin');
-const rounding = require('./terrainGen/rounding');
-const townGen = require('./terrainGen/towns');
+import * as pairing from "./terrainGen/pairing";
+import { Portal } from "./terrainGen/portal";
+import { Entity } from "./types";
 
+const buildingGen = require("./terrainGen/buildings");
+const constants = require("./terrainGen/constants");
+const perlin = require("./terrainGen/perlin");
+const rounding = require("./terrainGen/rounding");
+const townGen = require("./terrainGen/towns");
 
-exports.DUNGEON_MIN_SIZE         = 3;
-exports.DUNGEON_MAX_SIZE         = 7;
-exports.DUNGEON_STAIRS_DOWN_ODDS = 7; // out of 10
-exports.DUNGEON_BOSS_ODDS        = 3; // out of 10
-exports.DUNGEON_ANGEL_ODDS       = 3; // out of 10
+export const DUNGEON_MIN_SIZE = 3;
+export const DUNGEON_MAX_SIZE = 7;
+export const DUNGEON_STAIRS_DOWN_ODDS = 7; // out of 10
+export const DUNGEON_BOSS_ODDS = 3; // out of 10
+export const DUNGEON_ANGEL_ODDS = 3; // out of 10
 
-exports.DUNGEON_STATUE_ODDS = 6; // out of 10
+export const DUNGEON_STATUE_ODDS = 6; // out of 10
 
-exports.getCoordOption = (x, y, odds) => pairing.getCoordInt(x, y) % odds === 0;
-exports.getCoordRNG = (x, y) => new rng.MT(pairing.getCoordInt(x, y));
+export const getCoordOption = (x: number, y: number, odds: number) =>
+  pairing.getCoordInt(x, y) % odds === 0;
+export const getCoordRNG = (x: number, y: number) =>
+  new rng.MT(pairing.getCoordInt(x, y));
 
-exports.getNameRNG = name => new rng.MT(pairing.getNameInt(name));
-exports.getNameChance = (name, odds) => pairing.getNameInt(name) % odds === 0;
+export const getNameRNG = (name: string) =>
+  new rng.MT(pairing.getNameInt(name));
+export const getNameChance = (name: string, odds: number) =>
+  pairing.getNameInt(name) % odds === 0;
 
-exports.chance = rng => rng.uniform() < 0.5;
+export const chance = (rng: rng.RNG) => rng.uniform() < 0.5;
 
-
-const regionSizes = {
-  [constants.REGIONTYPE_FIELD]: [100, 100],
-  [constants.REGIONTYPE_DUNGEON]: [28, 28],
-  [constants.REGIONTYPE_SHOP]: [52, 52],
-  [constants.REGIONTYPE_HOUSE]: [52, 52],
+const regionSizes: Record<RegionType, [number, number]> = {
+  [RegionType.Field]: [100, 100],
+  [RegionType.Dungeon]: [28, 28],
+  [RegionType.Shop]: [52, 52],
+  [RegionType.House]: [52, 52],
 };
-
 
 const HM_BUFF_DIST = 0.00001;
 
-class Hitmap {
-  constructor(width, height) {
+export class Hitmap {
+  height: number;
+  width: number;
+
+  body: Uint8Array;
+
+  constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
 
-    this.body = new Uint8Array((this.width * this.height / 8 | 0) + 1);
+    this.body = new Uint8Array((((this.width * this.height) / 8) | 0) + 1);
   }
 
-  set(x, y) {
+  set(x: number, y: number) {
     const linearIndex = y * this.width + x;
-    const index = linearIndex / 8 | 0;
+    const index = (linearIndex / 8) | 0;
     const offset = 1 << (linearIndex % 8 | 0);
     this.body[index] = this.body[index] | offset;
   }
 
-  unset(x, y) {
+  unset(x: number, y: number) {
     const linearIndex = y * this.width + x;
-    const index = linearIndex / 8 | 0;
+    const index = (linearIndex / 8) | 0;
     const offset = 1 << (linearIndex % 8 | 0);
-    this.body[index] = this.body[index] & (~offset);
+    this.body[index] = this.body[index] & ~offset;
   }
 
-  fillArea(x, y, width, height) {
+  fillArea(x: number, y: number, width: number, height: number) {
     x = x | 0;
     y = y | 0;
     width = width | 0;
@@ -70,7 +81,7 @@ class Hitmap {
       }
     }
   }
-  clearArea(x, y, width, height) {
+  clearArea(x: number, y: number, width: number, height: number) {
     x = x | 0;
     y = y | 0;
     width = width | 0;
@@ -84,18 +95,13 @@ class Hitmap {
     }
   }
 
-  get(x, y) {
+  get(x: number, y: number): boolean {
     const linearIndex = y * this.width + x;
-    return Boolean(this.body[linearIndex / 8 | 0] & (1 << (linearIndex % 8)));
+    return Boolean(this.body[(linearIndex / 8) | 0] & (1 << linearIndex % 8));
   }
 
-  fits(x, y, w, h) {
-    if (
-      x < 1 ||
-      y - h < 1 ||
-      x > this.width - w - 1 ||
-      y > this.height - 1
-    ) {
+  fits(x: number, y: number, w: number, h: number) {
+    if (x < 1 || y - h < 1 || x > this.width - w - 1 || y > this.height - 1) {
       return false;
     }
 
@@ -107,7 +113,7 @@ class Hitmap {
     );
   }
 
-  apply(hitmap, x, y) {
+  apply(hitmap: Hitmap, x: number, y: number) {
     for (let i = 0; i < this.height; i++) {
       for (let j = 0; j < this.width; j++) {
         if (this.get(j, i)) {
@@ -130,11 +136,18 @@ class Hitmap {
     return output;
   }
 }
-exports.Hitmap = Hitmap;
 
+export class Terrain {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
 
-class Terrain {
-  constructor(region) {
+  tiles: Uint16Array;
+  hitmap: Hitmap;
+  portals: Set<Portal> = new Set();
+
+  constructor(region: Region) {
     [this.width, this.height] = regionSizes[region.type];
     this.x = region.x;
     this.y = region.y;
@@ -145,7 +158,7 @@ class Terrain {
 
     this.portals = new Set();
 
-    if (region.type === constants.REGIONTYPE_FIELD) {
+    if (region.type === RegionType.Field) {
       const ng = new perlin.NoiseGenerator(125);
       ng.fillGrid(
         this.x * this.width,
@@ -155,7 +168,7 @@ class Terrain {
         this.height
       );
 
-      const tileset = require('./terrainGen/tilesets').FIELD;
+      const tileset = require("./terrainGen/tilesets").FIELD;
       const roundingOut = rounding.round(this, tileset);
       // this.roundingOut = roundingOut;
     }
@@ -172,7 +185,6 @@ class Terrain {
     ) {
       buildingGen(this, region.type, region.parentID);
     }
-
   }
 
   applyDungeonEntrance() {}
@@ -190,7 +202,13 @@ class Terrain {
     return output;
   }
 
-  fillArea(x, y, width, height, material) {
+  fillArea(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    material: number
+  ) {
     x = x | 0;
     y = y | 0;
     width = width | 0;
@@ -202,20 +220,19 @@ class Terrain {
     }
   }
 }
-exports.Terrain = Terrain;
 
-exports.getTileset = function(world, type) {
-  if (world !== constants.WORLD_OVERWORLD) {
-    throw new Error('not implemented');
+export function getTileset(world: WorldType, type: RegionType) {
+  if (world !== WorldType.Overworld) {
+    throw new Error("not implemented");
   }
 
   switch (type) {
-    case constants.REGIONTYPE_SHOP:
-    case constants.REGIONTYPE_HOUSE:
-      return 'tileset_interiors';
-    case constants.REGIONTYPE_DUNGEON:
-      return 'tileset_dungeons';
-    case constants.REGIONTYPE_FIELD:
-      return 'tileset_default';
+    case RegionType.Shop:
+    case RegionType.House:
+      return "tileset_interiors";
+    case RegionType.Dungeon:
+      return "tileset_dungeons";
+    case RegionType.Field:
+      return "tileset_default";
   }
-};
+}

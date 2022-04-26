@@ -1,54 +1,59 @@
-const BaseEntity = require('./entities/BaseEntity');
-const cheats = require('./cheats');
-const entity = require('./entity');
-const events = require('./events');
-const Inventory = require('./inventory');
-const regions = require('./regions');
-const terrain = require('./terrain');
-const terrainConstants = require('./terrainGen/constants');
+import * as websocket from "ws";
 
+import { KillableEntity } from "./entities/BaseEntity";
+import { Event, EventType } from "./events";
+import { Inventory } from "./inventory";
+import { RegionType, WorldType } from "./terrainGen/constants";
+import { EntityType } from "./types";
 
-const MAX_HEALTH = 100;
-const PLAYER_INVENTORY_SIZE = 5;
-const PLAYER_SPEED = 0.0075;
+const cheats = require("./cheats");
+const entity = require("./entity");
+const regions = require("./regions");
 
+export const MAX_HEALTH = 100;
+export const PLAYER_INVENTORY_SIZE = 5;
+export const PLAYER_SPEED = 0.0075;
 
-exports.Player = class Player extends BaseEntity {
-  constructor(connection) {
-    super('player');
+export class Player extends KillableEntity {
+  ws: websocket.WebSocket;
 
-    this.ws = connection;
+  name: string = "Player";
+  lastUpdate: number;
 
-    connection.on('message', this.onMessage.bind(this));
-    connection.on('close', this.onClose.bind(this));
+  effectTTL: number = 0;
+  movementEffect: string | null = null;
 
-    this.send('haldo');
+  godMode: boolean = false;
 
-    this.name = 'Player';
-    this.lastUpdate = Date.now();
+  health = MAX_HEALTH;
+  maxHealth = MAX_HEALTH;
 
-    this.effectTTL = 0;
-    this.movementEffect = null;
+  inventory: Inventory;
 
-    this.godMode = false;
-
-    this.region = regions.getRegion(
-      terrainConstants.WORLD_OVERWORLD,
-      terrainConstants.REGIONTYPE_FIELD,
-      0,
-      0
+  constructor(connection: websocket.WebSocket) {
+    super(
+      EntityType.player,
+      regions.getRegion(WorldType.Overworld, RegionType.Field, 0, 0)
     );
 
+    this.lastUpdate = Date.now();
+    this.ws = connection;
+
+    connection.on("message", this.onMessage);
+    connection.on("close", this.onClose);
+
+    this.send("haldo");
+
     this.inventory = new Inventory(this, PLAYER_INVENTORY_SIZE);
-    this.inventory.give('wsw.sharp.12');
-    this.inventory.give('f5');
-    this.inventory.give('f5');
+    this.inventory.give("wsw.sharp.12");
+    this.inventory.give("f5");
+    this.inventory.give("f5");
 
     this.region.addEntity(this);
     this.send(`lev${this.region}`);
   }
 
-  onMessage(message) {
+  onMessage = (message: string) => {
     if (!message) {
       return;
     }
@@ -56,21 +61,21 @@ exports.Player = class Player extends BaseEntity {
 
     const split = message.split(/\s/g);
     switch (split[0]) {
-      case 'cyc': // cycle inventory
+      case "cyc": // cycle inventory
         this.inventory.cycle(split[1]);
         return;
 
-      case 'cha': // chat
+      case "cha": // chat
         if (cheats.handleCheat(split[1], this)) {
           return;
         }
         this.region.broadcast(
-          new events.Event(events.CHAT, `${this.x} ${this.y}\n${split[1]}`, this)
+          new Event(EventType.CHAT, `${this.x} ${this.y}\n${split[1]}`, this)
         );
         return;
 
-      case 'loc':
-        const posData = split[1].split(':');
+      case "loc":
+        const posData = split[1].split(":");
         if (posData.length < 4) {
           return;
         }
@@ -87,7 +92,7 @@ exports.Player = class Player extends BaseEntity {
           newY < 0 ||
           newY > this.region.terrain.height
         ) {
-          console.error('User attempted to exceed bounds of the level');
+          console.error("User attempted to exceed bounds of the level");
           return;
         }
 
@@ -97,7 +102,7 @@ exports.Player = class Player extends BaseEntity {
           return;
         }
         if (velX < -1 || velX > 1 || velY > 1 || velX > 1) {
-          console.error('User attempted to go faster than possible');
+          console.error("User attempted to go faster than possible");
           return;
         }
 
@@ -107,7 +112,7 @@ exports.Player = class Player extends BaseEntity {
           return;
         }
         if (dirX < -1 || dirX > 1 || dirY > 1 || dirX > 1) {
-          console.error('User attempted to face invalid direction');
+          console.error("User attempted to face invalid direction");
           return;
         }
 
@@ -121,8 +126,8 @@ exports.Player = class Player extends BaseEntity {
         this.lastUpdate = Date.now();
 
         this.region.broadcast(
-          new events.Event(
-            events.ENTITY_UPDATE,
+          new Event(
+            EventType.ENTITY_UPDATE,
             `${JSON.stringify({
               x: this.x,
               y: this.y,
@@ -135,7 +140,7 @@ exports.Player = class Player extends BaseEntity {
 
         break;
 
-      case 'use':
+      case "use":
         const slot = parseInt(split[1], 10);
         if (isNaN(slot)) {
           return;
@@ -143,17 +148,23 @@ exports.Player = class Player extends BaseEntity {
         this.inventory.use(slot, this);
         return;
 
-      case 'dro':
+      case "dro":
         this.inventory.drop(this);
         return;
 
-      case 'lev':
-        const pos = split[1].split(':');
+      case "lev":
+        const pos = split[1].split(":");
         const x = parseFloat(pos[0]);
         const y = parseFloat(pos[1]);
         const iXPos = this.region.x - x;
         const iYPos = this.region.y - y;
-        if (iYPos > 1 || iYPos < -1 || iXPos > 1 || iXPos < -1 || iXPos && iYPos) {
+        if (
+          iYPos > 1 ||
+          iYPos < -1 ||
+          iXPos > 1 ||
+          iXPos < -1 ||
+          (iXPos && iYPos)
+        ) {
           return;
         }
 
@@ -168,23 +179,23 @@ exports.Player = class Player extends BaseEntity {
         );
         return;
     }
-  }
+  };
 
-  get maxHealth() {
-    return MAX_HEALTH;
-  }
-
-  onClose() {
+  onClose = () => {
     this.region.removeEntity(this);
-  }
+  };
 
-  onEvent(event) {
+  onEvent(event: Event) {
     switch (event.type) {
-      case events.DEATH:
+      case EventType.DEATH: {
         this.send(`delevt:${event.origin}\n${event.origin}`);
         return;
-      case events.DIRECT_ATTACK:
-        const [x, y] = event.body.split(' ').slice(0, 2).map(x => parseFloat(x));
+      }
+      case EventType.DIRECT_ATTACK: {
+        const [x, y] = event.body
+          .split(" ")
+          .slice(0, 2)
+          .map((x) => parseFloat(x));
 
         const AWR = entity.ATTACK_WIGGLE_ROOM;
         if (
@@ -202,18 +213,27 @@ exports.Player = class Player extends BaseEntity {
         this.incrementHealth(-1 * damage);
 
         this.onEvent(
-          new events.Event(events.PARTICLE_MACRO, '0.5 0 bloodspatter 5 local', null)
+          new Event(
+            EventType.PARTICLE_MACRO,
+            "0.5 0 bloodspatter 5 local",
+            null
+          )
         );
         this.region.broadcast(
-          new events.Event(events.PARTICLE_MACRO, `0.5 0 bloodspatter 5 ${this.eid}`, this)
+          new Event(
+            EventType.PARTICLE_MACRO,
+            `0.5 0 bloodspatter 5 ${this.eid}`,
+            this
+          )
         );
         return;
+      }
     }
 
     this.send(event.toString());
   }
 
-  send(data) {
+  send(data: string) {
     this.ws.send(data);
   }
 
@@ -228,7 +248,7 @@ exports.Player = class Player extends BaseEntity {
     const delta = (now - this.lastUpdate) / 1000;
 
     if (this.velX || this.velY) {
-      let {velX, velY} = this;
+      let { velX, velY } = this;
       if (velX && velY) {
         velX *= Math.SQRT1_2;
         velY *= Math.SQRT1_2;
@@ -240,17 +260,13 @@ exports.Player = class Player extends BaseEntity {
       this.lastUpdate = now;
     }
 
-    if (this.godMode && (Math.random() * 3 | 0) === 0) {
+    if (this.godMode && ((Math.random() * 3) | 0) === 0) {
       this.onEvent(
-        new events.Event(
-          events.PARTICLE_MACRO,
-          '0.5 -0.5 godmode 3 local',
-          null
-        )
+        new Event(EventType.PARTICLE_MACRO, "0.5 -0.5 godmode 3 local", null)
       );
       this.region.broadcast(
-        new events.Event(
-          events.PARTICLE_MACRO,
+        new Event(
+          EventType.PARTICLE_MACRO,
           `0.5 -0.5 godmode 3 ${this.eid}`,
           this
         )
@@ -260,57 +276,69 @@ exports.Player = class Player extends BaseEntity {
     if (this.effectTTL) {
       this.effectTTL -= 1;
       if (!this.effectTTL) {
-        this.onEvent(events.EFFECT_CLEAR, '', null);
+        this.onEvent(new Event(EventType.EFFECT_CLEAR, "", null));
       }
     }
   }
 
-  setEffect(effect, ttl) {
+  setEffect = (effect: string, ttl: number) => {
     this.effectTTL = ttl;
-    this.onEvent(new events.Event(events.EFFECT, effect, null));
+    this.onEvent(new Event(EventType.EFFECT, effect, null));
   }
 
-  sendToLocation(parentID, type, x, y, newX, newY) {
+  sendToLocation(
+    parentID: string | WorldType,
+    type: RegionType,
+    x: number,
+    y: number,
+    newX: number,
+    newY: number
+  ) {
     const oldRegion = this.region;
-    this.send('flv');
+    this.send("flv");
     super.sendToLocation(parentID, type, x, y, newX, newY);
 
     if (this.region === oldRegion) {
-      this.send(`epuevt:local\n${JSON.stringify({x: this.x, y: this.y})}`);
+      this.send(`epuevt:local\n${JSON.stringify({ x: this.x, y: this.y })}`);
       return;
     }
 
-    this.send(`epuevt:local\n${JSON.stringify({x: this.x, y: this.y})}`);
+    this.send(`epuevt:local\n${JSON.stringify({ x: this.x, y: this.y })}`);
     this.send(`lev${this.region.toString()}`);
   }
 
-  incrementHealth(amount) {
+  incrementHealth(amount: number) {
     super.incrementHealth(amount);
     this.send(`hea${this.health}`);
   }
   death() {
     this.region.broadcast(
-      new events.Event(events.EVENT_PARTICLE_MACRO, `${this.x} ${this.y} deathFlake 25`, this)
+      new Event(
+        EventType.PARTICLE_MACRO,
+        `${this.x} ${this.y} deathFlake 25`,
+        this
+      )
     );
 
     while (this.inventory.numItems()) {
-      this.inventory.drop();
+      this.inventory.drop(this);
     }
 
-    this.sendToLocation(terrainConstants.WORLD_OVERWORLD, terrainConstants.REGIONTYPE_FIELD, 0, 0, 50, 50);
+    this.sendToLocation(WorldType.Overworld, RegionType.Field, 0, 0, 50, 50);
     this.health = MAX_HEALTH;
-    this.send('dea');
+    this.send("dea");
   }
 
   updateInventory() {
     const inv = this.inventory;
-    this.send(`inv${inv.slots.map((x, i) => `${i}:${x}:${inv.counts[i]}`).join('\n')}`);
+    this.send(
+      `inv${inv.slots.map((x, i) => `${i}:${x}:${inv.counts[i]}`).join("\n")}`
+    );
   }
 
-  getMetadata() {
+  getMetadata = () => {
     return {
       nametag: this.name,
     };
   }
-
-};
+}

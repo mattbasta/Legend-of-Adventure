@@ -2,9 +2,9 @@
   "name": "legend-of-adventure",
   "version": "1.0.0",
   "description": "A procedurally generated MMO",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "test": "mocha --recursive",
+    "test": "jest",
     "start": "node index.js"
   },
   "repository": {
@@ -22,16 +22,15 @@
     "express": "^4.14.0",
     "rng": "^0.2.2",
     "websocket": "^1.0.23",
-    "ws": "^1.1.1"
+    "ws": "^8.5.0"
   },
   "devDependencies": {
-    "babel-core": "^6.21.0",
-    "babel-loader": "^6.2.10",
-    "babel-preset-es2015": "^6.18.0",
-    "babel-preset-stage-2": "^6.18.0",
-    "css-loader": "^0.26.1",
-    "mocha": "^3.2.0",
-    "style-loader": "^0.13.1",
-    "webpack": "^1.14.0"
+    "@types/ws": "^8.5.3",
+    "css-loader": "^6.7.1",
+    "jest": "^28.0.0",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.2.8",
+    "typescript": "^4.6.3",
+    "webpack": "^5.72.0"
   }
 }

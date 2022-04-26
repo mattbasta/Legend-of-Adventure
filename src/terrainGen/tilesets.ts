@@ -1,7 +1,6 @@
-const pairing = require('./pairing');
+import * as pairing from "./pairing";
 
-
-exports.FIELD = {
+export const FIELD = {
   // Dark dirt to dirt
   [pairing.pairTileset(4, 4, 4, 3)]: 45,
   [pairing.pairTileset(4, 4, 3, 3)]: 46,

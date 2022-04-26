@@ -1,8 +1,7 @@
-const rng = require('rng');
-
-const featureTiles = require('./featureTiles');
-const pairing = require('./pairing');
-
+import * as rng from "../rng";
+import { Terrain } from "../terrain";
+import * as featureTiles from "./featureTiles";
+import * as pairing from "./pairing";
 
 const roadWidth = 4;
 const roadMaterial = 81;
@@ -15,25 +14,21 @@ const TOWN_MIN_EDGE = 10;
 const TOWN_MAX_EDGE = 190;
 
 const buildings = [
-  'plaza',
-  'well',
+  "plaza",
+  "well",
   // 'church',
-  'clock',
+  "clock",
   // 'library',
-  'graveyard',
-  'shop',
-  'house',
+  "graveyard",
+  "shop",
+  "house",
 ];
-const townCenters = [
-  'plaza',
-  'well',
-];
-const repeatableBuildings = new Set([
-  'shop',
-  'house',
-]);
+const townCenters = ["plaza", "well"];
+const repeatableBuildings = new Set(["shop", "house"]);
 
-const borderConds = [
+const borderConds: Array<
+  (x: number, y: number, bounds: [number, number, number, number]) => boolean
+> = [
   (x, y, bounds) => y > bounds[2],
   (x, y, bounds) => x < bounds[3],
   (x, y, bounds) => y < bounds[0],
@@ -47,9 +42,8 @@ const directionDefs = [
   [0, -1],
 ];
 
-
-module.exports = function(terrain) {
-  const buildingEntities = {};
+export default function (terrain: Terrain) {
+  const buildingEntities: Record<string, featureTiles.FeatureTiles> = {};
   for (let building of buildings) {
     buildingEntities[building] = featureTiles.getFeatureTiles(building);
   }
@@ -62,13 +56,13 @@ module.exports = function(terrain) {
   const center = townCenters[centerIndex];
   const centerEntity = buildingEntities[center];
 
-  const midpointX = terrain.width / 2 | 0;
-  const midpointY = terrain.height / 2 | 0;
+  const midpointX = (terrain.width / 2) | 0;
+  const midpointY = (terrain.height / 2) | 0;
 
-  const centerX = midpointX - centerEntity.width / 2 | 0;
-  const centerY = midpointY - centerEntity.height / 2 | 0;
+  const centerX = (midpointX - centerEntity.width / 2) | 0;
+  const centerY = (midpointY - centerEntity.height / 2) | 0;
 
-  const townBoundaries = [
+  const townBoundaries: [number, number, number, number] = [
     centerY,
     centerX + centerEntity.width,
     centerY + centerEntity.height + roadWidth,
@@ -91,18 +85,22 @@ module.exports = function(terrain) {
 
   let iteration = 0;
   while (
-    townBoundaries[0] > TOWN_MIN_EDGE && townBoundaries[0] < TOWN_MAX_EDGE &&
-    townBoundaries[1] > TOWN_MIN_EDGE && townBoundaries[1] < TOWN_MAX_EDGE &&
-    townBoundaries[2] > TOWN_MIN_EDGE && townBoundaries[2] < TOWN_MAX_EDGE &&
-    townBoundaries[3] > TOWN_MIN_EDGE && townBoundaries[3] < TOWN_MAX_EDGE &&
+    townBoundaries[0] > TOWN_MIN_EDGE &&
+    townBoundaries[0] < TOWN_MAX_EDGE &&
+    townBoundaries[1] > TOWN_MIN_EDGE &&
+    townBoundaries[1] < TOWN_MAX_EDGE &&
+    townBoundaries[2] > TOWN_MIN_EDGE &&
+    townBoundaries[2] < TOWN_MAX_EDGE &&
+    townBoundaries[3] > TOWN_MIN_EDGE &&
+    townBoundaries[3] < TOWN_MAX_EDGE &&
     buildingCount < buildingLimit
   ) {
     iteration += 1;
 
-    const oldBoundaries = [...townBoundaries];
+    const oldBoundaries: [number, number, number, number] = [...townBoundaries];
     for (let direction = 0; direction < 4; direction++) {
-      let x;
-      let y;
+      let x: number;
+      let y: number;
 
       switch (direction) {
         case 0:
@@ -121,6 +119,8 @@ module.exports = function(terrain) {
           x = oldBoundaries[3];
           y = oldBoundaries[0] - roadWidth;
           break;
+        default:
+          throw new Error("Invalid direction");
       }
 
       let widestBuilding = 0;
@@ -226,7 +226,10 @@ module.exports = function(terrain) {
               x,
               Math.min(y, oldBoundaries[0]) - roadWidth,
               roadWidth,
-              Math.max(oldBoundaries[2] - y, oldBoundaries[2] - oldBoundaries[0]),
+              Math.max(
+                oldBoundaries[2] - y,
+                oldBoundaries[2] - oldBoundaries[0]
+              ),
               roadMaterial
             );
             townBoundaries[3] = x - widestBuilding;
@@ -255,20 +258,16 @@ module.exports = function(terrain) {
         if (buildingCount >= buildingLimit) {
           break;
         }
-
       }
-
     }
   }
 
   smoothRoads(terrain);
-
-};
-
-function isRoad(material) {
-  return material === roadMaterial ? 1 : 0;
 }
 
+function isRoad(material: number) {
+  return material === roadMaterial ? 1 : 0;
+}
 
 const roadMajorTiles = {
   [pairing.pairTileset(1, 1, 1, 1)]: 81,
@@ -280,15 +279,15 @@ const roadMajorTiles = {
   [pairing.pairTileset(0, 1, 1, 1)]: 76,
   [pairing.pairTileset(1, 0, 1, 1)]: 82,
   [pairing.pairTileset(1, 1, 1, 0)]: 80,
-}
+};
 const roadMinorTiles = {
   [pairing.pairTileset(0, 1, 1, 1)]: 78,
   [pairing.pairTileset(1, 0, 1, 1)]: 79,
   [pairing.pairTileset(1, 1, 0, 1)]: 83,
   [pairing.pairTileset(1, 1, 1, 0)]: 84,
-}
+};
 
-function smoothRoads({tiles, width, height}) {
+function smoothRoads({ tiles, width, height }: Terrain) {
   const orig = tiles.slice(0);
   for (let i = 0; i < height; i++) {
     for (let j = 0; j < width; j++) {
@@ -303,8 +302,9 @@ function smoothRoads({tiles, width, height}) {
         isRoad(orig[(i + 1) * width + j]),
         isRoad(orig[i * width + j - 1])
       );
-      const majorTile = roadMajorTiles[major]
+      const majorTile = roadMajorTiles[major];
       if (!majorTile) {
+        continue;
         continue;
       }
 

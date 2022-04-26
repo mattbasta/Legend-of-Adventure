@@ -1,7 +1,9 @@
-const BaseEntity = require('./entities/BaseEntity');
-const events = require('./events');
-const Inventory = require('./inventory');
-const ItemEntity = require('./entities/itemEntity');
+import { BaseEntity } from "./entities/BaseEntity";
+import { ItemEntity } from "./entities/itemEntity";
+import { Event, EventType } from "./events";
+import { Inventory } from "./inventory";
+import { Region } from "./regions";
+import { Entity, EntityType } from "./types";
 
 exports.ATTACK_WIGGLE_ROOM = 0.5;
 
@@ -11,17 +13,21 @@ const POT_HIT_WIGGLE_ROOM_X = 0.3;
 const POT_HIT_WIGGLE_ROOM_Y = 0.4;
 
 
-class ChestEntity extends BaseEntity {
-  constructor(region, x, y) {
-    super('chest', region, x, y);
+export class ChestEntity extends BaseEntity {
+  static CHEST_INV_SIZE = 10;
+
+  inventory: Inventory;
+
+  constructor(region: Region, x: number, y: number) {
+    super(EntityType.chest, region, x, y);
     this.inventory = new Inventory(this, ChestEntity.CHEST_INV_SIZE);
   }
-  addItem(code) {
+  addItem(code: string) {
     this.inventory.give(code);
   }
 
-  onEvent(event) {
-    if (event.type !== events.DIRECT_ATTACK) {
+  onEvent(event: Event) {
+    if (event.type !== EventType.DIRECT_ATTACK) {
       return;
     }
 
@@ -40,8 +46,8 @@ class ChestEntity extends BaseEntity {
 
     if (!this.inventory.numItems()) {
       this.region.broadcast(
-        new events.Event(
-          events.SOUND,
+        new Event(
+          EventType.SOUND,
           `chest_smash:${this.x}:${this.y}`,
           this
         )
@@ -51,31 +57,33 @@ class ChestEntity extends BaseEntity {
 
   }
 
-  getMetadata() {
+  getMetadata = () => {
     return {proto: 'chest'};
   }
 }
-ChestEntity.CHEST_INV_SIZE = 10;
-
-exports.ChestEntity = ChestEntity;
 
 
-exports.PotEntity = class PotEntity extends BaseEntity {
-  constructor(region, x, y, potType = 0) {
-    super('pot', region, x, y + 0.25);
+
+export class PotEntity extends BaseEntity {
+  item: string | null = null;
+  entity: EntityType | null = null;
+  potType: number;
+
+  constructor(region: Region, x: number, y: number, potType: number = 0) {
+    super(EntityType.pot, region, x, y + 0.25);
     this.item = null;
     this.entity = null;
     this.potType = potType;
   }
-  addEntity(type) {
+  addEntity(type: EntityType) {
     this.entity = type;
   }
-  addItem(code) {
+  addItem(code: string) {
     this.item = code;
   }
 
-  onEvent(event) {
-    if (event.type !== events.DIRECT_ATTACK) {
+  onEvent(event: Event) {
+    if (event.type !== EventType.DIRECT_ATTACK) {
       return;
     }
 
@@ -99,10 +107,10 @@ exports.PotEntity = class PotEntity extends BaseEntity {
     } else if (this.entity) {
       const newEID = this.region.spawn(this.entity, this.x, this.y);
       if (event.origin) {
-        const newEnt = this.region.entitiesMap.get(newEID);
-        newEnt.onEvent(
-          new events.Event(
-            events.DIRECT_ATTACK,
+        const newEnt = this.region.entityMap.get(newEID);
+        newEnt!.onEvent(
+          new Event(
+            EventType.DIRECT_ATTACK,
             event.body,
             event.origin
           )
@@ -112,8 +120,8 @@ exports.PotEntity = class PotEntity extends BaseEntity {
 
     const sound = this.potType > 1 ? 'chest_smash' : 'pot_smash';
     this.region.broadcast(
-      new events.Event(
-        events.SOUND,
+      new Event(
+        EventType.SOUND,
         `${sound}:${this.x}:${this.y}`,
         this
       )
@@ -122,7 +130,7 @@ exports.PotEntity = class PotEntity extends BaseEntity {
     this.region.removeEntity(this);
   }
 
-  getMetadata() {
+  getMetadata = () => {
     return {
       image: 'pots',
       clip: {
@@ -135,8 +143,10 @@ exports.PotEntity = class PotEntity extends BaseEntity {
   }
 };
 
-exports.VirtualEntity = class VirtualEntity extends BaseEntity {
-  constructor(type) {
-    super(type);
+export class VirtualEntity extends BaseEntity {
+  constructor(type: EntityType, region: Region) {
+    super(type, region);
   }
+
+  onEvent() {}
 };

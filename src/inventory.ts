@@ -1,13 +1,19 @@
-const events = require('./events');
-const ItemEntity = require('./entities/itemEntity');
-
+import { KillableEntity } from "./entities/BaseEntity";
+import { ItemEntity } from "./entities/itemEntity";
+import { Event, EventType } from "./events";
+import { Entity } from "./types";
 
 const FOOD_HEALTH_INCREASE = 75;
 const INV_MAX_STACK = 32;
 
+export class Inventory {
+  owner: Entity;
+  capacity: number;
 
-module.exports = class Inventory {
-  constructor(owner, capacity) {
+  slots: Array<null | string>;
+  counts: Array<number>;
+
+  constructor(owner: Entity, capacity: number) {
     this.owner = owner;
     this.capacity = capacity;
 
@@ -24,10 +30,10 @@ module.exports = class Inventory {
   }
 
   isFull() {
-    return this.slots.every(x => x);
+    return this.slots.every((x) => x);
   }
 
-  give(item) {
+  give(item: string) {
     for (let i = 0; i < this.capacity; i++) {
       if (this.slots[i] === item && this.counts[i] < INV_MAX_STACK) {
         this.counts[i] += 1;
@@ -59,7 +65,7 @@ module.exports = class Inventory {
     }
   }
 
-  clearSlot(i) {
+  clearSlot(i: number) {
     this.slots[i] = null;
     this.counts[i] = 0;
   }
@@ -86,11 +92,11 @@ module.exports = class Inventory {
     }
   }
 
-  cycle(command) {
+  cycle(command: string) {
     this.consolidate();
     const count = this.numItems();
 
-    if (command === 'b') {
+    if (command === "b") {
       const firstItem = this.slots[0];
       const firstCount = this.counts[0];
       for (let i = 0; i < count - 1; i++) {
@@ -112,8 +118,12 @@ module.exports = class Inventory {
     this.owner.updateInventory();
   }
 
-  use(i, holder) {
-    if (i >= this.capacity || !this.slots[i]) {
+  use(i: number, holder: Entity) {
+    if (i >= this.capacity) {
+      return;
+    }
+    const contents = this.slots[i];
+    if (contents == null) {
       return;
     }
 
@@ -122,9 +132,12 @@ module.exports = class Inventory {
     const x = holder.x;
     const y = holder.y;
 
-    switch (this.slots[i][0]) {
-      case 'f':
-        console.log(holder.eid, holder.health, holder.maxHealth)
+    switch (contents[0]) {
+      case "f":
+        if (!(holder instanceof KillableEntity)) {
+          return;
+        }
+        console.log(holder.eid, holder.health, holder.maxHealth);
         if (holder.isAtMaxHealth()) {
           return;
         }
@@ -132,53 +145,50 @@ module.exports = class Inventory {
         this.remove(i);
 
         holder.onEvent(
-          new events.Event(
-            events.PARTICLE_MACRO,
-            '0.5 -0.5 eatfood 10 local'
-          )
+          new Event(EventType.PARTICLE_MACRO, "0.5 -0.5 eatfood 10 local")
         );
         holder.region.broadcast(
-          new events.Event(
-            events.PARTICLE_MACRO,
+          new Event(
+            EventType.PARTICLE_MACRO,
             `0.5, -0.5, eatfood 10 ${holder.eid}`,
             holder
           )
         );
         break;
 
-      case 'w':
+      case "w":
         holder.region.broadcast(
-          new events.Event(
-            events.DIRECT_ATTACK,
+          new Event(
+            EventType.DIRECT_ATTACK,
             `${x} ${y} ${this.slots[i]}`,
             holder
           )
         );
         break;
 
-      case 'p':
+      case "p":
         this.remove(i);
 
-        const effectN = Math.random() * 4 | 0;
-        const effectDuration = (Math.random() * 10 | 0) + 10;
-        switch(effectN) {
+        const effectN = (Math.random() * 4) | 0;
+        const effectDuration = ((Math.random() * 10) | 0) + 10;
+        switch (effectN) {
           case 0:
-            holder.setEffect('flip', effectDuration);
+            holder.setEffect("flip", effectDuration);
             break;
           case 1:
-            holder.setEffect('invincible', effectDuration);
+            holder.setEffect("invincible", effectDuration);
             break;
           case 2:
-            holder.setEffect('blindness', effectDuration);
+            holder.setEffect("blindness", effectDuration);
             break;
           case 3:
-            holder.setEffect('drained', effectDuration);
+            holder.setEffect("drained", effectDuration);
             break;
         }
         holder.region.broadcast(
-          new events.Event(
-            events.SOUND,
-            `potion${Math.random() * 2 | 0}:${x}:${y}`,
+          new Event(
+            EventType.SOUND,
+            `potion${(Math.random() * 2) | 0}:${x}:${y}`,
             null
           )
         );
@@ -186,7 +196,7 @@ module.exports = class Inventory {
     }
   }
 
-  remove(i) {
+  remove(i: number) {
     this.counts[i] -= 1;
     if (!this.counts[i]) {
       this.slots[i] = null;
@@ -194,7 +204,7 @@ module.exports = class Inventory {
     this.consolidate();
     this.owner.updateInventory();
   }
-  drop(dropper) {
+  drop(dropper: Entity) {
     if (!this.slots[0]) {
       return;
     }
@@ -212,4 +222,4 @@ module.exports = class Inventory {
     this.consolidate();
     this.owner.updateInventory();
   }
-};
+}
