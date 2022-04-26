@@ -42,7 +42,7 @@ const directionDefs = [
   [0, -1],
 ];
 
-export default function (terrain: Terrain) {
+export function generateTown(terrain: Terrain) {
   const buildingEntities: Record<string, featureTiles.FeatureTiles> = {};
   for (let building of buildings) {
     buildingEntities[building] = featureTiles.getFeatureTiles(building);

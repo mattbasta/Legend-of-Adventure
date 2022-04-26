@@ -1,6 +1,5 @@
 import { Event, EventType } from "../events";
-import { getRegion, getRegionData, Region } from "../regions";
-import { RegionType, WorldType } from "../terrainGen/constants";
+import { getRegionData, Region } from "../regions";
 import { Entity, EntityType } from "../types";
 
 let eid = 0;
@@ -50,70 +49,7 @@ export abstract class BaseEntity implements Entity {
 
   abstract onEvent(event: Event): void;
 
-  tick() {
-    if (!this.region) {
-      return;
-    }
-
-    for (let portal of this.region.terrain.portals) {
-      if (!portal.collidingWithEntity(this)) {
-        continue;
-      }
-
-      console.log(`${this.eid} in contact with portal`);
-      const currentCoords: [number, number] = [this.x, this.y];
-      let { destX, destY, target } = portal;
-
-      if (target === "..") {
-        target = this.region.parentID;
-        [destX, destY] = this.coordStack.pop()!;
-        destY += 1;
-      } else if (target === ".") {
-        target = this.region.id;
-        this.coordStack.pop();
-        this.coordStack.push(currentCoords);
-      } else {
-        target = this.region.id + "," + target;
-        this.coordStack.push(currentCoords);
-      }
-
-      this.sendToLocation(...getRegionData(target), destX, destY);
-      break;
-    }
-  }
-
-  sendToLocation(
-    parentID: string | WorldType,
-    type: RegionType,
-    x: number,
-    y: number,
-    newX: number,
-    newY: number
-  ) {
-    const newRegion = getRegion(parentID, type, x, y);
-
-    if (!newRegion) {
-      console.error("Requested region that does not exist", parentID, type, x);
-      return;
-    }
-
-    this.x = newX;
-    this.y = newY;
-
-    if (newRegion === this.region) {
-      this.region.broadcast(
-        new Event(EventType.ENTITY_UPDATE, `${this}\n${this.x} ${this.y}`, this)
-      );
-      return;
-    }
-
-    if (this.region) {
-      this.region.removeEntity(this);
-    }
-
-    this.region = newRegion;
-    newRegion.addEntity(this);
-  }
+  tick() {}
 
   updateInventory() {} // stub
 

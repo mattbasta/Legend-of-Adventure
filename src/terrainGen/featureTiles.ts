@@ -59,12 +59,13 @@ export class FeatureTiles {
 
 const cache: Record<string, FeatureTiles> = {};
 
+const prefix = path.normalize(`${__dirname}/../../../resources/tilesets`);
+
 export function getFeatureTiles(name: string) {
   if (name in cache) {
     return cache[name];
   }
 
-  const prefix = path.normalize(`${__dirname}/../../resources/tilesets`);
   const tileData = fs.readFileSync(`${prefix}/${name}.tiles`, "utf-8");
   const hitmapData = fs.readFileSync(`${prefix}/${name}.hitmap`, "utf-8");
 

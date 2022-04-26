@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as http from 'http';
+import * as path from 'path';
 
-import * as websocket from 'ws';
+import {WebSocketServer} from 'ws';
 
 import * as player from './src/player';
 
@@ -18,11 +19,12 @@ const server = http.createServer((request, response) => {
       return;
     }
 
-    const url = new URL(request.url!).pathname;
+    const url = new URL('http://foo' + request.url!).pathname;
 
-    if (url.startsWith('static/')) {
-      const wwwPath = 'www/' + url.slice(7);
+    if (url.startsWith('/static/')) {
+      const wwwPath = path.normalize(__dirname + '/../www/' + url.slice(8));
       if (!fs.existsSync(wwwPath)) {
+        console.log(`Could not find ${wwwPath} relative to ${__dirname}`);
         response.writeHead(404);
       } else {
         response.write(fs.readFileSync(wwwPath));
@@ -37,7 +39,7 @@ const server = http.createServer((request, response) => {
 });
 
 
-const wsServer = new websocket.Server({
+const wsServer = new WebSocketServer({
   server,
 });
 

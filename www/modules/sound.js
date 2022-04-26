@@ -10,7 +10,7 @@ define('sound', ['buzz', 'comm', 'entities'], function(buzz, comm, entities) {
         sounds[name] = new buzz.sound(
             url,
             {
-                formats: ["ogg", "mp3"],
+                formats: ["mp3"],
                 preload: true,
                 autoload: true,
                 loop: false

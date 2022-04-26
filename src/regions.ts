@@ -321,7 +321,7 @@ export class Region {
   getRoot() {
     let parent = this.parentID;
     while (parent !== WorldType.Overworld && parent !== WorldType.Ether) {
-      parent = exports.getRegionData(parent)[0];
+      parent = getRegionData(parent)[0];
     }
     return parent;
   }

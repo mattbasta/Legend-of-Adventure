@@ -3,9 +3,9 @@ import { ItemEntity } from "./entities/itemEntity";
 import { Event, EventType } from "./events";
 import { Inventory } from "./inventory";
 import { Region } from "./regions";
-import { Entity, EntityType } from "./types";
+import { EntityType } from "./types";
 
-exports.ATTACK_WIGGLE_ROOM = 0.5;
+export const ATTACK_WIGGLE_ROOM = 0.5;
 
 const CHEST_HIT_WIGGLE_ROOM_X = 0.35;
 const CHEST_HIT_WIGGLE_ROOM_Y = 1.25;

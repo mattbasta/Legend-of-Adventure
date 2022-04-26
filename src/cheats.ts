@@ -6,5 +6,8 @@ function sayToPlayer(message: string, player: Entity) {
 }
 
 export function handleCheat(message: string, player: Entity) {
+  if (!message.startsWith('/')) {
+    return;
+  }
   throw new Error("not implemented");
 }

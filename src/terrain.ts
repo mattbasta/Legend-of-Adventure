@@ -3,14 +3,12 @@ import * as rng from "./rng";
 import { RegionType, WorldType } from "./terrainGen/constants";
 
 import * as pairing from "./terrainGen/pairing";
+import * as perlin from "./terrainGen/perlin";
+import * as rounding from "./terrainGen/rounding";
 import { Portal } from "./terrainGen/portal";
-import { Entity } from "./types";
-
-const buildingGen = require("./terrainGen/buildings");
-const constants = require("./terrainGen/constants");
-const perlin = require("./terrainGen/perlin");
-const rounding = require("./terrainGen/rounding");
-const townGen = require("./terrainGen/towns");
+import { FIELD } from "./terrainGen/tilesets";
+import { generateBuildings } from "./terrainGen/buildings";
+import { generateTown } from "./terrainGen/towns";
 
 export const DUNGEON_MIN_SIZE = 3;
 export const DUNGEON_MAX_SIZE = 7;
@@ -168,22 +166,22 @@ export class Terrain {
         this.height
       );
 
-      const tileset = require("./terrainGen/tilesets").FIELD;
+      const tileset = FIELD;
       const roundingOut = rounding.round(this, tileset);
       // this.roundingOut = roundingOut;
     }
 
     if (region.isTown()) {
-      townGen(this);
+      generateTown(this);
     } else if (region.isDungeonEntrance()) {
       this.applyDungeonEntrance();
-    } else if (region.type === constants.REGIONTYPE_DUNGEON) {
+    } else if (region.type === RegionType.Dungeon) {
       this.applyDungeon();
     } else if (
-      region.type === constants.REGIONTYPE_HOUSE ||
-      region.type === constants.REGIONTYPE_SHOP
+      region.type === RegionType.House ||
+      region.type === RegionType.Shop
     ) {
-      buildingGen(this, region.type, region.parentID);
+      generateBuildings(this, region.type, region.parentID);
     }
   }
 

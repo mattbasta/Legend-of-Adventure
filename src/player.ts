@@ -1,8 +1,10 @@
 import * as websocket from "ws";
 
 import { KillableEntity } from "./entities/BaseEntity";
+import { sendEntityToLocation } from "./entities/moveEntity";
 import { Event, EventType } from "./events";
 import { Inventory } from "./inventory";
+import { getRegionData } from "./regions";
 import { RegionType, WorldType } from "./terrainGen/constants";
 import { EntityType } from "./types";
 
@@ -53,13 +55,13 @@ export class Player extends KillableEntity {
     this.send(`lev${this.region}`);
   }
 
-  onMessage = (message: string) => {
-    if (!message) {
+  onMessage = (message: Buffer, isBinary: boolean) => {
+    if (isBinary) {
       return;
     }
     // console.log('> ' + message)
 
-    const split = message.split(/\s/g);
+    const split = message.toString("utf-8").split(/\s/g);
     switch (split[0]) {
       case "cyc": // cycle inventory
         this.inventory.cycle(split[1]);
@@ -279,12 +281,38 @@ export class Player extends KillableEntity {
         this.onEvent(new Event(EventType.EFFECT_CLEAR, "", null));
       }
     }
+
+    for (let portal of this.region.terrain.portals) {
+      if (!portal.collidingWithEntity(this)) {
+        continue;
+      }
+
+      console.log(`${this.eid} in contact with portal`);
+      const currentCoords: [number, number] = [this.x, this.y];
+      let { destX, destY, target } = portal;
+
+      if (target === "..") {
+        target = this.region.parentID;
+        [destX, destY] = this.coordStack.pop()!;
+        destY += 1;
+      } else if (target === ".") {
+        target = this.region.id;
+        this.coordStack.pop();
+        this.coordStack.push(currentCoords);
+      } else {
+        target = this.region.id + "," + target;
+        this.coordStack.push(currentCoords);
+      }
+
+      this.sendToLocation(...getRegionData(target), destX, destY);
+      break;
+    }
   }
 
   setEffect = (effect: string, ttl: number) => {
     this.effectTTL = ttl;
     this.onEvent(new Event(EventType.EFFECT, effect, null));
-  }
+  };
 
   sendToLocation(
     parentID: string | WorldType,
@@ -296,7 +324,7 @@ export class Player extends KillableEntity {
   ) {
     const oldRegion = this.region;
     this.send("flv");
-    super.sendToLocation(parentID, type, x, y, newX, newY);
+    sendEntityToLocation(this, parentID, type, x, y, newX, newY);
 
     if (this.region === oldRegion) {
       this.send(`epuevt:local\n${JSON.stringify({ x: this.x, y: this.y })}`);
@@ -340,5 +368,5 @@ export class Player extends KillableEntity {
     return {
       nametag: this.name,
     };
-  }
+  };
 }

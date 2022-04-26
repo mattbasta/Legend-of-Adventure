@@ -100,7 +100,7 @@ export class NoiseGenerator {
   fillGrid(
     x: number,
     y: number,
-    grid: Uint8Array,
+    grid: Uint16Array,
     width: number,
     height: number,
     max: number = TERRAIN_PERLIN_MAX

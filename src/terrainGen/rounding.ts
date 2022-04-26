@@ -1,24 +1,23 @@
-const pairing = require('./pairing');
+import { Terrain } from "../terrain";
+import * as pairing from "./pairing";
 
-
-function isVertical(a, b, c, d) {
+function isVertical(a: number, b: number, c: number, d: number) {
   return a === c && b === d && isVerticalGradient(a, b, c, d);
 }
 
-function isHorizontal(a, b, c, d) {
+function isHorizontal(a: number, b: number, c: number, d: number) {
   return a === b && c === d && isHorizontalGradient(a, b, c, d);
 }
 
-function isVerticalGradient(a, b, c, d) {
+function isVerticalGradient(a: number, b: number, c: number, d: number) {
   return a !== b && c !== d;
 }
 
-function isHorizontalGradient(a, b, c, d) {
+function isHorizontalGradient(a: number, b: number, c: number, d: number) {
   return a !== c && b !== d;
 }
 
-
-exports.round = function(terrain, tileset) {
+export function round(terrain: Terrain, tileset: Record<number, number>) {
   const {
     height: rowCount,
     width: colCount,
@@ -72,7 +71,8 @@ exports.round = function(terrain, tileset) {
       if (
         y &&
         body[y * width + x] !== body[(y - 1) * width + x] &&
-        clone[((y - 1) * width + x) * 4 + 2] === clone[((y - 1) * width + x) * 4 + 3]
+        clone[((y - 1) * width + x) * 4 + 2] ===
+          clone[((y - 1) * width + x) * 4 + 3]
       ) {
         clone[(y * width + x) * 4] = body[(y - 1) * width + x];
         clone[(y * width + x) * 4 + 1] = body[(y - 1) * width + x];
@@ -87,21 +87,25 @@ exports.round = function(terrain, tileset) {
     const yc = y * width;
     for (let x = 0; x < colCount; x++) {
       const ypx = (yc + x) * 4;
-      const ypxm1 = ((yc + x) - 1) * 4;
-      const ypxp1 = ((yc + x) + 1) * 4;
+      const ypxm1 = (yc + x - 1) * 4;
+      const ypxp1 = (yc + x + 1) * 4;
 
-      const hLeftC = x && isVertical(
-        clone[ypxm1],
-        clone[ypxm1 + 1],
-        clone[ypxm1 + 2],
-        clone[ypxm1 + 3]
-      );
-      const hRightC = x && isVertical(
-        clone[ypxp1],
-        clone[ypxp1 + 1],
-        clone[ypxp1 + 2],
-        clone[ypxp1 + 3]
-      );
+      const hLeftC =
+        x &&
+        isVertical(
+          clone[ypxm1],
+          clone[ypxm1 + 1],
+          clone[ypxm1 + 2],
+          clone[ypxm1 + 3]
+        );
+      const hRightC =
+        x &&
+        isVertical(
+          clone[ypxp1],
+          clone[ypxp1 + 1],
+          clone[ypxp1 + 2],
+          clone[ypxp1 + 3]
+        );
 
       // Optimize the third pass by squashing it into the second.
       if (
@@ -119,7 +123,6 @@ exports.round = function(terrain, tileset) {
           ) {
             clone[ypxm1 + 2] = clone[ypx + 2];
             clone[ypxm1 + 3] = clone[ypx + 2];
-
           } else if (
             clone[ypx] === clone[ypxm1 + 2] &&
             clone[ypx + 2] === clone[ypxm1 + 3]
@@ -260,11 +263,10 @@ exports.round = function(terrain, tileset) {
       if (pairedVal in tileset) {
         body[i * width + j] = tileset[pairedVal];
       } else {
-        body[i * width + j] = cell0
+        body[i * width + j] = cell0;
       }
     }
   }
 
   return clone;
-
-};
+}

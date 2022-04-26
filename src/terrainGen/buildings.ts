@@ -38,7 +38,7 @@ const buildingStairOdds: Partial<Record<RegionType, number>> = {
 //   return conn & 1;
 // }
 
-export default function (terrain: Terrain, type: RegionType, parent: string) {
+export function generateBuildings(terrain: Terrain, type: RegionType, parent: string) {
   const stairOdds = buildingStairOdds[type] || 3;
 
   const r = new rng.MT(pairing.getNameInt(parent + "." + type));
