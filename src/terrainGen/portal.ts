@@ -49,12 +49,16 @@ export class Portal {
     );
   }
 
-  toString() {
-    return JSON.stringify({
+  serialize() {
+    return {
       x: this.x,
       y: this.y,
       width: this.width,
       height: this.height,
-    });
+      target: this.target,
+    };
+  }
+  toString() {
+    return JSON.stringify(this.serialize());
   }
 }

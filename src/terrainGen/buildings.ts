@@ -205,7 +205,7 @@ export function generateBuildings(terrain: Terrain, type: RegionType, parent: st
         terrain.portals.add(
           new Portal(
             rx + ROOMSIZE_WIDTH / 2 - 1,
-            ry + ROOMSIZE_HEIGHT - 1,
+            ry + ROOMSIZE_HEIGHT - 2,
             3,
             1,
             "..",

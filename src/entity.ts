@@ -12,7 +12,6 @@ const CHEST_HIT_WIGGLE_ROOM_Y = 1.25;
 const POT_HIT_WIGGLE_ROOM_X = 0.3;
 const POT_HIT_WIGGLE_ROOM_Y = 0.4;
 
-
 export class ChestEntity extends BaseEntity {
   static CHEST_INV_SIZE = 10;
 
@@ -31,7 +30,7 @@ export class ChestEntity extends BaseEntity {
       return;
     }
 
-    const [x, y] = event.body.split(' ').map(x => parseFloat(x));
+    const [x, y] = event.body.split(" ").map((x) => parseFloat(x));
 
     if (
       x < this.x - CHEST_HIT_WIGGLE_ROOM_X ||
@@ -46,23 +45,16 @@ export class ChestEntity extends BaseEntity {
 
     if (!this.inventory.numItems()) {
       this.region.broadcast(
-        new Event(
-          EventType.SOUND,
-          `chest_smash:${this.x}:${this.y}`,
-          this
-        )
+        new Event(EventType.SOUND, `chest_smash:${this.x}:${this.y}`, this)
       );
       this.region.removeEntity(this);
     }
-
   }
 
   getMetadata = () => {
-    return {proto: 'chest'};
-  }
+    return { proto: "chest" };
+  };
 }
-
-
 
 export class PotEntity extends BaseEntity {
   item: string | null = null;
@@ -87,7 +79,7 @@ export class PotEntity extends BaseEntity {
       return;
     }
 
-    const [x, y] = event.body.split(' ').map(x => parseFloat(x));
+    const [x, y] = event.body.split(" ").map((x) => parseFloat(x));
 
     if (
       x < this.x - POT_HIT_WIGGLE_ROOM_X ||
@@ -103,28 +95,19 @@ export class PotEntity extends BaseEntity {
       item.setLocation(this.region);
       item.setPosition(this.x + (this.width - item.width) / 2, this.y);
       this.region.addEntity(item);
-
     } else if (this.entity) {
       const newEID = this.region.spawn(this.entity, this.x, this.y);
       if (event.origin) {
         const newEnt = this.region.entityMap.get(newEID);
         newEnt!.onEvent(
-          new Event(
-            EventType.DIRECT_ATTACK,
-            event.body,
-            event.origin
-          )
+          new Event(EventType.DIRECT_ATTACK, event.body, event.origin)
         );
       }
     }
 
-    const sound = this.potType > 1 ? 'chest_smash' : 'pot_smash';
+    const sound = this.potType > 1 ? "chest_smash" : "pot_smash";
     this.region.broadcast(
-      new Event(
-        EventType.SOUND,
-        `${sound}:${this.x}:${this.y}`,
-        this
-      )
+      new Event(EventType.SOUND, `${sound}:${this.x}:${this.y}`, this)
     );
 
     this.region.removeEntity(this);
@@ -132,7 +115,7 @@ export class PotEntity extends BaseEntity {
 
   getMetadata = () => {
     return {
-      image: 'pots',
+      image: "pots",
       clip: {
         x: 0,
         y: this.potType * 32,
@@ -140,8 +123,8 @@ export class PotEntity extends BaseEntity {
         height: 32,
       },
     };
-  }
-};
+  };
+}
 
 export class VirtualEntity extends BaseEntity {
   constructor(type: EntityType, region: Region) {
@@ -149,4 +132,21 @@ export class VirtualEntity extends BaseEntity {
   }
 
   onEvent() {}
-};
+
+  getMetadata = () => {
+    let image = this.type as string;
+    if (this.type === "soldier") {
+      image = `soldier${Math.ceil(Math.random() * 3)}`;
+    }
+    if (this.type === "child") {
+      image = `child${Math.ceil(Math.random() * 2)}`;
+    }
+    if (this.type === "homely") {
+      image = `homely${Math.ceil(Math.random() * 3)}`;
+    }
+    if (this.type === "item") {
+      image = "items";
+    }
+    return { image };
+  };
+}

@@ -332,6 +332,9 @@ export class Region {
       hitmap: this.terrain.hitmap.toArray(),
       // rd: this.terrain.roundingOut && [...this.terrain.roundingOut],
       tileset: getTileset(this.getRoot(), this.type),
+      portals: Array.from(this.terrain.portals.values()).map((portal) =>
+        portal.serialize()
+      ),
       can_slide: true,
       h: this.terrain.height,
       w: this.terrain.width,

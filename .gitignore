@@ -8,3 +8,5 @@ node_modules/
 vendor/*/
 npm-debug.log
 dist/
+www/client.js
+www/client.js.map

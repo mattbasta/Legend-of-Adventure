@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './index.ts',
+  entry: './dist/src/client/index.js',
   module: {
     rules: [
       {
@@ -15,8 +15,8 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
-    filename: 'server.js',
-    path: path.resolve(__dirname, 'dist'),
+    filename: 'client.js',
+    path: path.resolve(__dirname, 'www'),
   },
   target: 'node',
   devtool: 'source-map',

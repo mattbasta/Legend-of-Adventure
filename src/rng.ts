@@ -15,3 +15,14 @@ export interface RNG {
 }
 
 export const MT: RNG = rng.MT;
+
+// This is the same as `rand.Perm` in Go
+export function shuffledIndices(rng: RNG, n: number) {
+  const arr = new Array(n);
+  for (let i = 0; i < n; i++){
+    const j = rng.range(i + 1);
+    arr[i] = arr[j];
+    arr[j] = i;
+  }
+  return arr;
+}

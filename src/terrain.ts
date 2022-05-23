@@ -9,6 +9,8 @@ import { Portal } from "./terrainGen/portal";
 import { FIELD } from "./terrainGen/tilesets";
 import { generateBuildings } from "./terrainGen/buildings";
 import { generateTown } from "./terrainGen/towns";
+import { getFeatureTiles } from "./terrainGen/featureTiles";
+import { applyDungeon } from "./terrainGen/dungeons";
 
 export const DUNGEON_MIN_SIZE = 3;
 export const DUNGEON_MAX_SIZE = 7;
@@ -174,9 +176,16 @@ export class Terrain {
     if (region.isTown()) {
       generateTown(this);
     } else if (region.isDungeonEntrance()) {
-      this.applyDungeonEntrance();
+      console.log("Applying dungeon entrance");
+      const r = new rng.MT(pairing.getCoordInt(this.x, this.y));
+      const tiles = getFeatureTiles("dungeon_portal");
+      tiles.apply(
+        this,
+        r.range(this.width - tiles.width - 1),
+        r.range(this.height - tiles.height - 1)
+      );
     } else if (region.type === RegionType.Dungeon) {
-      this.applyDungeon();
+      applyDungeon(region.parentID, this);
     } else if (
       region.type === RegionType.House ||
       region.type === RegionType.Shop
@@ -184,9 +193,6 @@ export class Terrain {
       generateBuildings(this, region.type, region.parentID);
     }
   }
-
-  applyDungeonEntrance() {}
-  applyDungeon() {}
 
   renderDownTilemap() {
     const output = new Array(this.height);

@@ -4,8 +4,11 @@
   "description": "A procedurally generated MMO",
   "main": "index.ts",
   "scripts": {
-    "test": "jest",
-    "start": "node index.js"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "dev:client": "webpack --watch --config webpack.client.config.js --mode development",
+    "start:server": "nodemon --stack-trace-limit=1000 dist/index.js",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -18,6 +21,7 @@
   },
   "homepage": "https://github.com/mattbasta/Legend-of-Adventure#readme",
   "dependencies": {
+    "buzz": "^1.2.1",
     "crc32": "^0.2.2",
     "express": "^4.14.0",
     "rng": "^0.2.2",
