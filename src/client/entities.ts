@@ -47,10 +47,6 @@ type Entity = {
 const registry: Record<string, Entity> = {};
 let follow = "local";
 
-const avatarHeight = 32;
-const avatarWidth = 32;
-const avatarScale = settings.scales.entities;
-
 // Add entity
 comm.messages.on("add", function (body) {
   var break_ = body.indexOf("\n");
