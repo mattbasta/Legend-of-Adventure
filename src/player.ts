@@ -1,3 +1,4 @@
+import type { Logger } from "pino";
 import type * as websocket from "ws";
 
 import { handleCheat } from "./cheats.ts";
@@ -6,6 +7,7 @@ import { ATTACK_WIGGLE_ROOM } from "./entities/constants.ts";
 import { sendEntityToLocation } from "./entities/moveEntity.ts";
 import { Event, EventType } from "./events.ts";
 import { Inventory } from "./inventory.ts";
+import { logger } from "./logger.ts";
 import { parseClientMessage } from "./protocol.ts";
 import { getRegion, getRegionData } from "./regions.ts";
 import { RegionType, WorldType } from "./terrainGen/constants.ts";
@@ -17,6 +19,7 @@ export const PLAYER_SPEED = 0.0075;
 
 export class Player extends KillableEntity {
   ws: websocket.WebSocket;
+  log: Logger;
 
   name: string = "Player";
   lastUpdate: number;
@@ -40,6 +43,7 @@ export class Player extends KillableEntity {
 
     this.lastUpdate = Date.now();
     this.ws = connection;
+    this.log = logger.child({ eid: this.eid });
 
     connection.on("message", this.onMessage);
     connection.on("close", this.onClose);
@@ -94,7 +98,7 @@ export class Player extends KillableEntity {
           newY < 0 ||
           newY > this.region.terrain.height
         ) {
-          console.error("User attempted to exceed bounds of the level");
+          this.log.warn("player attempted to exceed bounds of the level");
           return;
         }
 
@@ -104,7 +108,7 @@ export class Player extends KillableEntity {
           return;
         }
         if (velX < -1 || velX > 1 || velY > 1 || velX > 1) {
-          console.error("User attempted to go faster than possible");
+          this.log.warn("player attempted to go faster than possible");
           return;
         }
 
@@ -114,7 +118,7 @@ export class Player extends KillableEntity {
           return;
         }
         if (dirX < -1 || dirX > 1 || dirY > 1 || dirX > 1) {
-          console.error("User attempted to face invalid direction");
+          this.log.warn("player attempted to face invalid direction");
           return;
         }
 
@@ -287,7 +291,7 @@ export class Player extends KillableEntity {
         continue;
       }
 
-      console.log(`${this.eid} in contact with portal`);
+      this.log.debug("in contact with portal");
       const currentCoords: [number, number] = [this.x, this.y];
       let { destX, destY, target } = portal;
 

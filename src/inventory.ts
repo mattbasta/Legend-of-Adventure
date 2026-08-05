@@ -2,6 +2,7 @@ import { KillableEntity } from "./entities/BaseEntity.ts";
 import { ItemEntity } from "./entities/itemEntity.ts";
 import { Event, EventType } from "./events.ts";
 import type { Entity } from "./types.ts";
+import { logger } from "./logger.ts";
 
 const FOOD_HEALTH_INCREASE = 75;
 const INV_MAX_STACK = 32;
@@ -127,7 +128,7 @@ export class Inventory {
       return;
     }
 
-    console.log(`${holder} using ${this.slots[i]}`);
+    logger.debug({ holder: holder.eid, item: this.slots[i] }, "using item");
 
     const x = holder.x;
     const y = holder.y;
@@ -137,7 +138,14 @@ export class Inventory {
         if (!(holder instanceof KillableEntity)) {
           return;
         }
-        console.log(holder.eid, holder.health, holder.maxHealth);
+        logger.debug(
+          {
+            holder: holder.eid,
+            health: holder.health,
+            maxHealth: holder.maxHealth,
+          },
+          "consumed food",
+        );
         if (holder.isAtMaxHealth()) {
           return;
         }
@@ -209,7 +217,10 @@ export class Inventory {
       return;
     }
 
-    console.log(`${dropper} dropping ${this.slots[0]}`);
+    logger.debug(
+      { dropper: dropper.eid, item: this.slots[0] },
+      "dropping item",
+    );
 
     const region = dropper.region;
     const item = new ItemEntity(this.slots[0], dropper);

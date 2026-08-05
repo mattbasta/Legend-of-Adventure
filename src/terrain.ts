@@ -11,6 +11,7 @@ import { generateBuildings } from "./terrainGen/buildings.ts";
 import { generateTown } from "./terrainGen/towns.ts";
 import { getFeatureTiles } from "./terrainGen/featureTiles.ts";
 import { applyDungeon } from "./terrainGen/dungeons.ts";
+import { logger } from "./logger.ts";
 
 export const DUNGEON_MIN_SIZE = 3;
 export const DUNGEON_MAX_SIZE = 7;
@@ -178,7 +179,7 @@ export class Terrain {
     if (region.isTown()) {
       generateTown(this);
     } else if (region.isDungeonEntrance()) {
-      console.log("Applying dungeon entrance");
+      logger.debug({ x: this.x, y: this.y }, "applying dungeon entrance");
       const r = new rng.MT(pairing.getCoordInt(this.x, this.y));
       const tiles = getFeatureTiles("dungeon_portal");
       tiles.apply(

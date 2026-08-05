@@ -5,6 +5,7 @@ import type { RNG } from "./rng.ts";
 import { getCoordOption, getCoordRNG, getTileset, Terrain } from "./terrain.ts";
 import { RegionType, WorldType } from "./terrainGen/constants.ts";
 import { type Entity, EntityType } from "./types.ts";
+import { logger } from "./logger.ts";
 
 export type RegionData = [
   world: WorldType,
@@ -362,7 +363,7 @@ export function getRegion(
   const regionID = getRegionID(parent, type, x, y);
 
   if (!isValidRegionID(regionID)) {
-    console.error(`Invalid region ID requested: ${regionID}`);
+    logger.warn({ regionID }, "invalid region ID requested");
     return null;
   }
 

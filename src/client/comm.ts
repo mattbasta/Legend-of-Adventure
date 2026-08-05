@@ -24,11 +24,10 @@ const commMessages = new EventTarget<{
 
 const readyPromise = new Deferred<void>();
 
-var socket = new WebSocket(
-  `ws://${document.domain}:${document.currentScript?.getAttribute(
-    "data-port",
-  )}/socket`,
-);
+// The websocket server shares the HTTP server, so the page's own host is
+// always the right endpoint.
+const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
+var socket = new WebSocket(`${wsProtocol}://${location.host}/socket`);
 
 socket.onopen = function () {
   commEventsRaw.fire("connected", socket);

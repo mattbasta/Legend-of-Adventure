@@ -2,6 +2,7 @@ import { Event, EventType } from "../events.ts";
 import { getRegion } from "../regions.ts";
 import { RegionType, WorldType } from "../terrainGen/constants.ts";
 import type { Entity } from "../types.ts";
+import { logger } from "../logger.ts";
 
 export function sendEntityToLocation(
   entity: Entity,
@@ -15,7 +16,10 @@ export function sendEntityToLocation(
   const newRegion = getRegion(parentID, type, x, y);
 
   if (!newRegion) {
-    console.error("Requested region that does not exist", parentID, type, x);
+    logger.error(
+      { parentID, type, x, y },
+      "requested region that does not exist",
+    );
     return;
   }
 

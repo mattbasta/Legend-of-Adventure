@@ -11,6 +11,7 @@ import {
 } from "../terrain.ts";
 import * as pairing from "./pairing.ts";
 import { Portal } from "./portal.ts";
+import { logger } from "../logger.ts";
 
 const movableDirections: Array<[0 | 1 | -1, 0 | 1 | -1]> = [
   [0, 1],
@@ -245,7 +246,7 @@ export function applyDungeon(parent: string, terrain: Terrain) {
       ),
     );
   } else if (room.type === DungeonRoomType.Stairwell) {
-    console.log("Generating new dungeon portal");
+    logger.debug("generating new dungeon portal");
     terrain.fillArea(11, 9, 6, 6, 10);
     terrain.fillArea(13, 12, 1, 1, 11);
     terrain.portals.add(new Portal(12, 9, 2, 2, "dungeon:0:0", 14, 14));
