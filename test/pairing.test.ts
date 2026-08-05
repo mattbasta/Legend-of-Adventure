@@ -14,13 +14,13 @@ describe("pairing", () => {
             const paired = pairTileset(i, j, k, l);
             assert.ok(
               !seen.has(paired),
-              `Should not have encountered ${name} before (${paired})`
+              `Should not have encountered ${name} before (${paired})`,
             );
             seen.add(paired);
             assert.deepStrictEqual(
               unpairTileset(paired),
               [i, j, k, l],
-              `Expected valid mapping for pairing ${paired} (${name})`
+              `Expected valid mapping for pairing ${paired} (${name})`,
             );
           }
         }

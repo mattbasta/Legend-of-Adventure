@@ -55,7 +55,7 @@ export abstract class BaseEntity implements Entity {
 
   getMetadata = () => {
     return {};
-  }
+  };
   toString() {
     return JSON.stringify(
       Object.assign(
@@ -69,8 +69,8 @@ export abstract class BaseEntity implements Entity {
           height: this.height,
           width: this.width,
         },
-        this.getMetadata()
-      )
+        this.getMetadata(),
+      ),
     );
   }
 }
@@ -98,8 +98,8 @@ export abstract class KillableEntity extends BaseEntity {
         this.region.broadcast(
           new Event(
             EventType.SOUND,
-            `grunt${(Math.random() * 3) | 0}:${this.x}:${this.y}`
-          )
+            `grunt${(Math.random() * 3) | 0}:${this.x}:${this.y}`,
+          ),
         );
       }
       this.health = newHealth;

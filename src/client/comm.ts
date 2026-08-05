@@ -26,8 +26,8 @@ const readyPromise = new Deferred<void>();
 
 var socket = new WebSocket(
   `ws://${document.domain}:${document.currentScript?.getAttribute(
-    "data-port"
-  )}/socket`
+    "data-port",
+  )}/socket`,
 );
 
 socket.onopen = function () {

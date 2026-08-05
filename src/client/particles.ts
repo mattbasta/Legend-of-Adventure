@@ -57,7 +57,7 @@ class ParticleBase {
       deltaX + this.x - this.diameter / 2,
       deltaY + this.y - this.diameter / 2,
       this.diameter,
-      this.diameter
+      this.diameter,
     );
   }
 }

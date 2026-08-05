@@ -69,26 +69,32 @@ export function getFeatureTiles(name: string) {
   const tileData = fs.readFileSync(`${prefix}/${name}.tiles`, "utf-8");
   const hitmapData = fs.readFileSync(`${prefix}/${name}.hitmap`, "utf-8");
 
-  const tilesParsed = tileData.split(/\n/g).reduce((acc, cur) => {
-    if (!cur.trim()) {
+  const tilesParsed = tileData.split(/\n/g).reduce(
+    (acc, cur) => {
+      if (!cur.trim()) {
+        return acc;
+      }
+      acc.push(cur.split(" ").map((x) => parseInt(x, 10)));
       return acc;
-    }
-    acc.push(cur.split(" ").map((x) => parseInt(x, 10)));
-    return acc;
-  }, [] as Array<Array<number>>);
+    },
+    [] as Array<Array<number>>,
+  );
 
-  const hitmapParsed = hitmapData.split(/\n/g).reduce((acc, cur) => {
-    if (!cur.trim()) {
+  const hitmapParsed = hitmapData.split(/\n/g).reduce(
+    (acc, cur) => {
+      if (!cur.trim()) {
+        return acc;
+      }
+      acc.push(cur.split(" ").map((x) => !!parseInt(x, 10)));
       return acc;
-    }
-    acc.push(cur.split(" ").map((x) => !!parseInt(x, 10)));
-    return acc;
-  }, [] as Array<Array<boolean>>);
+    },
+    [] as Array<Array<boolean>>,
+  );
 
   const feature = new FeatureTiles(
     name,
     tilesParsed[0].length,
-    tilesParsed.length
+    tilesParsed.length,
   );
   feature.populateTiles(tilesParsed);
   feature.populateHitmap(hitmapParsed);
@@ -109,8 +115,8 @@ export function getFeatureTiles(name: string) {
           Number(height),
           destID,
           Number(destX),
-          Number(destY)
-        )
+          Number(destY),
+        ),
       );
     }
   }

@@ -96,7 +96,7 @@ export function round(terrain: Terrain, tileset: Record<number, number>) {
           clone[ypxm1],
           clone[ypxm1 + 1],
           clone[ypxm1 + 2],
-          clone[ypxm1 + 3]
+          clone[ypxm1 + 3],
         );
       const hRightC =
         x &&
@@ -104,7 +104,7 @@ export function round(terrain: Terrain, tileset: Record<number, number>) {
           clone[ypxp1],
           clone[ypxp1 + 1],
           clone[ypxp1 + 2],
-          clone[ypxp1 + 3]
+          clone[ypxp1 + 3],
         );
 
       // Optimize the third pass by squashing it into the second.
@@ -113,7 +113,7 @@ export function round(terrain: Terrain, tileset: Record<number, number>) {
           clone[ypx],
           clone[ypx + 1],
           clone[ypx + 2],
-          clone[ypx + 3]
+          clone[ypx + 3],
         )
       ) {
         if (hLeftC) {
@@ -139,7 +139,7 @@ export function round(terrain: Terrain, tileset: Record<number, number>) {
           clone[ypx],
           clone[ypx + 1],
           clone[ypx + 2],
-          clone[ypx + 3]
+          clone[ypx + 3],
         )
       ) {
         // There is nothing for us here except pain.
@@ -200,13 +200,13 @@ export function round(terrain: Terrain, tileset: Record<number, number>) {
           clone[ycpx],
           clone[ycpx + 1],
           clone[ycpx + 2],
-          clone[ycpx + 3]
+          clone[ycpx + 3],
         ) ||
         isVerticalGradient(
           clone[ycpx],
           clone[ycpx + 1],
           clone[ycpx + 2],
-          clone[ycpx + 3]
+          clone[ycpx + 3],
         )
       ) {
         continue;
@@ -258,7 +258,7 @@ export function round(terrain: Terrain, tileset: Record<number, number>) {
         cell0,
         clone[(i * width + j) * 4 + 1],
         clone[(i * width + j) * 4 + 2],
-        clone[(i * width + j) * 4 + 3]
+        clone[(i * width + j) * 4 + 3],
       );
       if (pairedVal in tileset) {
         body[i * width + j] = tileset[pairedVal];

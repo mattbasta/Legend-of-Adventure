@@ -31,11 +31,11 @@ comm.messages.on("par", function (body) {
     var parInst = new particles.RawParticle(
       parseFloat(data[4]),
       parseFloat(data[3]),
-      data[2] // Color is not an integer
+      data[2], // Color is not an integer
     );
     parInst.setPosition(
       parseFloat(data[0]) * drawnTileSize,
-      parseFloat(data[1]) * drawnTileSize
+      parseFloat(data[1]) * drawnTileSize,
     );
     // if (data[5]) {
     //   parInst.init(data[5]);
@@ -59,7 +59,7 @@ comm.messages.on("pma", function (body) {
       const parInst = particles.macro(data[2]);
       parInst.setPosition(
         parseFloat(data[0]) * drawnTileSize,
-        parseFloat(data[1]) * drawnTileSize
+        parseFloat(data[1]) * drawnTileSize,
       );
       if (data[4]) {
         entities.addParticle(data[4], parInst);
@@ -111,24 +111,24 @@ function draw() {
     var topmostTB = Math.floor(state[1] / drawnTileSize / terrainChunkSize);
     var leftmostTB = Math.floor(state[0] / drawnTileSize / terrainChunkSize);
     var bottommostTB = Math.ceil(
-      (state[1] + state[3]) / drawnTileSize / terrainChunkSize
+      (state[1] + state[3]) / drawnTileSize / terrainChunkSize,
     );
     var rightmostTB = Math.ceil(
-      (state[0] + state[2]) / drawnTileSize / terrainChunkSize
+      (state[0] + state[2]) / drawnTileSize / terrainChunkSize,
     );
 
     topmostTB = Math.max(Math.min(topmostTB, terrainBuffers.length - 1), 0);
     leftmostTB = Math.max(
       Math.min(leftmostTB, terrainBuffers[0].length - 1),
-      0
+      0,
     );
     bottommostTB = Math.max(
       Math.min(bottommostTB, terrainBuffers.length - 1),
-      0
+      0,
     );
     rightmostTB = Math.max(
       Math.min(rightmostTB, terrainBuffers[0].length - 1),
-      0
+      0,
     );
 
     for (i = topmostTB; i <= bottommostTB; i++) {
@@ -142,7 +142,7 @@ function draw() {
           j * drawnTileSize * terrainChunkSize - state[0],
           i * drawnTileSize * terrainChunkSize - state[1],
           drawnTileSize * terrainChunkSize,
-          drawnTileSize * terrainChunkSize
+          drawnTileSize * terrainChunkSize,
         );
       }
     }
@@ -224,7 +224,7 @@ async function redrawTerrain() {
             j * tileSize,
             i * tileSize,
             tileSize,
-            tileSize
+            tileSize,
           );
           if (settings.show_hitmap) {
             if (hitmap[y * terrainChunkSize + i][x * terrainChunkSize + j]) {
@@ -271,7 +271,7 @@ async function redrawTerrain() {
           bufferCtx.lineTo(bufferX + tileSize * portal.width, bufferY);
           bufferCtx.lineTo(
             bufferX + tileSize * portal.width,
-            bufferY + tileSize * portal.height
+            bufferY + tileSize * portal.height,
           );
           bufferCtx.lineTo(bufferX, bufferY + tileSize * portal.height);
           bufferCtx.lineTo(bufferX, bufferY);
@@ -292,7 +292,7 @@ function setState(
   x2: number,
   y2: number,
   w2: number,
-  h2: number
+  h2: number,
 ) {
   if (!state) state = [] as any;
   state[0] = x;

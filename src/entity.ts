@@ -45,7 +45,7 @@ export class ChestEntity extends BaseEntity {
 
     if (!this.inventory.numItems()) {
       this.region.broadcast(
-        new Event(EventType.SOUND, `chest_smash:${this.x}:${this.y}`, this)
+        new Event(EventType.SOUND, `chest_smash:${this.x}:${this.y}`, this),
       );
       this.region.removeEntity(this);
     }
@@ -100,14 +100,14 @@ export class PotEntity extends BaseEntity {
       if (event.origin) {
         const newEnt = this.region.entityMap.get(newEID);
         newEnt!.onEvent(
-          new Event(EventType.DIRECT_ATTACK, event.body, event.origin)
+          new Event(EventType.DIRECT_ATTACK, event.body, event.origin),
         );
       }
     }
 
     const sound = this.potType > 1 ? "chest_smash" : "pot_smash";
     this.region.broadcast(
-      new Event(EventType.SOUND, `${sound}:${this.x}:${this.y}`, this)
+      new Event(EventType.SOUND, `${sound}:${this.x}:${this.y}`, this),
     );
 
     this.region.removeEntity(this);

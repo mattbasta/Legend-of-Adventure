@@ -103,12 +103,10 @@ class DungeonLayout {
       }
       return !(
         // No if the passage already exists
-        (
-          this.grid[y][x].passages[passageToIndex(dirX, dirY)] ||
-          // No if the passage leads to a defined or staged room
-          this.grid[y + dirY][x + dirX].defined ||
-          this.grid[y + dirY][x + dirX].toBeProcessed
-        )
+        this.grid[y][x].passages[passageToIndex(dirX, dirY)] ||
+        // No if the passage leads to a defined or staged room
+        this.grid[y + dirY][x + dirX].defined ||
+        this.grid[y + dirY][x + dirX].toBeProcessed
       );
     };
 
@@ -129,12 +127,12 @@ class DungeonLayout {
       });
 
       let viableDirections = directions.filter(([dirX, dirY]) =>
-        canMove(x, y, dirX, dirY)
+        canMove(x, y, dirX, dirY),
       );
       if (!room.initial && viableDirections.length > 1) {
         viableDirections = viableDirections.slice(
           0,
-          r.range(viableDirections.length - 1) + 1
+          r.range(viableDirections.length - 1) + 1,
         );
       }
       room.outboundPassages = viableDirections.length;
@@ -242,11 +240,11 @@ export function applyDungeon(parent: string, terrain: Terrain) {
         2,
         "..",
         14,
-        14 // TODO: figure out what to do with this
-      )
+        14, // TODO: figure out what to do with this
+      ),
     );
   } else if (room.type === DungeonRoomType.Stairwell) {
-    console.log('Generating new dungeon portal');
+    console.log("Generating new dungeon portal");
     terrain.fillArea(11, 9, 6, 6, 10);
     terrain.fillArea(13, 12, 1, 1, 11);
     terrain.portals.add(new Portal(12, 9, 2, 2, "dungeon:0:0", 14, 14));

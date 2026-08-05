@@ -46,7 +46,7 @@ const levelEvents = new EventTarget<{
     number,
     number,
     number,
-    number
+    number,
   ];
 }>();
 
@@ -127,7 +127,7 @@ export function setCenterPosition() {
     Math.max(n_x, 0),
     Math.max(n_y, 0),
     Math.min(output_buffer.clientWidth, level_w),
-    Math.min(output_buffer.clientHeight, level_h)
+    Math.min(output_buffer.clientHeight, level_h),
   );
 }
 

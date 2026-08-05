@@ -13,7 +13,7 @@ type Avatar = {
 
 export function updateAvatarX(
   avatar: Avatar,
-  hitmap: level.LevelData["hitmap"] = level.getHitmap()
+  hitmap: level.LevelData["hitmap"] = level.getHitmap(),
 ) {
   const y = (avatar.y - (avatar.height * 0.5) / settings.tilesize) | 0;
   const xLeft = (avatar.x + HITMAP_BUFFER) | 0;
@@ -41,10 +41,11 @@ export function updateAvatarX(
 
 export function updateAvatarY(
   avatar: Avatar,
-  hitmap: level.LevelData["hitmap"] = level.getHitmap()
+  hitmap: level.LevelData["hitmap"] = level.getHitmap(),
 ) {
   const yBottom = (avatar.y - HITMAP_BUFFER) | 0;
-  const yTop = (avatar.y - avatar.height / settings.tilesize + HITMAP_BUFFER) | 0;
+  const yTop =
+    (avatar.y - avatar.height / settings.tilesize + HITMAP_BUFFER) | 0;
 
   const x = (avatar.x + HITMAP_BUFFER) | 0;
 

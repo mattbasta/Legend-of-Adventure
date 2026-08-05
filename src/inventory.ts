@@ -145,14 +145,14 @@ export class Inventory {
         this.remove(i);
 
         holder.onEvent(
-          new Event(EventType.PARTICLE_MACRO, "0.5 -0.5 eatfood 10 local")
+          new Event(EventType.PARTICLE_MACRO, "0.5 -0.5 eatfood 10 local"),
         );
         holder.region.broadcast(
           new Event(
             EventType.PARTICLE_MACRO,
             `0.5, -0.5, eatfood 10 ${holder.eid}`,
-            holder
-          )
+            holder,
+          ),
         );
         break;
 
@@ -161,8 +161,8 @@ export class Inventory {
           new Event(
             EventType.DIRECT_ATTACK,
             `${x} ${y} ${this.slots[i]}`,
-            holder
-          )
+            holder,
+          ),
         );
         break;
 
@@ -189,8 +189,8 @@ export class Inventory {
           new Event(
             EventType.SOUND,
             `potion${(Math.random() * 2) | 0}:${x}:${y}`,
-            null
-          )
+            null,
+          ),
         );
         break;
     }

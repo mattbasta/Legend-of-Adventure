@@ -36,7 +36,7 @@ export class Player extends KillableEntity {
   constructor(connection: websocket.WebSocket) {
     super(
       EntityType.player,
-      regions.getRegion(WorldType.Overworld, RegionType.Field, 0, 0)
+      regions.getRegion(WorldType.Overworld, RegionType.Field, 0, 0),
     );
 
     this.lastUpdate = Date.now();
@@ -73,7 +73,7 @@ export class Player extends KillableEntity {
           return;
         }
         this.region.broadcast(
-          new Event(EventType.CHAT, `${this.x} ${this.y}\n${body}`, this)
+          new Event(EventType.CHAT, `${this.x} ${this.y}\n${body}`, this),
         );
         return;
 
@@ -137,8 +137,8 @@ export class Player extends KillableEntity {
               velocity: [this.velX, this.velY],
               direction: [this.dirX, this.dirY],
             })}\n${this.x} ${this.y}`,
-            this
-          )
+            this,
+          ),
         );
 
         break;
@@ -178,7 +178,7 @@ export class Player extends KillableEntity {
           x,
           y,
           this.x,
-          this.y
+          this.y,
         );
         return;
     }
@@ -219,15 +219,15 @@ export class Player extends KillableEntity {
           new Event(
             EventType.PARTICLE_MACRO,
             "0.5 0 bloodspatter 5 local",
-            null
-          )
+            null,
+          ),
         );
         this.region.broadcast(
           new Event(
             EventType.PARTICLE_MACRO,
             `0.5 0 bloodspatter 5 ${this.eid}`,
-            this
-          )
+            this,
+          ),
         );
         return;
       }
@@ -265,14 +265,14 @@ export class Player extends KillableEntity {
 
     if (this.godMode && ((Math.random() * 3) | 0) === 0) {
       this.onEvent(
-        new Event(EventType.PARTICLE_MACRO, "0.5 -0.5 godmode 3 local", null)
+        new Event(EventType.PARTICLE_MACRO, "0.5 -0.5 godmode 3 local", null),
       );
       this.region.broadcast(
         new Event(
           EventType.PARTICLE_MACRO,
           `0.5 -0.5 godmode 3 ${this.eid}`,
-          this
-        )
+          this,
+        ),
       );
     }
 
@@ -321,7 +321,7 @@ export class Player extends KillableEntity {
     x: number,
     y: number,
     newX: number,
-    newY: number
+    newY: number,
   ) {
     const oldRegion = this.region;
     this.send("flv");
@@ -345,8 +345,8 @@ export class Player extends KillableEntity {
       new Event(
         EventType.PARTICLE_MACRO,
         `${this.x} ${this.y} deathFlake 25`,
-        this
-      )
+        this,
+      ),
     );
 
     while (this.inventory.numItems()) {
@@ -361,7 +361,7 @@ export class Player extends KillableEntity {
   updateInventory() {
     const inv = this.inventory;
     this.send(
-      `inv${inv.slots.map((x, i) => `${i}:${x}:${inv.counts[i]}`).join("\n")}`
+      `inv${inv.slots.map((x, i) => `${i}:${x}:${inv.counts[i]}`).join("\n")}`,
     );
   }
 

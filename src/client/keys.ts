@@ -42,4 +42,3 @@ window.addEventListener("keyup", function (e) {
 
 export const up = keyUpHandler;
 export const down = keyDownHandler;
-

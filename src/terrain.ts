@@ -57,14 +57,14 @@ export class Hitmap {
   set(x: number, y: number) {
     const linearIndex = y * this.width + x;
     const index = (linearIndex / 8) | 0;
-    const offset = 1 << (linearIndex % 8 | 0);
+    const offset = 1 << ((linearIndex % 8) | 0);
     this.body[index] = this.body[index] | offset;
   }
 
   unset(x: number, y: number) {
     const linearIndex = y * this.width + x;
     const index = (linearIndex / 8) | 0;
-    const offset = 1 << (linearIndex % 8 | 0);
+    const offset = 1 << ((linearIndex % 8) | 0);
     this.body[index] = this.body[index] & ~offset;
   }
 
@@ -97,7 +97,7 @@ export class Hitmap {
 
   get(x: number, y: number): boolean {
     const linearIndex = y * this.width + x;
-    return Boolean(this.body[(linearIndex / 8) | 0] & (1 << linearIndex % 8));
+    return Boolean(this.body[(linearIndex / 8) | 0] & (1 << (linearIndex % 8)));
   }
 
   fits(x: number, y: number, w: number, h: number) {
@@ -165,7 +165,7 @@ export class Terrain {
         this.y * this.height,
         this.tiles,
         this.width,
-        this.height
+        this.height,
       );
 
       const tileset = FIELD;
@@ -182,7 +182,7 @@ export class Terrain {
       tiles.apply(
         this,
         r.range(this.width - tiles.width - 1),
-        r.range(this.height - tiles.height - 1)
+        r.range(this.height - tiles.height - 1),
       );
     } else if (region.type === RegionType.Dungeon) {
       applyDungeon(region.parentID, this);
@@ -211,7 +211,7 @@ export class Terrain {
     y: number,
     width: number,
     height: number,
-    material: number
+    material: number,
   ) {
     x = x | 0;
     y = y | 0;

@@ -111,7 +111,7 @@ describe("terrain golden masters", () => {
 
       assert.ok(
         fs.existsSync(goldenPath),
-        `Missing golden file ${goldenPath}; run with UPDATE_GOLDEN=1 to create it`
+        `Missing golden file ${goldenPath}; run with UPDATE_GOLDEN=1 to create it`,
       );
       const expected = fs.readFileSync(goldenPath, "utf-8").trimEnd();
       assert.strictEqual(
@@ -119,7 +119,7 @@ describe("terrain golden masters", () => {
         sha256(expected),
         `Generated terrain for "${name}" no longer matches ${goldenPath}. ` +
           `If this change is intentional, regenerate with UPDATE_GOLDEN=1 ` +
-          `and review the diff.`
+          `and review the diff.`,
       );
     });
   }

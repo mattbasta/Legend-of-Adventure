@@ -12,7 +12,7 @@ let defaultWidth = 0;
 let defaultHeight = 0;
 
 const outputCanvas = document.getElementById(
-  "output_full"
+  "output_full",
 ) as HTMLCanvasElement;
 canvases.output = outputCanvas;
 contexts.output = prepareContext(outputCanvas.getContext("2d")!);

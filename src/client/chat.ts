@@ -27,7 +27,7 @@ comm.messages.on("cha", function (body) {
   var local = entities.getLocal();
   var dist = Math.sqrt(
     Math.pow(local.x - parseFloat(coords[0]), 2) +
-      Math.pow(local.y - parseFloat(coords[1]), 2)
+      Math.pow(local.y - parseFloat(coords[1]), 2),
   );
   if (dist > CHAT_DISTANCE) return;
 

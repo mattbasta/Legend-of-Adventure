@@ -38,7 +38,11 @@ const buildingStairOdds: Partial<Record<RegionType, number>> = {
 //   return conn & 1;
 // }
 
-export function generateBuildings(terrain: Terrain, type: RegionType, parent: string) {
+export function generateBuildings(
+  terrain: Terrain,
+  type: RegionType,
+  parent: string,
+) {
   const stairOdds = buildingStairOdds[type] || 3;
 
   const r = new rng.MT(pairing.getNameInt(parent + "." + type));
@@ -145,7 +149,7 @@ export function generateBuildings(terrain: Terrain, type: RegionType, parent: st
         ry + ROOMSIZE_HEIGHT - 1,
         ROOMSIZE_WIDTH - 2,
         1,
-        9
+        9,
       );
       terrain.fillArea(rx, ry + 1, 1, ROOMSIZE_HEIGHT - 2, 16);
       terrain.fillArea(
@@ -153,7 +157,7 @@ export function generateBuildings(terrain: Terrain, type: RegionType, parent: st
         ry + 1,
         1,
         ROOMSIZE_HEIGHT - 2,
-        15
+        15,
       );
 
       // Draw the back wall
@@ -170,13 +174,13 @@ export function generateBuildings(terrain: Terrain, type: RegionType, parent: st
         ry + 5,
         ROOMSIZE_WIDTH - 2,
         ROOMSIZE_HEIGHT - 6,
-        1
+        1,
       );
       terrain.hitmap.clearArea(
         rx + 1,
         ry + 5,
         ROOMSIZE_WIDTH - 2,
-        ROOMSIZE_HEIGHT - 6
+        ROOMSIZE_HEIGHT - 6,
       );
 
       // If this is the lobby, draw the entrance and add the exit portal
@@ -210,8 +214,8 @@ export function generateBuildings(terrain: Terrain, type: RegionType, parent: st
             1,
             "..",
             0,
-            0
-          )
+            0,
+          ),
         );
       } else if (chance()) {
         drawCarpet(terrain, rx, ry);
@@ -270,21 +274,21 @@ export function generateBuildings(terrain: Terrain, type: RegionType, parent: st
           ry + ROOMSIZE_HEIGHT / 2 - HORIZ_HALLWAYSIZE_HEIGHT / 2,
           HORIZ_HALLWAYSIZE_WIDTH,
           1,
-          14
+          14,
         );
         terrain.fillArea(
           rx + ROOMSIZE_WIDTH,
           ry + ROOMSIZE_HEIGHT / 2 + HORIZ_HALLWAYSIZE_HEIGHT / 2,
           HORIZ_HALLWAYSIZE_WIDTH,
           1,
-          9
+          9,
         );
         terrain.fillArea(
           rx + ROOMSIZE_WIDTH - 1,
           ry + ROOMSIZE_HEIGHT / 2 - HORIZ_HALLWAYSIZE_HEIGHT / 2 + 1,
           HORIZ_HALLWAYSIZE_WIDTH + 2,
           HORIZ_HALLWAYSIZE_HEIGHT - 1,
-          1
+          1,
         );
 
         // Fill the back wall
@@ -323,7 +327,7 @@ export function generateBuildings(terrain: Terrain, type: RegionType, parent: st
           rx + ROOMSIZE_WIDTH - 1,
           ry + ROOMSIZE_HEIGHT / 2 - HORIZ_HALLWAYSIZE_HEIGHT / 2 + 5,
           HORIZ_HALLWAYSIZE_WIDTH + 2,
-          HORIZ_HALLWAYSIZE_HEIGHT - 5
+          HORIZ_HALLWAYSIZE_HEIGHT - 5,
         );
       }
       if (connections[y * 3 + x][1]) {
@@ -359,27 +363,27 @@ export function generateBuildings(terrain: Terrain, type: RegionType, parent: st
           ry + ROOMSIZE_HEIGHT,
           1,
           VERT_HALLWAYSIZE_HEIGHT,
-          16
+          16,
         );
         terrain.fillArea(
           rx + ROOMSIZE_WIDTH / 2 + VERT_HALLWAYSIZE_WIDTH / 2 - 1,
           ry + ROOMSIZE_HEIGHT,
           1,
           VERT_HALLWAYSIZE_HEIGHT,
-          15
+          15,
         );
         terrain.fillArea(
           rx + ROOMSIZE_WIDTH / 2 - VERT_HALLWAYSIZE_WIDTH / 2 + 1,
           ry + ROOMSIZE_HEIGHT - 1,
           VERT_HALLWAYSIZE_WIDTH - 2,
           VERT_HALLWAYSIZE_HEIGHT + 2 + 4,
-          1
+          1,
         );
         terrain.hitmap.clearArea(
           rx + ROOMSIZE_WIDTH / 2 - VERT_HALLWAYSIZE_WIDTH / 2 + 1,
           ry + ROOMSIZE_HEIGHT - 1,
           VERT_HALLWAYSIZE_WIDTH - 2,
-          VERT_HALLWAYSIZE_HEIGHT + 2 + 4
+          VERT_HALLWAYSIZE_HEIGHT + 2 + 4,
         );
       }
 
@@ -438,7 +442,7 @@ function drawShopLobby(
   x: number,
   y: number,
   r: rng.RNG,
-  chance: () => boolean
+  chance: () => boolean,
 ) {
   const halfRoom = (ROOMSIZE_WIDTH / 2) | 0;
 

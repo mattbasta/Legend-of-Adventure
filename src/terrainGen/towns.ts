@@ -181,7 +181,7 @@ export function generateTown(terrain: Terrain) {
               oldBoundaries[0],
               roadWidth,
               y - oldBoundaries[0],
-              roadMaterial
+              roadMaterial,
             );
             if (y < townBoundaries[2]) {
               townBoundaries[2] = y;
@@ -195,10 +195,10 @@ export function generateTown(terrain: Terrain) {
                 oldBoundaries[2] - roadWidth,
                 Math.max(
                   oldBoundaries[1] - x + buildingEntity.width,
-                  centerEntity.width + roadWidth
+                  centerEntity.width + roadWidth,
                 ) | 0,
                 roadWidth,
-                roadMaterial
+                roadMaterial,
               );
             }
             terrain.fillArea(
@@ -206,7 +206,7 @@ export function generateTown(terrain: Terrain) {
               y + widestBuilding,
               oldBoundaries[1] - x + buildingEntity.width,
               roadWidth,
-              roadMaterial
+              roadMaterial,
             );
             if (x < townBoundaries[3]) {
               townBoundaries[3] = x;
@@ -218,7 +218,7 @@ export function generateTown(terrain: Terrain) {
               oldBoundaries[2],
               roadWidth,
               townBoundaries[2] - oldBoundaries[2],
-              roadMaterial
+              roadMaterial,
             );
             break;
           case 2:
@@ -228,9 +228,9 @@ export function generateTown(terrain: Terrain) {
               roadWidth,
               Math.max(
                 oldBoundaries[2] - y,
-                oldBoundaries[2] - oldBoundaries[0]
+                oldBoundaries[2] - oldBoundaries[0],
               ),
-              roadMaterial
+              roadMaterial,
             );
             townBoundaries[3] = x - widestBuilding;
             if (y > townBoundaries[0]) {
@@ -243,10 +243,10 @@ export function generateTown(terrain: Terrain) {
               y,
               Math.max(
                 x - oldBoundaries[3],
-                townBoundaries[1] - oldBoundaries[3]
+                townBoundaries[1] - oldBoundaries[3],
               ) | 0,
               roadWidth,
-              roadMaterial
+              roadMaterial,
             );
             if (x > townBoundaries[1]) {
               townBoundaries[1] = x;
@@ -300,7 +300,7 @@ function smoothRoads({ tiles, width, height }: Terrain) {
         isRoad(orig[(i - 1) * width + j]),
         isRoad(orig[i * width + j + 1]),
         isRoad(orig[(i + 1) * width + j]),
-        isRoad(orig[i * width + j - 1])
+        isRoad(orig[i * width + j - 1]),
       );
       const majorTile = roadMajorTiles[major];
       if (!majorTile) {

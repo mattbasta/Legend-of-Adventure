@@ -44,7 +44,6 @@ export function waitFor(
 ): Promise<Array<HTMLImageElement>> {
   for (const img of deps) {
     if (!(img in images)) {
-
     }
   }
   return Promise.all(deps.map((img) => images[img]));

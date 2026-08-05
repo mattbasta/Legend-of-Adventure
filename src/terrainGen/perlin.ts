@@ -28,7 +28,7 @@ function gradient(
   oy: number,
   grad: Gradient,
   px: number,
-  py: number
+  py: number,
 ) {
   return grad[0] * (px - ox) + grad[1] * (py - oy);
 }
@@ -103,7 +103,7 @@ export class NoiseGenerator {
     grid: Uint16Array,
     width: number,
     height: number,
-    max: number = TERRAIN_PERLIN_MAX
+    max: number = TERRAIN_PERLIN_MAX,
   ) {
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {

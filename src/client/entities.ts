@@ -146,7 +146,7 @@ export function register(
     height: number;
     image: images.GameImages;
   },
-  proto?: keyof typeof settings.entityPrototypes
+  proto?: keyof typeof settings.entityPrototypes,
 ) {
   const entity: Entity = {
     created: Date.now(),
@@ -198,7 +198,7 @@ export async function draw(id: string) {
       0,
       0,
       entity.width,
-      entity.height
+      entity.height,
     );
   } else if (entity.clip) {
     context.drawImage(
@@ -210,7 +210,7 @@ export async function draw(id: string) {
       0,
       0,
       entity.width,
-      entity.height
+      entity.height,
     );
   } else {
     context.drawImage(img, 0, 0, img.width, img.height);
@@ -239,7 +239,7 @@ register(
     width: 1,
     height: 1,
   },
-  "avatar"
+  "avatar",
 );
 
 var firstLevel = true;
@@ -303,7 +303,7 @@ export function tick(ms: number) {
 
 export function drawAll(
   context: CanvasRenderingContext2D,
-  state: [number, number, number, number, number, number, number, number]
+  state: [number, number, number, number, number, number, number, number],
 ) {
   var now = Date.now();
   var entities = [];
@@ -371,7 +371,7 @@ export function drawAll(
       destX,
       destY,
       entity.width,
-      entity.height
+      entity.height,
     );
 
     if (entity.eid === "local") {
@@ -391,19 +391,19 @@ export function drawAll(
         entity.width / 2 + destX - (temp.width + 20) / 2,
         destY - 10 - 15 - 20,
         temp.width + 20,
-        15 + 20
+        15 + 20,
       );
       context.fillStyle = "#000";
       context.fillText(
         entity.nametag,
         entity.width / 2 + destX - temp.width / 2 + 2,
-        destY - 10 - 10 + 2
+        destY - 10 - 10 + 2,
       );
       context.fillStyle = "#fff";
       context.fillText(
         entity.nametag,
         entity.width / 2 + destX - temp.width / 2,
-        destY - 10 - 10
+        destY - 10 - 10,
       );
     }
 
@@ -412,7 +412,7 @@ export function drawAll(
         entity.particles[j].draw(
           context,
           entity.x * settings.tilesize - state[0],
-          entity.y * settings.tilesize - state[1]
+          entity.y * settings.tilesize - state[1],
         );
       }
     }
@@ -421,7 +421,7 @@ export function drawAll(
 
 export function drawHitmappings(
   context: CanvasRenderingContext2D,
-  state: [number, number, number, number, number, number, number, number]
+  state: [number, number, number, number, number, number, number, number],
 ) {
   const local = registry.local;
   context.lineWidth = 3;
@@ -430,7 +430,7 @@ export function drawHitmappings(
     local.hitmap[3] * settings.tilesize - state[0],
     local.hitmap[0] * settings.tilesize - state[1],
     (local.hitmap[1] - local.hitmap[3]) * settings.tilesize,
-    (local.hitmap[2] - local.hitmap[0]) * settings.tilesize
+    (local.hitmap[2] - local.hitmap[0]) * settings.tilesize,
   );
 }
 

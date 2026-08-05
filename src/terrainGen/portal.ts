@@ -17,7 +17,7 @@ export class Portal {
     h: number,
     destination: string,
     destX: number,
-    destY: number
+    destY: number,
   ) {
     this.x = x | 0;
     this.y = y | 0;
@@ -36,7 +36,7 @@ export class Portal {
       this.height,
       this.target,
       this.destX,
-      this.destY
+      this.destY,
     );
   }
 

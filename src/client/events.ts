@@ -6,13 +6,12 @@ export interface Listenable<Mapping extends ListenerMapping> {
   one<U extends keyof Mapping>(name: U, listener: Listener<Mapping[U]>): void;
 }
 
-type ListenerMap<T> = T extends Record<string | number, Listener<Array<any>>>
-  ? T
-  : never;
+type ListenerMap<T> =
+  T extends Record<string | number, Listener<Array<any>>> ? T : never;
 
-export default class EventTarget<M extends ListenerMapping>
-  implements Listenable<M>
-{
+export default class EventTarget<
+  M extends ListenerMapping,
+> implements Listenable<M> {
   listeners: ListenerMap<M> = {} as ListenerMap<M>;
   oneListeners: ListenerMap<M> = {} as ListenerMap<M>;
 

@@ -1,0 +1,8 @@
+dist/
+legacy/
+resources/
+test/golden/
+www/client.js
+www/client.js.map
+www/jgame.assets.js
+package-lock.json

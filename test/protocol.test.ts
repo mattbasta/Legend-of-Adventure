@@ -57,10 +57,12 @@ describe("region IDs", () => {
   });
 
   it("parses a nested region ID", () => {
-    assert.deepStrictEqual(
-      getRegionData("overworld,field:1:0,dungeon:2:3"),
-      ["overworld,field:1:0", "dungeon", 2, 3]
-    );
+    assert.deepStrictEqual(getRegionData("overworld,field:1:0,dungeon:2:3"), [
+      "overworld,field:1:0",
+      "dungeon",
+      2,
+      3,
+    ]);
   });
 
   it("falls back to the default region for malformed IDs", () => {

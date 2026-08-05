@@ -39,7 +39,7 @@ abstract class EntityBehavior {
     this.scheduleHandles.push(
       setTimeout(() => {
         this.enqueueSelf(handlerName, args);
-      }, inMs)
+      }, inMs),
     );
   }
   protected clearSchedule() {

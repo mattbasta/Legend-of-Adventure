@@ -4,13 +4,12 @@ An action adventure MMORPG that runs in the browser!
 
 LoA has the following goals:
 
-* Infinitely large, procedurally generated worlds.
-* Novel AI for every NPC and many non-NPCs.
-* Semi-intelligent learning chatbot with individual training data for each NPC.
-* To provide a high degree of replayability.
-* Realtime, massively multiplayer.
-* Horizontally scalable to hundreds or thousands of machines.
-
+- Infinitely large, procedurally generated worlds.
+- Novel AI for every NPC and many non-NPCs.
+- Semi-intelligent learning chatbot with individual training data for each NPC.
+- To provide a high degree of replayability.
+- Realtime, massively multiplayer.
+- Horizontally scalable to hundreds or thousands of machines.
 
 ## Running
 
@@ -25,7 +24,6 @@ make  # go fmt, get, build, etc.
 
 The server will start on port `8080` or whatever you pass as `--port`.
 
-
 ## Status
 
 This project is currently undergoing a port from Python to Go. As such, most of
@@ -33,7 +31,6 @@ the Python code is considered deprecated and may not run. Most of the
 functionality from the Python code has not yet been ported.
 
 The last stable version of the Python server can be found on the `python` branch.
-
 
 ## Requirements
 
@@ -46,21 +43,20 @@ run the server.
 The Python version of this project relies on Redis, though this requirement is
 not present in the Go port.
 
-
 ## Special Thanks
 
 ### Graphics
 
-* [Henrique Lazarini](http://7soul1.deviantart.com/) - Some item sprites
-* [RATED-RKOFRANKLIN](http://www.gdunlimited.net/forums/user/10621-rated-rkofranklin/) - Some sprites
-* LordBagardo - Mob Sprites
-* Kazzador - Zombie Sprite
-* [Dust Collector](http://www.gdunlimited.net/forums/user/501-dust-collector/) - Various Sprites and Tiles
+- [Henrique Lazarini](http://7soul1.deviantart.com/) - Some item sprites
+- [RATED-RKOFRANKLIN](http://www.gdunlimited.net/forums/user/10621-rated-rkofranklin/) - Some sprites
+- LordBagardo - Mob Sprites
+- Kazzador - Zombie Sprite
+- [Dust Collector](http://www.gdunlimited.net/forums/user/501-dust-collector/) - Various Sprites and Tiles
 
 ### Audio
 
-* Evil Mind Entertainment
-* Josh Stitt - Music Composition
-* Ralph Hinkle - Sounds
-* Ron Corbin - Zombie SFX (youtube.com/mrontheborder)
-* Texaveryjr - Wood crate smashing
+- Evil Mind Entertainment
+- Josh Stitt - Music Composition
+- Ralph Hinkle - Sounds
+- Ron Corbin - Zombie SFX (youtube.com/mrontheborder)
+- Texaveryjr - Wood crate smashing

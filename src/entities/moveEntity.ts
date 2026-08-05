@@ -10,7 +10,7 @@ export function sendEntityToLocation(
   x: number,
   y: number,
   newX: number,
-  newY: number
+  newY: number,
 ) {
   const newRegion = getRegion(parentID, type, x, y);
 
@@ -27,8 +27,8 @@ export function sendEntityToLocation(
       new Event(
         EventType.ENTITY_UPDATE,
         `${entity}\n${entity.x} ${entity.y}`,
-        entity
-      )
+        entity,
+      ),
     );
     return;
   }

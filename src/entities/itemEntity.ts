@@ -14,7 +14,7 @@ export class ItemEntity extends BaseEntity {
       EntityType.item,
       dropper.region,
       dropper.x + dropper.dirX,
-      dropper.y + dropper.dirY
+      dropper.y + dropper.dirY,
     );
 
     this.itemCode = itemCode;

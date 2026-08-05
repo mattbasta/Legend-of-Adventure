@@ -17,7 +17,7 @@ describe("Hitmap", () => {
         assert.strictEqual(
           h.get(i, j),
           i === j || (i === 0 && j === 1),
-          `Should have gotten the correct position for (${i}, ${j})`
+          `Should have gotten the correct position for (${i}, ${j})`,
         );
       }
     }

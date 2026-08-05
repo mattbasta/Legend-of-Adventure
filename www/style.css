@@ -1,85 +1,111 @@
 @font-face {
-    font-family: 'VT323';
-    font-style: normal;
-    font-weight: 400;
-    src: local('VT323'), local('VT323-Regular'), url(http://themes.googleusercontent.com/static/fonts/vt323/v5/SSPdB6sO_7a9ZMMiCroIGqCWcynf_cDxXwCLxiixG1c.woff) format('woff');
+  font-family: "VT323";
+  font-style: normal;
+  font-weight: 400;
+  src:
+    local("VT323"),
+    local("VT323-Regular"),
+    url(http://themes.googleusercontent.com/static/fonts/vt323/v5/SSPdB6sO_7a9ZMMiCroIGqCWcynf_cDxXwCLxiixG1c.woff)
+      format("woff");
 }
-*, *:before, *:after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-html, body {
-    height:100%;
+html,
+body {
+  height: 100%;
 }
 body {
-    background: #222;
-    overflow: hidden;
+  background: #222;
+  overflow: hidden;
 }
 body.loading {
-    background: #222 url(/static/images/ajax-loader.gif) no-repeat center center;
+  background: #222 url(/static/images/ajax-loader.gif) no-repeat center center;
 }
 #bg_tile_wrap,
-#bg_tile_wrap {z-index:5;}
+#bg_tile_wrap {
+  z-index: 5;
+}
 #bg_tile_full {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
 }
 #chatbox {
-    position: absolute;
-    bottom: 130px;
-    left: 0;
-    max-width: 50%;
-    padding: 0.5em;
-    z-index: 6;
-    font-size: 2em;
-    letter-spacing: 2px;
+  position: absolute;
+  bottom: 130px;
+  left: 0;
+  max-width: 50%;
+  padding: 0.5em;
+  z-index: 6;
+  font-size: 2em;
+  letter-spacing: 2px;
 }
-#chatbox, #talkbar {
-    font-family: 'VT323', Courier, Courier New, monospace;
-    font-size: 25px;
+#chatbox,
+#talkbar {
+  font-family:
+    "VT323",
+    Courier,
+    Courier New,
+    monospace;
+  font-size: 25px;
 }
 #chatbox p {
-    opacity: 0;
-    text-shadow: 1px 1px #fff;
+  opacity: 0;
+  text-shadow: 1px 1px #fff;
 }
-#chatbox p + p {opacity: 0.4;}
-#chatbox p + p + p {opacity: 0.8;}
-#chatbox p + p + p + p {opacity: 1;}
-#chatbox p span {color: #a00;}
-#chatbox p span.nametag {color: blue;}
-#chatbox p small {color: #888;}
+#chatbox p + p {
+  opacity: 0.4;
+}
+#chatbox p + p + p {
+  opacity: 0.8;
+}
+#chatbox p + p + p + p {
+  opacity: 1;
+}
+#chatbox p span {
+  color: #a00;
+}
+#chatbox p span.nametag {
+  color: blue;
+}
+#chatbox p small {
+  color: #888;
+}
 #talkbar {
-    background: #000;
-    border-radius: 5px;
-    bottom: 100px;
-    color: #fff;
-    display: none;
-    font-size: 20px;
-    left: 0.5em;
-    letter-spacing: 0.2ex;
-    padding: 0.1em 0.25em;
-    position: absolute;
-    z-index: 1000;
+  background: #000;
+  border-radius: 5px;
+  bottom: 100px;
+  color: #fff;
+  display: none;
+  font-size: 20px;
+  left: 0.5em;
+  letter-spacing: 0.2ex;
+  padding: 0.1em 0.25em;
+  position: absolute;
+  z-index: 1000;
 }
 
 #talkbar.empty {
-    color: #aaa;
+  color: #aaa;
 }
 #inventory {
-    z-index: 8;
-    position: fixed;
-    left: 0;
-    bottom: 0;
+  z-index: 8;
+  position: fixed;
+  left: 0;
+  bottom: 0;
 }
 canvas {
-    image-rendering: optimizeSpeed;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: -o-crisp-edges;
-    image-rendering: optimize-contrast;
-    -ms-interpolation-mode: nearest-neighbor;
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -o-crisp-edges;
+  image-rendering: optimize-contrast;
+  -ms-interpolation-mode: nearest-neighbor;
 }

@@ -100,7 +100,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
     y: number,
     h: number,
     w: number,
-    code: string | null
+    code: string | null,
   ) {
     if (!code) return;
     let sy = 0;
@@ -130,7 +130,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
         34 + x - modifierWidth.width - 19,
         51,
         modifierWidth.width + 9,
-        19
+        19,
       );
       ctx.fillStyle = "#fff";
       ctx.fillText(modifier, 34 + x - modifierWidth.width - 15, 66);
@@ -162,7 +162,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
             10 + 76 - countWidth.width - 25,
             9,
             countWidth.width + 10,
-            19
+            19,
           );
           ctx.fillStyle = "#fff";
           ctx.fillText(String(count), 10 + 76 - countWidth.width - 20, 24);
@@ -181,7 +181,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
         26 + i * 64,
         14,
         16,
-        64
+        64,
       );
       ctx.drawImage(
         inventoryImg,
@@ -192,7 +192,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
         74 + i * 64,
         14,
         16,
-        64
+        64,
       );
       if (slots[i]) {
         draw_item(34 + i * 64, 22, 48, 48, slots[i]);
@@ -202,13 +202,13 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
             34 + i * 64 + 64 - countWidth.width - 20,
             19,
             countWidth.width + 10,
-            19
+            19,
           );
           ctx.fillStyle = "#fff";
           ctx.fillText(
             String(count),
             34 + i * 64 + 64 - countWidth.width - 15,
-            34
+            34,
           );
         }
       }
@@ -232,7 +232,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
       84 + health_x,
       get_y(),
       13,
-      13
+      13,
     );
     health_x += 14;
     health -= 14;
@@ -246,7 +246,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
     84 + health_x,
     get_y(),
     health,
-    13
+    13,
   );
 }
 

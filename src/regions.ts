@@ -11,7 +11,7 @@ export type RegionData = [
   world: WorldType,
   regionType: RegionType,
   x: number,
-  y: number
+  y: number,
 ];
 
 const DEFAULT_REGION_DATA: RegionData = [
@@ -64,7 +64,7 @@ export class Region {
     parent: string | WorldType,
     type: RegionType,
     x: number,
-    y: number
+    y: number,
   ) {
     this.parentID = parent;
     this.type = type;
@@ -179,7 +179,7 @@ export class Region {
     if (this.isTown()) {
       const soldierCount = rng.range(
         MIN_SOLDIERS_PER_TOWN,
-        MAX_SOLDIERS_PER_TOWN
+        MAX_SOLDIERS_PER_TOWN,
       );
       for (let i = 0; i < soldierCount; i++) {
         placeEntity(EntityType.soldier);
@@ -210,7 +210,7 @@ export class Region {
         this.placeChestShop(
           i % this.terrain.height,
           i / this.terrain.width,
-          rng
+          rng,
         );
       } else if (tile === 59) {
         this.placePotShop(i % this.terrain.height, i / this.terrain.width, rng);
@@ -222,7 +222,7 @@ export class Region {
     const entCount = rng.range(0, MAX_ENTITIES_PER_DUNGEON);
     for (let i = 0; i < entCount; i++) {
       placeEntity(
-        i % DEATH_WAKER_ODDS === 0 ? EntityType.deathWaker : EntityType.zombie
+        i % DEATH_WAKER_ODDS === 0 ? EntityType.deathWaker : EntityType.zombie,
       );
     }
   }
@@ -261,7 +261,7 @@ export class Region {
       pot.addItem(
         `wsw.${
           WEAPON_RAW_PREFIXES[rng.range(0, WEAPON_RAW_PREFIXES.length - 1)]
-        }.${rng.range(0, SHOP_CHEST_SWORD_MAX_LEV)}`
+        }.${rng.range(0, SHOP_CHEST_SWORD_MAX_LEV)}`,
       );
     } else {
       if (rng.range(0, 10) < ODDS_SHOP_CHEST_POTION) {
@@ -281,8 +281,8 @@ export class Region {
       new Event(
         EventType.REGION_ENTRANCE,
         `${entity}\n${entity.x} ${entity.y}`,
-        entity
-      )
+        entity,
+      ),
     );
 
     for (let exEnt of this.entities) {
@@ -291,7 +291,7 @@ export class Region {
       }
 
       entity.onEvent(
-        new Event(EventType.REGION_ENTRANCE, `${exEnt}\n${exEnt.x} ${exEnt.y}`)
+        new Event(EventType.REGION_ENTRANCE, `${exEnt}\n${exEnt.x} ${exEnt.y}`),
       );
     }
 
@@ -333,7 +333,7 @@ export class Region {
       // rd: this.terrain.roundingOut && [...this.terrain.roundingOut],
       tileset: getTileset(this.getRoot(), this.type),
       portals: Array.from(this.terrain.portals.values()).map((portal) =>
-        portal.serialize()
+        portal.serialize(),
       ),
       can_slide: true,
       h: this.terrain.height,
@@ -352,7 +352,7 @@ export function getRegion(
   parent: string | WorldType,
   type: RegionType,
   x: number,
-  y: number
+  y: number,
 ) {
   const regionID = getRegionID(parent, type, x, y);
 

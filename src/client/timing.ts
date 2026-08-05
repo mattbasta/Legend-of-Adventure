@@ -22,7 +22,7 @@ function updateLocation() {
       ":" +
       avatar.direction[0] +
       ":" +
-      avatar.direction[1]
+      avatar.direction[1],
   );
 }
 
@@ -158,7 +158,7 @@ function tick() {
       avatar.direction[1] = Math.round(_y);
       const spriteDirection = entities.getSpriteDirection(
         avatar.direction[0],
-        avatar.direction[1]
+        avatar.direction[1],
       );
       avatar.position = spriteDirection[1].position;
       avatar.cycle_position = 0;
@@ -178,7 +178,7 @@ function tick() {
     // direction it is facing.
     avatar.position = entities.getSpriteDirection(
       avatar.direction[0],
-      avatar.direction[1]
+      avatar.direction[1],
     )[0].position;
     // Reset the avatar to a downward facing rest position.
     // avatar.direction[0] = 0;

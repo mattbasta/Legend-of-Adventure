@@ -32,7 +32,7 @@ comm.messages.on("snd", function (body) {
   const sY = parseFloat(data[2]);
   const following = entities.getFollowing();
   const dist = Math.sqrt(
-    Math.pow(sX - following.x, 2) + Math.pow(sY - following.y, 2)
+    Math.pow(sX - following.x, 2) + Math.pow(sY - following.y, 2),
   );
   playSound(data[0], dist);
 });

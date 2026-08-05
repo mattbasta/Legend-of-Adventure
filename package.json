@@ -34,6 +34,7 @@
     "css-loader": "^6.7.1",
     "jest": "^28.0.0",
     "nodemon": "^2.0.15",
+    "prettier": "^3.9.6",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.2.8",
     "typescript": "5.9",

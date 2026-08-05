@@ -2,7 +2,7 @@ import * as comm from "./comm";
 import settings from "./settings";
 
 const outputCanvas = document.getElementById(
-  "output_full"
+  "output_full",
 ) as HTMLCanvasElement;
 
 // Effects
