@@ -1,4 +1,4 @@
-import * as pairing from "./pairing";
+import * as pairing from "./pairing.ts";
 
 export const FIELD = {
   // Dark dirt to dirt

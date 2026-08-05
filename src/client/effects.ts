@@ -1,5 +1,5 @@
-import * as comm from "./comm";
-import settings from "./settings";
+import * as comm from "./comm.ts";
+import settings from "./settings.ts";
 
 const outputCanvas = document.getElementById(
   "output_full",

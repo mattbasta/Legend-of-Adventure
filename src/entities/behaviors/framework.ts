@@ -1,4 +1,4 @@
-import { Entity } from "../../types";
+import type { Entity } from "../../types.ts";
 
 type Handler = (sup: () => Promise<void>, ...args: any) => void | Promise<void>;
 
@@ -59,7 +59,8 @@ abstract class EntityBehavior {
     return !!this.handlers[handlerName];
   }
   private async invokeHandler(handlerName: string, args: Array<any>) {
-    const handler = this.handlers[handlerName];
+    // Call sites are guarded by canInvokeHandler/enqueueSelf.
+    const handler = this.handlers[handlerName]!;
     const sup = async () => {
       for (const mixin of this.mixinInstances) {
         if (mixin.canInvokeHandler(handlerName)) {

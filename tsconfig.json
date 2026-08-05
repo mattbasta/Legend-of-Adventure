@@ -1,13 +1,11 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/",
-    "sourceMap": true,
-    "noImplicitAny": true,
-    "module": "commonjs",
-    "target": "es2020",
-    "jsx": "react",
-    "allowJs": true,
-    "moduleResolution": "node",
-    "strict": true
-  }
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "lib": ["es2023"]
+  },
+  "include": ["index.ts", "src/**/*", "test/**/*", "scripts/**/*"],
+  "exclude": ["src/client"]
 }

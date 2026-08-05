@@ -1,15 +1,9 @@
-import * as comm from "./comm";
-import * as entities from "./entities";
+import buzz from "buzz";
 
-const buzz = require("buzz"); // ts-ignore
+import * as comm from "./comm.ts";
+import * as entities from "./entities.ts";
 
-type BuzzSound = {
-  getStateCode(): number;
-  setVolume(volume: number): BuzzSound;
-  play(): BuzzSound;
-  fadeOut(duration: number, cb?: () => void): BuzzSound;
-  fadeTo(volume: number, duration: number): BuzzSound;
-};
+type BuzzSound = InstanceType<typeof buzz.sound>;
 
 const sounds: Record<string, BuzzSound> = {};
 const loops: Record<string, BuzzSound> = {};
@@ -28,13 +22,13 @@ export function loadSound(name: string, url: string) {
 // Play sound
 comm.messages.on("snd", function (body) {
   const data = body.split(":");
-  const sX = parseFloat(data[1]);
-  const sY = parseFloat(data[2]);
+  const sX = parseFloat(data[1]!);
+  const sY = parseFloat(data[2]!);
   const following = entities.getFollowing();
   const dist = Math.sqrt(
     Math.pow(sX - following.x, 2) + Math.pow(sY - following.y, 2),
   );
-  playSound(data[0], dist);
+  playSound(data[0]!, dist);
 });
 
 loadSound("bleat", "static/sounds/bleat");
@@ -64,7 +58,7 @@ export function loadLoop(name: string, url: string) {
 export function playSound(name: string, distance: number) {
   if (!(name in sounds)) return;
   if (distance > 25) return;
-  var sound = sounds[name];
+  var sound = sounds[name]!;
   var sc = sound.getStateCode();
   if (sc >= 2) {
     distance /= 2.5;
@@ -80,15 +74,15 @@ export function playLoop(name: string) {
   if (playingLoop == name) return;
 
   if (!playingLoop) {
-    loops[name].play().setVolume(0).fadeTo(10, 1000);
+    loops[name]!.play().setVolume(0).fadeTo(10, 1000);
     playingLoop = name;
     return;
   }
 
-  loops[playingLoop].fadeOut(2000, function () {
+  loops[playingLoop]!.fadeOut(2000, function () {
     playingLoop = name;
     // FIXME: Bad things might happen if playLoop is called again
     // within four seconds of it being called once.
-    loops[name].play().setVolume(0).fadeTo(20, 2000);
+    loops[name]!.play().setVolume(0).fadeTo(20, 2000);
   });
 }

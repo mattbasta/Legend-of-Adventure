@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import * as assert from "assert";
 
-import { Hitmap } from "../src/terrain";
+import { Hitmap } from "../src/terrain.ts";
 
 describe("Hitmap", () => {
   it("sets and gets properly", () => {

@@ -1,9 +1,9 @@
-import * as canvases from "./canvases";
-import * as comm from "./comm";
-import * as entities from "./entities";
-import EventTarget from "./events";
-import { GameImages } from "./images";
-import settings from "./settings";
+import * as canvases from "./canvases.ts";
+import * as comm from "./comm.ts";
+import * as entities from "./entities.ts";
+import EventTarget from "./events.ts";
+import type { GameImages } from "./images.ts";
+import settings from "./settings.ts";
 
 let offsetX = 0;
 let offsetY = 0;

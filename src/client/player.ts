@@ -1,5 +1,9 @@
-import * as comm from "./comm";
-import * as sound from "./sound";
+import * as comm from "./comm.ts";
+// Circular with playerStatsOverlay (it draws our health); safe because both
+// modules only dereference each other inside event handlers, never at
+// module-evaluation time.
+import * as playerStatsOverlay from "./playerStatsOverlay.ts";
+import * as sound from "./sound.ts";
 
 let health = 100;
 let lowHealth: ReturnType<typeof setInterval> | null = null;
@@ -15,13 +19,13 @@ comm.messages.on("hea", function (body) {
 
   if (healthIsLow()) {
     if (!lowHealth)
-      lowHealth = setInterval(require("./playerStatsOverlay").redraw, 100);
+      lowHealth = setInterval(() => playerStatsOverlay.redraw(), 100);
   } else {
-    clearInterval(lowHealth!);
+    if (lowHealth) clearInterval(lowHealth);
     lowHealth = null;
   }
 
-  require("./playerStatsOverlay").redraw();
+  playerStatsOverlay.redraw();
 });
 
 export const getHealth = () => health;

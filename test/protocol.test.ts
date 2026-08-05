@@ -1,10 +1,10 @@
 import { describe, it } from "node:test";
 import * as assert from "assert";
 
-import { Event, EventType } from "../src/events";
-import { parseClientMessage } from "../src/protocol";
-import { getRegionData } from "../src/regions";
-import { Entity } from "../src/types";
+import { Event, EventType } from "../src/events.ts";
+import { parseClientMessage } from "../src/protocol.ts";
+import { getRegionData } from "../src/regions.ts";
+import type { Entity } from "../src/types.ts";
 
 describe("Event framing", () => {
   it("frames events as <type>evt:<origin eid>\\n<body>", () => {

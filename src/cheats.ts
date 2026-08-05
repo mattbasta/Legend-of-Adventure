@@ -1,5 +1,5 @@
-import { Event, EventType } from "./events";
-import { Entity } from "./types";
+import { Event, EventType } from "./events.ts";
+import type { Entity } from "./types.ts";
 
 function sayToPlayer(message: string, player: Entity) {
   player.onEvent(new Event(EventType.CHAT, `0 0\n${message}`, null));

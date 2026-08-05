@@ -1,7 +1,7 @@
-import * as rng from "../rng";
-import { Terrain } from "../terrain";
-import * as featureTiles from "./featureTiles";
-import * as pairing from "./pairing";
+import * as rng from "../rng.ts";
+import { Terrain } from "../terrain.ts";
+import * as featureTiles from "./featureTiles.ts";
+import * as pairing from "./pairing.ts";
 
 const roadWidth = 4;
 const roadMaterial = 81;
@@ -35,7 +35,7 @@ const borderConds: Array<
   (x, y, bounds) => x > bounds[1],
 ];
 
-const directionDefs = [
+const directionDefs: Array<[number, number]> = [
   [0, 0],
   [-1, 0],
   [-1, -1],
@@ -53,8 +53,8 @@ export function generateTown(terrain: Terrain) {
   const r = new rng.MT(pairing.getCoordInt(terrain.x, terrain.y));
 
   const centerIndex = r.range(0, townCenters.length);
-  const center = townCenters[centerIndex];
-  const centerEntity = buildingEntities[center];
+  const center = townCenters[centerIndex]!;
+  const centerEntity = buildingEntities[center]!;
 
   const midpointX = (terrain.width / 2) | 0;
   const midpointY = (terrain.height / 2) | 0;
@@ -124,17 +124,17 @@ export function generateTown(terrain: Terrain) {
       }
 
       let widestBuilding = 0;
-      while (!borderConds[direction](x, y, oldBoundaries)) {
+      while (!borderConds[direction]!(x, y, oldBoundaries)) {
         const buildingIndex = r.range(0, availableBuildings.length);
-        const building = availableBuildings[buildingIndex];
-        const buildingEntity = buildingEntities[building];
+        const building = availableBuildings[buildingIndex]!;
+        const buildingEntity = buildingEntities[building]!;
 
         if (!repeatableBuildings.has(building)) {
           delete buildingEntities[building];
           availableBuildings.splice(buildingIndex, 1);
         }
 
-        const [dirX, dirY] = directionDefs[direction];
+        const [dirX, dirY] = directionDefs[direction]!;
         const bOffsetX = dirX * buildingEntity.width;
         const bOffsetY = dirY * buildingEntity.height;
 
@@ -291,16 +291,16 @@ function smoothRoads({ tiles, width, height }: Terrain) {
   const orig = tiles.slice(0);
   for (let i = 0; i < height; i++) {
     for (let j = 0; j < width; j++) {
-      const cell = tiles[i * width + j];
+      const cell = tiles[i * width + j]!;
       if (!isRoad(cell)) {
         continue;
       }
 
       const major = pairing.pairTileset(
-        isRoad(orig[(i - 1) * width + j]),
-        isRoad(orig[i * width + j + 1]),
-        isRoad(orig[(i + 1) * width + j]),
-        isRoad(orig[i * width + j - 1]),
+        isRoad(orig[(i - 1) * width + j]!),
+        isRoad(orig[i * width + j + 1]!),
+        isRoad(orig[(i + 1) * width + j]!),
+        isRoad(orig[i * width + j - 1]!),
       );
       const majorTile = roadMajorTiles[major];
       if (!majorTile) {
@@ -313,10 +313,10 @@ function smoothRoads({ tiles, width, height }: Terrain) {
         continue;
       }
 
-      const minor0 = isRoad(orig[(i - 1) * width + j - 1]);
-      const minor1 = isRoad(orig[(i - 1) * width + j + 1]);
-      const minor2 = isRoad(orig[(i + 1) * width + j - 1]);
-      const minor3 = isRoad(orig[(i + 1) * width + j + 1]);
+      const minor0 = isRoad(orig[(i - 1) * width + j - 1]!);
+      const minor1 = isRoad(orig[(i - 1) * width + j + 1]!);
+      const minor2 = isRoad(orig[(i + 1) * width + j - 1]!);
+      const minor3 = isRoad(orig[(i + 1) * width + j + 1]!);
 
       if (minor0 && minor1 && minor2 && minor3) {
         continue;

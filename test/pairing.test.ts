@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import * as assert from "assert";
 
-import { pairTileset, unpairTileset } from "../src/terrainGen/pairing";
+import { pairTileset, unpairTileset } from "../src/terrainGen/pairing.ts";
 
 describe("pairing", () => {
   it("pairTileset round-trips and never collides", () => {

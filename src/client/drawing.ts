@@ -1,10 +1,10 @@
-import * as canvases from "./canvases";
-import * as comm from "./comm";
-import * as entities from "./entities";
-import * as images from "./images";
-import * as level from "./level";
-import * as particles from "./particles";
-import settings from "./settings";
+import * as canvases from "./canvases.ts";
+import * as comm from "./comm.ts";
+import * as entities from "./entities.ts";
+import * as images from "./images.ts";
+import * as level from "./level.ts";
+import * as particles from "./particles.ts";
+import settings from "./settings.ts";
 
 var drawnTileSize = settings.tilesize;
 var terrainChunkSize = settings.terrainChunkSize;
@@ -29,13 +29,13 @@ comm.messages.on("par", function (body) {
     }
     var data = particle.split(" ");
     var parInst = new particles.RawParticle(
-      parseFloat(data[4]),
-      parseFloat(data[3]),
-      data[2], // Color is not an integer
+      parseFloat(data[4]!),
+      parseFloat(data[3]!),
+      data[2]!, // Color is not an integer
     );
     parInst.setPosition(
-      parseFloat(data[0]) * drawnTileSize,
-      parseFloat(data[1]) * drawnTileSize,
+      parseFloat(data[0]!) * drawnTileSize,
+      parseFloat(data[1]!) * drawnTileSize,
     );
     // if (data[5]) {
     //   parInst.init(data[5]);
@@ -55,11 +55,11 @@ comm.messages.on("pma", function (body) {
       return;
     }
     const data = particle.split(" ");
-    for (let i = 0; i < parseFloat(data[3]); i++) {
-      const parInst = particles.macro(data[2]);
+    for (let i = 0; i < parseFloat(data[3]!); i++) {
+      const parInst = particles.macro(data[2]!);
       parInst.setPosition(
-        parseFloat(data[0]) * drawnTileSize,
-        parseFloat(data[1]) * drawnTileSize,
+        parseFloat(data[0]!) * drawnTileSize,
+        parseFloat(data[1]!) * drawnTileSize,
       );
       if (data[4]) {
         entities.addParticle(data[4], parInst);
@@ -89,7 +89,7 @@ function draw() {
     finishingDraw = false;
   }
 
-  if (!terrainBuffers.length || !terrainBuffers[0].length) return;
+  if (!terrainBuffers.length || !terrainBuffers[0]!.length) return;
 
   var output = canvases.getContext("output");
 
@@ -107,7 +107,7 @@ function draw() {
     }
 
     // Draw the terrain
-    scale = settings.scales.terrain;
+    scale = settings.scales["terrain"];
     var topmostTB = Math.floor(state[1] / drawnTileSize / terrainChunkSize);
     var leftmostTB = Math.floor(state[0] / drawnTileSize / terrainChunkSize);
     var bottommostTB = Math.ceil(
@@ -119,7 +119,7 @@ function draw() {
 
     topmostTB = Math.max(Math.min(topmostTB, terrainBuffers.length - 1), 0);
     leftmostTB = Math.max(
-      Math.min(leftmostTB, terrainBuffers[0].length - 1),
+      Math.min(leftmostTB, terrainBuffers[0]!.length - 1),
       0,
     );
     bottommostTB = Math.max(
@@ -127,18 +127,19 @@ function draw() {
       0,
     );
     rightmostTB = Math.max(
-      Math.min(rightmostTB, terrainBuffers[0].length - 1),
+      Math.min(rightmostTB, terrainBuffers[0]!.length - 1),
       0,
     );
 
     for (i = topmostTB; i <= bottommostTB; i++) {
       for (j = leftmostTB; j <= rightmostTB; j++) {
+        const terrainBuffer = terrainBuffers[i]![j]!;
         output.drawImage(
-          terrainBuffers[i][j],
+          terrainBuffer,
           0,
           0,
-          terrainBuffers[i][j].width,
-          terrainBuffers[i][j].height,
+          terrainBuffer.width,
+          terrainBuffer.height,
           j * drawnTileSize * terrainChunkSize - state[0],
           i * drawnTileSize * terrainChunkSize - state[1],
           drawnTileSize * terrainChunkSize,
@@ -152,7 +153,7 @@ function draw() {
 
     // Draw the region particles
     for (i = 0; i < activeParticles.length; i++) {
-      activeParticles[i].draw(output, -1 * state[0], -1 * state[1]);
+      activeParticles[i]!.draw(output, -1 * state[0], -1 * state[1]);
     }
 
     if (settings.effect === "drained") {
@@ -173,7 +174,7 @@ function draw() {
 
   // Update each region particle
   for (i = activeParticles.length - 1; i >= 0; i--) {
-    if (activeParticles[i].tick()) {
+    if (activeParticles[i]!.tick()) {
       activeParticles.splice(i, 1);
     }
   }
@@ -195,7 +196,7 @@ async function redrawTerrain() {
   const terrain = level.getTerrain();
   const hitmap = level.getHitmap();
   const terrainH = terrain.length;
-  const terrainW = terrain[0].length;
+  const terrainW = terrain[0]!.length;
 
   for (let y = 0; y < Math.ceil(terrainH / terrainChunkSize); y++) {
     const buf = new Array(Math.ceil(terrainW / terrainChunkSize));
@@ -207,14 +208,10 @@ async function redrawTerrain() {
       const bufferCtx = canvases.prepareContext(buffer.getContext("2d")!);
       for (let i = 0; i < terrainChunkSize; i++) {
         if (y * terrainChunkSize + i >= terrain.length) continue;
+        const terrainRow = terrain[y * terrainChunkSize + i]!;
         for (let j = 0; j < terrainChunkSize; j++) {
-          if (
-            x * terrainChunkSize + j >=
-            terrain[y * terrainChunkSize + i].length
-          )
-            continue;
-          const cell =
-            terrain[y * terrainChunkSize + i][x * terrainChunkSize + j];
+          if (x * terrainChunkSize + j >= terrainRow.length) continue;
+          const cell = terrainRow[x * terrainChunkSize + j]!;
           bufferCtx.drawImage(
             tileset,
             (cell % tilesPerRow) * tileSize,
@@ -227,7 +224,7 @@ async function redrawTerrain() {
             tileSize,
           );
           if (settings.show_hitmap) {
-            if (hitmap[y * terrainChunkSize + i][x * terrainChunkSize + j]) {
+            if (hitmap[y * terrainChunkSize + i]![x * terrainChunkSize + j]) {
               bufferCtx.strokeStyle = "red";
               bufferCtx.beginPath();
               bufferCtx.moveTo(j * tileSize, i * tileSize);

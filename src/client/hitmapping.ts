@@ -1,5 +1,5 @@
-import * as level from "./level";
-import settings from "./settings";
+import * as level from "./level.ts";
+import settings from "./settings.ts";
 
 const HITMAP_BUFFER = 1 / settings.tilesize;
 
@@ -24,13 +24,15 @@ export function updateAvatarX(
   let yMax = hitmap.length;
 
   for (let i = y; i >= 0; i--) {
-    if (hitmap[i][xLeft] || hitmap[i][xRight]) {
+    const row = hitmap[i]!;
+    if (row[xLeft] || row[xRight]) {
       yMin = i + 1;
       break;
     }
   }
   for (let i = y + 1, maplen = hitmap.length; i < maplen; i++) {
-    if (hitmap[i][xLeft] || hitmap[i][xRight]) {
+    const row = hitmap[i]!;
+    if (row[xLeft] || row[xRight]) {
       yMax = i;
       break;
     }
@@ -49,17 +51,20 @@ export function updateAvatarY(
 
   const x = (avatar.x + HITMAP_BUFFER) | 0;
 
+  const yBottomRow = hitmap[yBottom]!;
+  const yTopRow = hitmap[yTop]!;
+
   let xMin = 0;
-  let xMax = hitmap[yBottom].length;
+  let xMax = yBottomRow.length;
 
   for (let i = x - 1; i >= 0; i--) {
-    if (hitmap[yBottom][i] || hitmap[yTop][i]) {
+    if (yBottomRow[i] || yTopRow[i]) {
       xMin = i + 1;
       break;
     }
   }
-  for (let i = x + 1, rowlen = hitmap[yBottom].length; i < rowlen; i++) {
-    if (hitmap[yBottom][i] || hitmap[yTop][i]) {
+  for (let i = x + 1, rowlen = yBottomRow.length; i < rowlen; i++) {
+    if (yBottomRow[i] || yTopRow[i]) {
       xMax = i;
       break;
     }

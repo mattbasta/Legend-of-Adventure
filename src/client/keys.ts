@@ -1,4 +1,4 @@
-import EventTarget from "./events";
+import EventTarget from "./events.ts";
 
 const keyUpHandler = new EventTarget();
 const keyDownHandler = new EventTarget();

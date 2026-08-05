@@ -1,16 +1,16 @@
-import { Region } from "./regions";
-import * as rng from "./rng";
-import { RegionType, WorldType } from "./terrainGen/constants";
+import { Region } from "./regions.ts";
+import * as rng from "./rng.ts";
+import { RegionType, WorldType } from "./terrainGen/constants.ts";
 
-import * as pairing from "./terrainGen/pairing";
-import * as perlin from "./terrainGen/perlin";
-import * as rounding from "./terrainGen/rounding";
-import { Portal } from "./terrainGen/portal";
-import { FIELD } from "./terrainGen/tilesets";
-import { generateBuildings } from "./terrainGen/buildings";
-import { generateTown } from "./terrainGen/towns";
-import { getFeatureTiles } from "./terrainGen/featureTiles";
-import { applyDungeon } from "./terrainGen/dungeons";
+import * as pairing from "./terrainGen/pairing.ts";
+import * as perlin from "./terrainGen/perlin.ts";
+import * as rounding from "./terrainGen/rounding.ts";
+import { Portal } from "./terrainGen/portal.ts";
+import { FIELD } from "./terrainGen/tilesets.ts";
+import { generateBuildings } from "./terrainGen/buildings.ts";
+import { generateTown } from "./terrainGen/towns.ts";
+import { getFeatureTiles } from "./terrainGen/featureTiles.ts";
+import { applyDungeon } from "./terrainGen/dungeons.ts";
 
 export const DUNGEON_MIN_SIZE = 3;
 export const DUNGEON_MAX_SIZE = 7;
@@ -58,14 +58,14 @@ export class Hitmap {
     const linearIndex = y * this.width + x;
     const index = (linearIndex / 8) | 0;
     const offset = 1 << ((linearIndex % 8) | 0);
-    this.body[index] = this.body[index] | offset;
+    this.body[index] = this.body[index]! | offset;
   }
 
   unset(x: number, y: number) {
     const linearIndex = y * this.width + x;
     const index = (linearIndex / 8) | 0;
     const offset = 1 << ((linearIndex % 8) | 0);
-    this.body[index] = this.body[index] & ~offset;
+    this.body[index] = this.body[index]! & ~offset;
   }
 
   fillArea(x: number, y: number, width: number, height: number) {
@@ -97,7 +97,9 @@ export class Hitmap {
 
   get(x: number, y: number): boolean {
     const linearIndex = y * this.width + x;
-    return Boolean(this.body[(linearIndex / 8) | 0] & (1 << (linearIndex % 8)));
+    return Boolean(
+      this.body[(linearIndex / 8) | 0]! & (1 << (linearIndex % 8)),
+    );
   }
 
   fits(x: number, y: number, w: number, h: number) {

@@ -1,7 +1,7 @@
-import { Event, EventType } from "../events";
-import { getRegion } from "../regions";
-import { RegionType, WorldType } from "../terrainGen/constants";
-import { Entity } from "../types";
+import { Event, EventType } from "../events.ts";
+import { getRegion } from "../regions.ts";
+import { RegionType, WorldType } from "../terrainGen/constants.ts";
+import type { Entity } from "../types.ts";
 
 export function sendEntityToLocation(
   entity: Entity,

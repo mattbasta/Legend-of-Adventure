@@ -46,7 +46,7 @@ class ParticleBase {
       this.velY *= -1;
     }
     if (this.movement) {
-      movements[this.movement](this);
+      movements[this.movement]!(this);
     }
     return !--this.ticksTillDeath;
   }

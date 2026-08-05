@@ -1,11 +1,13 @@
-export enum RegionType {
-  Field = "field",
-  Dungeon = "dungeon",
-  Shop = "shop",
-  House = "house",
-}
+export const RegionType = {
+  Field: "field",
+  Dungeon: "dungeon",
+  Shop: "shop",
+  House: "house",
+} as const;
+export type RegionType = (typeof RegionType)[keyof typeof RegionType];
 
-export enum WorldType {
-  Overworld = "overworld",
-  Ether = "ether",
-}
+export const WorldType = {
+  Overworld: "overworld",
+  Ether: "ether",
+} as const;
+export type WorldType = (typeof WorldType)[keyof typeof WorldType];

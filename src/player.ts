@@ -1,17 +1,15 @@
-import * as websocket from "ws";
+import type * as websocket from "ws";
 
-import { KillableEntity } from "./entities/BaseEntity";
-import { sendEntityToLocation } from "./entities/moveEntity";
-import { Event, EventType } from "./events";
-import { Inventory } from "./inventory";
-import { parseClientMessage } from "./protocol";
-import { getRegionData } from "./regions";
-import { RegionType, WorldType } from "./terrainGen/constants";
-import { EntityType } from "./types";
-
-const cheats = require("./cheats");
-const entity = require("./entity");
-const regions = require("./regions");
+import { handleCheat } from "./cheats.ts";
+import { KillableEntity } from "./entities/BaseEntity.ts";
+import { ATTACK_WIGGLE_ROOM } from "./entities/constants.ts";
+import { sendEntityToLocation } from "./entities/moveEntity.ts";
+import { Event, EventType } from "./events.ts";
+import { Inventory } from "./inventory.ts";
+import { parseClientMessage } from "./protocol.ts";
+import { getRegion, getRegionData } from "./regions.ts";
+import { RegionType, WorldType } from "./terrainGen/constants.ts";
+import { EntityType } from "./types.ts";
 
 export const MAX_HEALTH = 100;
 export const PLAYER_INVENTORY_SIZE = 5;
@@ -26,7 +24,7 @@ export class Player extends KillableEntity {
   effectTTL: number = 0;
   movementEffect: string | null = null;
 
-  godMode: boolean = false;
+  override godMode: boolean = false;
 
   health = MAX_HEALTH;
   maxHealth = MAX_HEALTH;
@@ -34,9 +32,10 @@ export class Player extends KillableEntity {
   inventory: Inventory;
 
   constructor(connection: websocket.WebSocket) {
+    // The spawn region is always a valid ID, so getRegion cannot return null.
     super(
       EntityType.player,
-      regions.getRegion(WorldType.Overworld, RegionType.Field, 0, 0),
+      getRegion(WorldType.Overworld, RegionType.Field, 0, 0)!,
     );
 
     this.lastUpdate = Date.now();
@@ -69,7 +68,7 @@ export class Player extends KillableEntity {
         return;
 
       case "cha": // chat
-        if (cheats.handleCheat(body, this)) {
+        if (handleCheat(body, this)) {
           return;
         }
         this.region.broadcast(
@@ -83,8 +82,8 @@ export class Player extends KillableEntity {
           return;
         }
         // TODO: do more cheat testing here
-        const newX = parseFloat(posData[0]);
-        const newY = parseFloat(posData[1]);
+        const newX = parseFloat(posData[0]!);
+        const newY = parseFloat(posData[1]!);
         if (isNaN(newX) || isNaN(newY)) {
           return;
         }
@@ -99,8 +98,8 @@ export class Player extends KillableEntity {
           return;
         }
 
-        const velX = parseFloat(posData[2]);
-        const velY = parseFloat(posData[3]);
+        const velX = parseFloat(posData[2]!);
+        const velY = parseFloat(posData[3]!);
         if (isNaN(velX) || isNaN(velY)) {
           return;
         }
@@ -109,8 +108,8 @@ export class Player extends KillableEntity {
           return;
         }
 
-        const dirX = parseFloat(posData[4]);
-        const dirY = parseFloat(posData[5]);
+        const dirX = parseFloat(posData[4]!);
+        const dirY = parseFloat(posData[5]!);
         if (isNaN(dirX) || isNaN(dirY)) {
           return;
         }
@@ -157,8 +156,8 @@ export class Player extends KillableEntity {
 
       case "lev":
         const pos = body.split(":");
-        const x = parseFloat(pos[0]);
-        const y = parseFloat(pos[1]);
+        const x = parseFloat(pos[0]!);
+        const y = parseFloat(pos[1]!);
         const iXPos = this.region.x - x;
         const iYPos = this.region.y - y;
         if (
@@ -200,12 +199,12 @@ export class Player extends KillableEntity {
           .slice(0, 2)
           .map((x) => parseFloat(x));
 
-        const AWR = entity.ATTACK_WIGGLE_ROOM;
+        const AWR = ATTACK_WIGGLE_ROOM;
         if (
-          x < this.x - AWR ||
-          x > this.x + this.width + AWR ||
-          y < this.y - this.height - AWR ||
-          y > this.y + AWR
+          x! < this.x - AWR ||
+          x! > this.x + this.width + AWR ||
+          y! < this.y - this.height - AWR ||
+          y! > this.y + AWR
         ) {
           return;
         }
@@ -240,7 +239,7 @@ export class Player extends KillableEntity {
     this.ws.send(data);
   }
 
-  tick() {
+  override tick() {
     super.tick();
 
     if (!this.region) {
@@ -310,7 +309,7 @@ export class Player extends KillableEntity {
     }
   }
 
-  setEffect = (effect: string, ttl: number) => {
+  override setEffect = (effect: string, ttl: number) => {
     this.effectTTL = ttl;
     this.onEvent(new Event(EventType.EFFECT, effect, null));
   };
@@ -336,11 +335,11 @@ export class Player extends KillableEntity {
     this.send(`lev${this.region.toString()}`);
   }
 
-  incrementHealth(amount: number) {
+  override incrementHealth(amount: number) {
     super.incrementHealth(amount);
     this.send(`hea${this.health}`);
   }
-  death() {
+  override death() {
     this.region.broadcast(
       new Event(
         EventType.PARTICLE_MACRO,
@@ -358,14 +357,14 @@ export class Player extends KillableEntity {
     this.send("dea");
   }
 
-  updateInventory() {
+  override updateInventory() {
     const inv = this.inventory;
     this.send(
       `inv${inv.slots.map((x, i) => `${i}:${x}:${inv.counts[i]}`).join("\n")}`,
     );
   }
 
-  getMetadata = () => {
+  override getMetadata = () => {
     return {
       nametag: this.name,
     };

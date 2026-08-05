@@ -17,24 +17,24 @@ export default class EventTarget<
 
   fire<L extends keyof M>(name: L, ...args: M[L]) {
     if (name in this.listeners) {
-      for (let i = 0; i < this.listeners[name].length; i++) {
-        this.listeners[name][i](...args);
+      for (let i = 0; i < this.listeners[name]!.length; i++) {
+        this.listeners[name]![i](...args);
       }
     }
     if (name in this.oneListeners) {
-      for (let i = 0; i < this.oneListeners[name].length; i++) {
-        this.oneListeners[name][i](...args);
+      for (let i = 0; i < this.oneListeners[name]!.length; i++) {
+        this.oneListeners[name]![i](...args);
       }
       delete this.oneListeners[name];
     }
   }
   on<L extends keyof M>(name: L, listener: Listener<M[L]>) {
     this.listeners[name] ||= [] as any;
-    this.listeners[name].push(listener);
+    this.listeners[name]!.push(listener);
   }
   one<L extends keyof M>(name: L, listener: Listener<M[L]>) {
     this.oneListeners[name] ||= [] as any;
-    this.oneListeners[name].push(listener);
+    this.oneListeners[name]!.push(listener);
   }
 
   waitFor<L extends keyof M>(name: L): Promise<M[L]> {

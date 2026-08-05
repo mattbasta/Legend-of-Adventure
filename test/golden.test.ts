@@ -4,9 +4,9 @@ import * as path from "path";
 import { describe, it } from "node:test";
 import * as assert from "assert";
 
-import { getCoordOption, Terrain } from "../src/terrain";
-import { RegionType, WorldType } from "../src/terrainGen/constants";
-import { Region } from "../src/regions";
+import { getCoordOption, Terrain } from "../src/terrain.ts";
+import { RegionType, WorldType } from "../src/terrainGen/constants.ts";
+import { Region } from "../src/regions.ts";
 
 // Terrain generation is fully deterministic (seeded by region coordinates),
 // which makes it a regression oracle for the modernization work: any change
@@ -103,7 +103,7 @@ describe("terrain golden masters", () => {
       const goldenPath = path.join(GOLDEN_DIR, `${name}.json`);
       const actual = JSON.stringify(generate(host));
 
-      if (process.env.UPDATE_GOLDEN) {
+      if (process.env["UPDATE_GOLDEN"]) {
         fs.mkdirSync(GOLDEN_DIR, { recursive: true });
         fs.writeFileSync(goldenPath, actual + "\n");
         return;

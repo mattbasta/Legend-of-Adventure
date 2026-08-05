@@ -1,4 +1,4 @@
-import * as rng from "../rng";
+import * as rng from "../rng.ts";
 import {
   DUNGEON_ANGEL_ODDS,
   DUNGEON_BOSS_ODDS,
@@ -8,9 +8,9 @@ import {
   DUNGEON_STATUE_ODDS,
   getCoordRNG,
   Terrain,
-} from "../terrain";
-import * as pairing from "./pairing";
-import { Portal } from "./portal";
+} from "../terrain.ts";
+import * as pairing from "./pairing.ts";
+import { Portal } from "./portal.ts";
 
 const movableDirections: Array<[0 | 1 | -1, 0 | 1 | -1]> = [
   [0, 1],
@@ -31,13 +31,14 @@ function passageToIndex(x: number, y: number) {
   }
 }
 
-enum DungeonRoomType {
-  Room = "room",
-  Lobby = "lobby",
-  Treasure = "treasure",
-  Stairwell = "stairwell",
-  Boss = "boss",
-}
+const DungeonRoomType = {
+  Room: "room",
+  Lobby: "lobby",
+  Treasure: "treasure",
+  Stairwell: "stairwell",
+  Boss: "boss",
+} as const;
+type DungeonRoomType = (typeof DungeonRoomType)[keyof typeof DungeonRoomType];
 
 // Rooms can randomly be any of these types. These rooms aren't special
 // and have no limit per dungeon level.
@@ -78,7 +79,7 @@ class DungeonLayout {
     for (let i = 0; i < dHeight; i++) {
       this.grid[i] = new Array(dWidth);
       for (let j = 0; j < dWidth; j++) {
-        this.grid[i][j] = new DungeonRoom();
+        this.grid[i]![j] = new DungeonRoom();
       }
     }
 
@@ -88,7 +89,7 @@ class DungeonLayout {
     const roomsToProcess: Array<[number, number]> = [
       [this.entranceX, this.entranceY],
     ];
-    this.grid[this.entranceY][this.entranceX].toBeProcessed = true;
+    this.grid[this.entranceY]![this.entranceX]!.toBeProcessed = true;
 
     // Helper function to determine if a passage can be built
     const canMove = (x: number, y: number, dirX: number, dirY: number) => {
@@ -103,10 +104,10 @@ class DungeonLayout {
       }
       return !(
         // No if the passage already exists
-        this.grid[y][x].passages[passageToIndex(dirX, dirY)] ||
+        this.grid[y]![x]!.passages[passageToIndex(dirX, dirY)] ||
         // No if the passage leads to a defined or staged room
-        this.grid[y + dirY][x + dirX].defined ||
-        this.grid[y + dirY][x + dirX].toBeProcessed
+        this.grid[y + dirY]![x + dirX]!.defined ||
+        this.grid[y + dirY]![x + dirX]!.toBeProcessed
       );
     };
 
@@ -118,12 +119,12 @@ class DungeonLayout {
       if (room.initial) {
         room.type = DungeonRoomType.Lobby;
       } else {
-        room.type = commonRoomTypes[r.range(commonRoomTypes.length)];
+        room.type = commonRoomTypes[r.range(commonRoomTypes.length)]!;
       }
 
       const directions = [...movableDirections];
       rng.shuffledIndices(r, movableDirections.length).forEach((v, i) => {
-        directions[v] = movableDirections[i];
+        directions[v] = movableDirections[i]!;
       });
 
       let viableDirections = directions.filter(([dirX, dirY]) =>
@@ -143,7 +144,7 @@ class DungeonLayout {
         // Define the reverse passage from the other room
         const oppositeX = x + direction[0];
         const oppositeY = y + direction[1];
-        const otherRoom = this.grid[oppositeY][oppositeX];
+        const otherRoom = this.grid[oppositeY]![oppositeX]!;
         otherRoom.passages[
           passageToIndex(direction[0] * -1, direction[1] * -1)
         ] = true;
@@ -155,8 +156,8 @@ class DungeonLayout {
 
     while (roomsToProcess.length) {
       const nextRoomIndex = r.range(roomsToProcess.length);
-      const nextRoom = roomsToProcess[nextRoomIndex];
-      const nextRoomObj = this.grid[nextRoom[1]][nextRoom[0]];
+      const nextRoom = roomsToProcess[nextRoomIndex]!;
+      const nextRoomObj = this.grid[nextRoom[1]]![nextRoom[0]]!;
       roomsToProcess.splice(nextRoomIndex, 1);
       buildRoom(nextRoom[0], nextRoom[1], nextRoomObj);
       nextRoomObj.toBeProcessed = false;
@@ -172,20 +173,20 @@ class DungeonLayout {
     }
 
     if (r.range(10) <= DUNGEON_STAIRS_DOWN_ODDS) {
-      const room = terminalRooms[r.range(terminalRooms.length)];
+      const room = terminalRooms[r.range(terminalRooms.length)]!;
       room.type = DungeonRoomType.Stairwell;
     }
 
     // Generate boss room
     if (terminalRooms.length > 0 && r.range(10) <= DUNGEON_BOSS_ODDS) {
       const roomIndex = r.range(terminalRooms.length);
-      terminalRooms[roomIndex].type = DungeonRoomType.Boss;
+      terminalRooms[roomIndex]!.type = DungeonRoomType.Boss;
       terminalRooms.splice(roomIndex, 1);
     }
     // Generate angel room
     if (terminalRooms.length > 0 && r.range(10) <= DUNGEON_ANGEL_ODDS) {
       const roomIndex = r.range(terminalRooms.length);
-      terminalRooms[roomIndex].type = DungeonRoomType.Boss;
+      terminalRooms[roomIndex]!.type = DungeonRoomType.Boss;
       terminalRooms.splice(roomIndex, 1);
     }
   }
@@ -195,7 +196,7 @@ export function applyDungeon(parent: string, terrain: Terrain) {
   const layout = getDungeonLayout(parent);
   const roomX = terrain.x + layout.entranceX;
   const roomY = terrain.y + layout.entranceY;
-  if (roomY >= layout.grid.length || roomX >= layout.grid[roomY].length) {
+  if (roomY >= layout.grid.length || roomX >= layout.grid[roomY]!.length) {
     return;
   }
 
@@ -208,7 +209,7 @@ export function applyDungeon(parent: string, terrain: Terrain) {
   terrain.fillArea(4, terrain.height - 4, terrain.width - 8, 1, 6);
   terrain.hitmap.clearArea(4, 4, terrain.width - 8, terrain.height - 8);
 
-  const room = layout.grid[roomY][roomX];
+  const room = layout.grid[roomY]![roomX]!;
 
   if (room.hasPassage(0, 1)) {
     terrain.fillArea(12, 24, 4, 4, 0);

@@ -40,3 +40,6 @@ export const WEAPON_PREFIXES: Record<string, number> = {
   ether: 12,
   ancie: 13,
 };
+
+// How far outside an entity's hitbox an attack still lands.
+export const ATTACK_WIGGLE_ROOM = 0.5;

@@ -1,7 +1,7 @@
-import { KillableEntity } from "./entities/BaseEntity";
-import { ItemEntity } from "./entities/itemEntity";
-import { Event, EventType } from "./events";
-import { Entity } from "./types";
+import { KillableEntity } from "./entities/BaseEntity.ts";
+import { ItemEntity } from "./entities/itemEntity.ts";
+import { Event, EventType } from "./events.ts";
+import type { Entity } from "./types.ts";
 
 const FOOD_HEALTH_INCREASE = 75;
 const INV_MAX_STACK = 32;
@@ -35,8 +35,8 @@ export class Inventory {
 
   give(item: string) {
     for (let i = 0; i < this.capacity; i++) {
-      if (this.slots[i] === item && this.counts[i] < INV_MAX_STACK) {
-        this.counts[i] += 1;
+      if (this.slots[i] === item && this.counts[i]! < INV_MAX_STACK) {
+        this.counts[i]! += 1;
         this.owner.updateInventory();
         return [true, i];
       }
@@ -81,8 +81,8 @@ export class Inventory {
           continue;
         }
 
-        this.slots[i] = this.slots[j];
-        this.counts[i] = this.counts[j];
+        this.slots[i] = this.slots[j]!;
+        this.counts[i] = this.counts[j]!;
         this.clearSlot(j);
         break;
       }
@@ -97,20 +97,20 @@ export class Inventory {
     const count = this.numItems();
 
     if (command === "b") {
-      const firstItem = this.slots[0];
-      const firstCount = this.counts[0];
+      const firstItem = this.slots[0]!;
+      const firstCount = this.counts[0]!;
       for (let i = 0; i < count - 1; i++) {
-        this.slots[i] = this.slots[i + 1];
-        this.counts[i] = this.counts[i + 1];
+        this.slots[i] = this.slots[i + 1]!;
+        this.counts[i] = this.counts[i + 1]!;
       }
       this.slots[count - 1] = firstItem;
       this.counts[count - 1] = firstCount;
     } else {
-      const lastItem = this.slots[count - 1];
-      const lastCount = this.counts[count - 1];
+      const lastItem = this.slots[count - 1]!;
+      const lastCount = this.counts[count - 1]!;
       for (let i = count - 1; i > 0; i--) {
-        this.slots[i] = this.slots[i - 1];
-        this.counts[i] = this.counts[i - 1];
+        this.slots[i] = this.slots[i - 1]!;
+        this.counts[i] = this.counts[i - 1]!;
       }
       this.slots[0] = lastItem;
       this.counts[0] = lastCount;
@@ -197,7 +197,7 @@ export class Inventory {
   }
 
   remove(i: number) {
-    this.counts[i] -= 1;
+    this.counts[i]! -= 1;
     if (!this.counts[i]) {
       this.slots[i] = null;
     }
@@ -213,7 +213,7 @@ export class Inventory {
 
     const region = dropper.region;
     const item = new ItemEntity(this.slots[0], dropper);
-    this.counts[0] -= 1;
+    this.counts[0]! -= 1;
 
     if (!this.counts[0]) {
       this.slots[0] = null;

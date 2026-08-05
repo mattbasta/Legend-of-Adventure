@@ -1,9 +1,9 @@
-import * as comm from "./comm";
-import * as inventory from "./inventory";
-import * as images from "./images";
-import * as level from "./level";
-import * as keys from "./keys";
-import * as player from "./player";
+import * as comm from "./comm.ts";
+import * as inventory from "./inventory.ts";
+import * as images from "./images.ts";
+import * as level from "./level.ts";
+import * as keys from "./keys.ts";
+import * as player from "./player.ts";
 
 const canvas = document.getElementById("canvas_inventory") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
@@ -109,8 +109,8 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
     if (code[0] == "w") {
       // Weapons have special codes to allow modifiers
       const attributes = code.substr(1).split(".");
-      sx = weapon_prefixes_order.indexOf(attributes[1]) * 24 + 5 * 24;
-      sy = weapon_order.indexOf(attributes[0]) * 24;
+      sx = weapon_prefixes_order.indexOf(attributes[1]!) * 24 + 5 * 24;
+      sy = weapon_order.indexOf(attributes[0]!) * 24;
 
       modifier = attributes[2];
     } else {
@@ -155,7 +155,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
       else if (hovering === -1 && selected) sx = 240;
       ctx.drawImage(inventoryImg, sx, 0, 80, 80, 0, 0, 80, 80);
       if (slots[i]) {
-        draw_item(10, 10, 60, 60, slots[i]);
+        draw_item(10, 10, 60, 60, slots[i]!);
         if (count && count !== 1) {
           ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
           ctx.fillRect(
@@ -195,7 +195,7 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
         64,
       );
       if (slots[i]) {
-        draw_item(34 + i * 64, 22, 48, 48, slots[i]);
+        draw_item(34 + i * 64, 22, 48, 48, slots[i]!);
         if (count && count !== 1) {
           ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
           ctx.fillRect(

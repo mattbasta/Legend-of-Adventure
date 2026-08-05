@@ -1,6 +1,6 @@
-import { Event, EventType } from "../events";
-import { getRegionData, Region } from "../regions";
-import { Entity, EntityType } from "../types";
+import { Event, EventType } from "../events.ts";
+import type { Region } from "../regions.ts";
+import type { Entity, EntityType } from "../types.ts";
 
 let eid = 0;
 

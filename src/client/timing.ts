@@ -1,9 +1,9 @@
-import * as comm from "./comm";
-import * as entities from "./entities";
-import * as hitmapping from "./hitmapping";
-import * as keys from "./keys";
-import * as level from "./level";
-import settings from "./settings";
+import * as comm from "./comm.ts";
+import * as entities from "./entities.ts";
+import * as hitmapping from "./hitmapping.ts";
+import * as keys from "./keys.ts";
+import * as level from "./level.ts";
+import settings from "./settings.ts";
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let last = Date.now();

@@ -1,11 +1,9 @@
-import { BaseEntity } from "./entities/BaseEntity";
-import { ItemEntity } from "./entities/itemEntity";
-import { Event, EventType } from "./events";
-import { Inventory } from "./inventory";
-import { Region } from "./regions";
-import { EntityType } from "./types";
-
-export const ATTACK_WIGGLE_ROOM = 0.5;
+import { BaseEntity } from "./entities/BaseEntity.ts";
+import { ItemEntity } from "./entities/itemEntity.ts";
+import { Event, EventType } from "./events.ts";
+import { Inventory } from "./inventory.ts";
+import type { Region } from "./regions.ts";
+import { EntityType } from "./types.ts";
 
 const CHEST_HIT_WIGGLE_ROOM_X = 0.35;
 const CHEST_HIT_WIGGLE_ROOM_Y = 1.25;
@@ -33,10 +31,10 @@ export class ChestEntity extends BaseEntity {
     const [x, y] = event.body.split(" ").map((x) => parseFloat(x));
 
     if (
-      x < this.x - CHEST_HIT_WIGGLE_ROOM_X ||
-      x > this.x + this.width + CHEST_HIT_WIGGLE_ROOM_X ||
-      y < this.y - this.height - CHEST_HIT_WIGGLE_ROOM_Y ||
-      y > this.y + CHEST_HIT_WIGGLE_ROOM_Y
+      x! < this.x - CHEST_HIT_WIGGLE_ROOM_X ||
+      x! > this.x + this.width + CHEST_HIT_WIGGLE_ROOM_X ||
+      y! < this.y - this.height - CHEST_HIT_WIGGLE_ROOM_Y ||
+      y! > this.y + CHEST_HIT_WIGGLE_ROOM_Y
     ) {
       return;
     }
@@ -51,7 +49,7 @@ export class ChestEntity extends BaseEntity {
     }
   }
 
-  getMetadata = () => {
+  override getMetadata = () => {
     return { proto: "chest" };
   };
 }
@@ -82,10 +80,10 @@ export class PotEntity extends BaseEntity {
     const [x, y] = event.body.split(" ").map((x) => parseFloat(x));
 
     if (
-      x < this.x - POT_HIT_WIGGLE_ROOM_X ||
-      x > this.x + this.width + POT_HIT_WIGGLE_ROOM_X ||
-      y < this.y - this.height - POT_HIT_WIGGLE_ROOM_Y ||
-      y > this.y + POT_HIT_WIGGLE_ROOM_Y
+      x! < this.x - POT_HIT_WIGGLE_ROOM_X ||
+      x! > this.x + this.width + POT_HIT_WIGGLE_ROOM_X ||
+      y! < this.y - this.height - POT_HIT_WIGGLE_ROOM_Y ||
+      y! > this.y + POT_HIT_WIGGLE_ROOM_Y
     ) {
       return;
     }
@@ -113,7 +111,7 @@ export class PotEntity extends BaseEntity {
     this.region.removeEntity(this);
   }
 
-  getMetadata = () => {
+  override getMetadata = () => {
     return {
       image: "pots",
       clip: {
@@ -133,7 +131,7 @@ export class VirtualEntity extends BaseEntity {
 
   onEvent() {}
 
-  getMetadata = () => {
+  override getMetadata = () => {
     let image = this.type as string;
     if (this.type === "soldier") {
       image = `soldier${Math.ceil(Math.random() * 3)}`;

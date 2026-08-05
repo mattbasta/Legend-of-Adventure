@@ -1,11 +1,10 @@
-import { WEAPON_RAW_PREFIXES } from "./entities/constants";
-import { ChestEntity, PotEntity, VirtualEntity } from "./entity";
-import { Event, EventType } from "./events";
-import { Player } from "./player";
-import { RNG } from "./rng";
-import { getCoordOption, getCoordRNG, getTileset, Terrain } from "./terrain";
-import { RegionType, WorldType } from "./terrainGen/constants";
-import { Entity, EntityType } from "./types";
+import { WEAPON_RAW_PREFIXES } from "./entities/constants.ts";
+import { ChestEntity, PotEntity, VirtualEntity } from "./entity.ts";
+import { Event, EventType } from "./events.ts";
+import type { RNG } from "./rng.ts";
+import { getCoordOption, getCoordRNG, getTileset, Terrain } from "./terrain.ts";
+import { RegionType, WorldType } from "./terrainGen/constants.ts";
+import { type Entity, EntityType } from "./types.ts";
 
 export type RegionData = [
   world: WorldType,
@@ -91,7 +90,7 @@ export class Region {
   tick = () => {
     let hasPlayers = false;
     for (let entity of this.entities.values()) {
-      if (entity instanceof Player) {
+      if (entity.type === EntityType.player) {
         hasPlayers = true;
       }
       entity.tick();
@@ -155,8 +154,14 @@ export class Region {
         break;
 
       case RegionType.Shop:
+        // Shops historically fell through into the House case, spawning two
+        // extra homelies before the shared House population logic.
         placeEntity(EntityType.homely);
         placeEntity(EntityType.homely);
+        placeEntity(EntityType.homely);
+        placeEntity(EntityType.homely);
+        this.populateHouseEntities(rng, placeEntity);
+        break;
 
       case RegionType.House:
         placeEntity(EntityType.homely);
@@ -295,7 +300,7 @@ export class Region {
       );
     }
 
-    if (entity instanceof Player && this.cleanup) {
+    if (entity.type === EntityType.player && this.cleanup) {
       clearTimeout(this.cleanup);
       this.cleanup = null;
     }
@@ -362,10 +367,10 @@ export function getRegion(
   }
 
   if (regionID in regionCache) {
-    if (regionCache[regionID].cleanup) {
-      clearTimeout(regionCache[regionID].cleanup!);
+    if (regionCache[regionID]!.cleanup) {
+      clearTimeout(regionCache[regionID]!.cleanup!);
     }
-    return regionCache[regionID];
+    return regionCache[regionID]!;
   }
 
   return new Region(parent, type, x, y);
@@ -377,14 +382,14 @@ export function getRegionData(id: string): RegionData {
     return DEFAULT_REGION_DATA;
   }
 
-  const regSplit = split[split.length - 1].split(":");
+  const regSplit = split[split.length - 1]!.split(":");
   if (regSplit.length !== 3) {
     return DEFAULT_REGION_DATA;
   }
 
   const parent = split.slice(0, -1).join(",") as RegionData[0];
-  const x = parseFloat(regSplit[1]);
-  const y = parseFloat(regSplit[2]);
+  const x = parseFloat(regSplit[1]!);
+  const y = parseFloat(regSplit[2]!);
   return [parent, regSplit[0] as RegionData[1], x, y];
 }
 

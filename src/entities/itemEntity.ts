@@ -1,7 +1,7 @@
-import { Event, EventType } from "../events";
-import { Entity, EntityType } from "../types";
-import { BaseEntity } from "./BaseEntity";
-import { WEAPONS, WEAPON_PREFIXES } from "./constants";
+import { Event, EventType } from "../events.ts";
+import { type Entity, EntityType } from "../types.ts";
+import { BaseEntity } from "./BaseEntity.ts";
+import { WEAPONS, WEAPON_PREFIXES } from "./constants.ts";
 
 const ITEM_PICK_UP_DIST = 0.5;
 
@@ -33,10 +33,10 @@ export class ItemEntity extends BaseEntity {
         }
 
         const [x, y] = event.body
-          .split("\n")[1]
+          .split("\n")[1]!
           .split(" ")
           .map((x) => parseFloat(x));
-        const dist = Math.sqrt((this.x - x) ** 2 + (this.y - y) ** 2);
+        const dist = Math.sqrt((this.x - x!) ** 2 + (this.y - y!) ** 2);
         if (dist > ITEM_PICK_UP_DIST) {
           return;
         }
@@ -58,8 +58,8 @@ export class ItemEntity extends BaseEntity {
 
     if (this.itemCode[0] === "w") {
       const weaponData = this.itemCode.substr(1).split(".");
-      clip.x = WEAPON_PREFIXES[weaponData[1]] * 24 + 5 * 24;
-      clip.y = WEAPONS[weaponData[0]] * 24;
+      clip.x = WEAPON_PREFIXES[weaponData[1]!]! * 24 + 5 * 24;
+      clip.y = WEAPONS[weaponData[0]!]! * 24;
     } else {
       const code = parseInt(this.itemCode.substr(1), 10);
       clip.x = (code % 5) * 24;
@@ -72,8 +72,8 @@ export class ItemEntity extends BaseEntity {
     return clip;
   }
 
-  setEffect = () => {};
-  getMetadata = () => {
+  override setEffect = () => {};
+  override getMetadata = () => {
     return {
       proto: "item",
       code: this.itemCode,

@@ -1,11 +1,11 @@
-import * as canvases from "./canvases";
-import * as comm from "./comm";
-import entitymovement from "./entitymovement";
-import * as hitmapping from "./hitmapping";
-import * as images from "./images";
-import * as level from "./level";
-import settings from "./settings";
-import { Particle } from "./particles";
+import * as canvases from "./canvases.ts";
+import * as comm from "./comm.ts";
+import entitymovement from "./entitymovement.ts";
+import * as hitmapping from "./hitmapping.ts";
+import * as images from "./images.ts";
+import * as level from "./level.ts";
+import settings from "./settings.ts";
+import type { Particle } from "./particles.ts";
 
 type SpriteSnapshot = { position: number; duration: number };
 type Sprite = {
@@ -78,7 +78,7 @@ comm.messages.on("epu", function (body, origin) {
   }
 
   var data = JSON.parse(body);
-  var entity = registry[origin];
+  var entity = registry[origin]!;
   if ("x" in data) {
     entity.x = data.x;
     delete data.x;
@@ -182,7 +182,7 @@ export function register(
 }
 
 export async function draw(id: string) {
-  var entity = registry[id];
+  var entity = registry[id]!;
   var context = entity.canvas.getContext("2d")!;
   canvases.prepareContext(context);
 
@@ -218,7 +218,7 @@ export async function draw(id: string) {
 }
 
 export function getFollowing() {
-  return registry[follow];
+  return registry[follow]!;
 }
 
 export function getSpriteDirection(x: number, y: number) {
@@ -244,7 +244,7 @@ register(
 
 var firstLevel = true;
 level.on("newLevel", function (width, height, hitmap) {
-  var entity = registry.local;
+  var entity = registry["local"]!;
   if (firstLevel) {
     entity.x = width / 2;
     entity.y = height / 2;
@@ -264,15 +264,15 @@ level.on("unload", function () {
   follow = "local";
 });
 
-export const getLocal = () => registry.local;
+export const getLocal = () => registry["local"]!;
 
 export function tick(ms: number) {
   for (const entity in registry) {
-    const a = registry[entity];
+    const a = registry[entity]!;
 
     if (a.particles.length) {
       for (var i = a.particles.length - 1; i >= 0; i--) {
-        if (a.particles[i].tick()) {
+        if (a.particles[i]!.tick()) {
           a.particles.splice(i, 1);
         }
       }
@@ -292,10 +292,10 @@ export function tick(ms: number) {
     }
 
     const spriteDirection = getSpriteDirection(a.direction[0], a.direction[1]);
-    if (a.sprite_cycle++ === spriteDirection[a.cycle_position].duration) {
+    if (a.sprite_cycle++ === spriteDirection[a.cycle_position]!.duration) {
       a.sprite_cycle = 0;
       a.cycle_position = a.cycle_position + 1 === 3 ? 1 : 2;
-      a.position = spriteDirection[a.cycle_position].position;
+      a.position = spriteDirection[a.cycle_position]!.position;
       draw(entity);
     }
   }
@@ -311,7 +311,7 @@ export function drawAll(
   // Ignore entities that are not onscreen.
   var entity;
   for (entity in registry) {
-    var a = registry[entity];
+    var a = registry[entity]!;
     if (
       (state[0] > 0 &&
         (a.x < (state[0] - 1) / settings.tilesize ||
@@ -409,7 +409,7 @@ export function drawAll(
 
     if (entity.particles.length) {
       for (var j = 0; j < entity.particles.length; j++) {
-        entity.particles[j].draw(
+        entity.particles[j]!.draw(
           context,
           entity.x * settings.tilesize - state[0],
           entity.y * settings.tilesize - state[1],
@@ -423,7 +423,7 @@ export function drawHitmappings(
   context: CanvasRenderingContext2D,
   state: [number, number, number, number, number, number, number, number],
 ) {
-  const local = registry.local;
+  const local = registry["local"]!;
   context.lineWidth = 3;
   context.strokeStyle = "red";
   context.strokeRect(

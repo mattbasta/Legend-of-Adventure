@@ -1,8 +1,8 @@
-import * as comm from "./comm";
+import * as comm from "./comm.ts";
 
-import * as entities from "./entities";
-import * as keys from "./keys";
-import * as level from "./level";
+import * as entities from "./entities.ts";
+import * as keys from "./keys.ts";
+import * as level from "./level.ts";
 
 const CHAT_DISTANCE = 10;
 
@@ -11,7 +11,7 @@ const textbox = document.getElementById("talkbar") as HTMLInputElement;
 
 function handleMessage(message: string) {
   if (chatbox.childNodes.length > 10) {
-    chatbox.removeChild(chatbox.childNodes[0]);
+    chatbox.removeChild(chatbox.childNodes[0]!);
   }
   var p = document.createElement("p");
   if (message[0] == "/") p.style.color = "#5d6";
@@ -56,6 +56,8 @@ export function startChat() {
           comm.send("cha", m);
           handleMessage(m);
         }
+        stopChat();
+        break;
       case 27:
         stopChat();
     }

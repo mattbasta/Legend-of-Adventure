@@ -1,5 +1,5 @@
-import Deferred from "./deferred";
-import EventTarget from "./events";
+import Deferred from "./deferred.ts";
+import EventTarget from "./events.ts";
 
 const commEventsRaw = new EventTarget<{
   connected: [WebSocket];

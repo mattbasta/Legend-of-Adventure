@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { Hitmap, Terrain } from "../terrain";
-import { Portal } from "./portal";
+import { Hitmap, Terrain } from "../terrain.ts";
+import { Portal } from "./portal.ts";
 
 export class FeatureTiles {
   name: string;
@@ -25,7 +25,7 @@ export class FeatureTiles {
   populateTiles(tileData: Array<Array<number>>) {
     for (let i = 0; i < this.height; i++) {
       for (let j = 0; j < this.width; j++) {
-        this.tiles[i * this.width + j] = tileData[i][j];
+        this.tiles[i * this.width + j] = tileData[i]![j]!;
       }
     }
   }
@@ -33,7 +33,7 @@ export class FeatureTiles {
   populateHitmap(hitmapData: Array<Array<boolean>>) {
     for (let i = 0; i < this.height; i++) {
       for (let j = 0; j < this.width; j++) {
-        if (!hitmapData[i][j]) {
+        if (!hitmapData[i]![j]) {
           continue;
         }
         this.hitmap.set(j, i);
@@ -45,7 +45,7 @@ export class FeatureTiles {
     for (let i = 0; i < this.height; i++) {
       for (let j = 0; j < this.width; j++) {
         terrain.tiles[(i + y) * terrain.width + x + j] =
-          this.tiles[i * this.width + j];
+          this.tiles[i * this.width + j]!;
       }
     }
 
@@ -59,11 +59,11 @@ export class FeatureTiles {
 
 const cache: Record<string, FeatureTiles> = {};
 
-const prefix = path.normalize(`${__dirname}/../../../resources/tilesets`);
+const prefix = path.join(import.meta.dirname, "../../resources/tilesets");
 
 export function getFeatureTiles(name: string) {
   if (name in cache) {
-    return cache[name];
+    return cache[name]!;
   }
 
   const tileData = fs.readFileSync(`${prefix}/${name}.tiles`, "utf-8");
@@ -93,7 +93,7 @@ export function getFeatureTiles(name: string) {
 
   const feature = new FeatureTiles(
     name,
-    tilesParsed[0].length,
+    tilesParsed[0]!.length,
     tilesParsed.length,
   );
   feature.populateTiles(tilesParsed);
@@ -113,7 +113,7 @@ export function getFeatureTiles(name: string) {
           Number(y),
           Number(width),
           Number(height),
-          destID,
+          destID!,
           Number(destX),
           Number(destY),
         ),

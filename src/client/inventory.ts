@@ -1,5 +1,5 @@
-import * as comm from "./comm";
-import * as keys from "./keys";
+import * as comm from "./comm.ts";
+import * as keys from "./keys.ts";
 
 type ItemSlot = string | null;
 const slots: [ItemSlot, ItemSlot, ItemSlot, ItemSlot, ItemSlot] = [
@@ -61,4 +61,4 @@ export const setSelected = (sel: number) => {
   selected = sel;
 };
 export const getContents = () => [...slots];
-export const getCount = (i: number) => count[i];
+export const getCount = (i: number) => count[i]!;

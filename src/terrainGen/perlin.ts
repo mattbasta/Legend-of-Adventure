@@ -1,4 +1,4 @@
-import { MT, RNG } from "../rng";
+import { MT, type RNG } from "../rng.ts";
 
 const TERRAIN_PERLIN_PERIOD = 256;
 const TERRAIN_PERLIN_PERIOD_M1 = TERRAIN_PERLIN_PERIOD - 1;
@@ -38,7 +38,7 @@ function seededPermutation(rng: RNG, maxExclusive: number) {
   const values = new Uint16Array(maxExclusive);
   for (let i = 0; i < maxExclusive; i++) {
     const j = rng.range(0, i);
-    values[i] = values[j];
+    values[i] = values[j]!;
     values[j] = i;
   }
   return values;
@@ -63,9 +63,9 @@ export class NoiseGenerator {
 
   getGradient(x: number, y: number) {
     const idx =
-      this.permutations[x & TERRAIN_PERLIN_PERIOD_M1] +
-      this.permutations[y & TERRAIN_PERLIN_PERIOD_M1];
-    return this.rgradients[idx & TERRAIN_PERLIN_PERIOD_M1];
+      this.permutations[x & TERRAIN_PERLIN_PERIOD_M1]! +
+      this.permutations[y & TERRAIN_PERLIN_PERIOD_M1]!;
+    return this.rgradients[idx & TERRAIN_PERLIN_PERIOD_M1]!;
   }
 
   get2d(x: number, y: number) {

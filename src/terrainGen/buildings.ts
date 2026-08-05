@@ -1,16 +1,19 @@
-import * as rng from "../rng";
-import * as pairing from "./pairing";
-import { Terrain } from "../terrain";
-import { RegionType } from "./constants";
-import { Portal } from "./portal";
+import * as rng from "../rng.ts";
+import * as pairing from "./pairing.ts";
+import { Terrain } from "../terrain.ts";
+import { RegionType } from "./constants.ts";
+import { Portal } from "./portal.ts";
 
-export enum RoomType {
-  Lobby = "lobby",
-  Stairs = "stairs",
-  Plain = "room",
-  Bed = "bed",
-  Storage = "bed",
-}
+export const RoomType = {
+  Lobby: "lobby",
+  Stairs: "stairs",
+  Plain: "room",
+  Bed: "bed",
+  // NOTE: shares a value with Bed (preserved from the original enum, where
+  // RoomType.Storage === RoomType.Bed).
+  Storage: "bed",
+} as const;
+export type RoomType = (typeof RoomType)[keyof typeof RoomType];
 
 const ROOMSIZE_WIDTH = 15;
 const ROOMSIZE_HEIGHT = 15;
@@ -56,7 +59,7 @@ export function generateBuildings(
     return Boolean(layout[y * 3 + x]);
   }
   function getRoomType() {
-    return availableRooms[r.range(0, availableRooms.length)];
+    return availableRooms[r.range(0, availableRooms.length)]!;
   }
   function setRoom(x: number, y: number, value: RoomType = getRoomType()) {
     layout[y * 3 + x] = value;
