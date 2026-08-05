@@ -42,10 +42,6 @@ export type GameImages = keyof typeof images;
 export function waitFor<T extends Array<keyof typeof images>>(
   ...deps: T
 ): Promise<{ [K in keyof T]: HTMLImageElement }> {
-  for (const img of deps) {
-    if (!(img in images)) {
-    }
-  }
   return Promise.all(deps.map((img) => images[img])) as Promise<{
     [K in keyof T]: HTMLImageElement;
   }>;

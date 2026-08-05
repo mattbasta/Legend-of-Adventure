@@ -98,7 +98,7 @@ export abstract class KillableEntity extends BaseEntity {
         this.region.broadcast(
           new Event(
             EventType.SOUND,
-            `grunt${(Math.random() * 3) | 0}:${this.x}:${this.y}`,
+            `hit_grunt${(Math.random() * 4) | 0}:${this.x}:${this.y}`,
           ),
         );
       }

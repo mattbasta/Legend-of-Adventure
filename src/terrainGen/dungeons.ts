@@ -17,7 +17,7 @@ const movableDirections: Array<[0 | 1 | -1, 0 | 1 | -1]> = [
   [0, 1],
   [1, 0],
   [0, -1],
-  [0, 1],
+  [-1, 0],
 ];
 
 function passageToIndex(x: number, y: number) {
@@ -38,6 +38,7 @@ const DungeonRoomType = {
   Treasure: "treasure",
   Stairwell: "stairwell",
   Boss: "boss",
+  Angel: "angel",
 } as const;
 type DungeonRoomType = (typeof DungeonRoomType)[keyof typeof DungeonRoomType];
 
@@ -187,7 +188,7 @@ class DungeonLayout {
     // Generate angel room
     if (terminalRooms.length > 0 && r.range(10) <= DUNGEON_ANGEL_ODDS) {
       const roomIndex = r.range(terminalRooms.length);
-      terminalRooms[roomIndex]!.type = DungeonRoomType.Boss;
+      terminalRooms[roomIndex]!.type = DungeonRoomType.Angel;
       terminalRooms.splice(roomIndex, 1);
     }
   }

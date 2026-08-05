@@ -289,8 +289,10 @@ const roadMinorTiles = {
 
 function smoothRoads({ tiles, width, height }: Terrain) {
   const orig = tiles.slice(0);
-  for (let i = 0; i < height; i++) {
-    for (let j = 0; j < width; j++) {
+  // Interior cells only (matches the Go original); border cells would read
+  // out of bounds and wrap between rows.
+  for (let i = 1; i < height - 1; i++) {
+    for (let j = 1; j < width - 1; j++) {
       const cell = tiles[i * width + j]!;
       if (!isRoad(cell)) {
         continue;
@@ -304,7 +306,6 @@ function smoothRoads({ tiles, width, height }: Terrain) {
       );
       const majorTile = roadMajorTiles[major];
       if (!majorTile) {
-        continue;
         continue;
       }
 

@@ -212,14 +212,12 @@ export class Region {
 
     for (let i = 0; i < totalTiles; i++) {
       const tile = this.terrain.tiles[i];
+      const x = i % this.terrain.width;
+      const y = Math.floor(i / this.terrain.width);
       if (tile === 58) {
-        this.placeChestShop(
-          i % this.terrain.height,
-          i / this.terrain.width,
-          rng,
-        );
+        this.placeChestShop(x, y + 0.75, rng);
       } else if (tile === 59) {
-        this.placePotShop(i % this.terrain.height, i / this.terrain.width, rng);
+        this.placePotShop(x, y + 1, rng);
       }
     }
   }

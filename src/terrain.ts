@@ -108,11 +108,13 @@ export class Hitmap {
       return false;
     }
 
+    // Checks the four corners of the entity's footprint. Coordinates are
+    // truncated per axis before indexing, like the Go original's int() casts.
     return !(
-      this.get(y - HM_BUFF_DIST, x) ||
-      this.get(y - h + HM_BUFF_DIST, x) ||
-      this.get(y - HM_BUFF_DIST, x + w - HM_BUFF_DIST) ||
-      this.get(y - h + HM_BUFF_DIST, x + w - HM_BUFF_DIST)
+      this.get(x | 0, (y - HM_BUFF_DIST) | 0) ||
+      this.get(x | 0, (y - h + HM_BUFF_DIST) | 0) ||
+      this.get((x + w - HM_BUFF_DIST) | 0, (y - HM_BUFF_DIST) | 0) ||
+      this.get((x + w - HM_BUFF_DIST) | 0, (y - h + HM_BUFF_DIST) | 0)
     );
   }
 
@@ -202,7 +204,7 @@ export class Terrain {
     for (let i = 0; i < this.height; i++) {
       const row = new Array(this.width);
       for (let j = 0; j < this.width; j++) {
-        row[j] = this.tiles[i * this.height + j];
+        row[j] = this.tiles[i * this.width + j];
       }
       output[i] = row;
     }

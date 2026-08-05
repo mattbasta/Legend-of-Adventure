@@ -34,16 +34,16 @@ socket.onopen = function () {
   readyPromise.resolve();
 };
 socket.onmessage = function (message) {
-  const header = message.data.substr(0, 3);
-  const subheader = message.data.substr(3, 3);
+  const header = message.data.slice(0, 3);
+  const subheader = message.data.slice(3, 6);
   let body;
   if (subheader === "evt") {
     var linebreak = message.data.indexOf("\n");
-    const origin = message.data.substr(7, linebreak - 7);
-    body = message.data.substr(linebreak + 1);
+    const origin = message.data.slice(7, linebreak);
+    body = message.data.slice(linebreak + 1);
     commMessages.fire(header, body, origin);
   } else {
-    body = message.data.substr(3);
+    body = message.data.slice(3);
     commMessages.fire(header, body);
   }
 };

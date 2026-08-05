@@ -18,22 +18,20 @@ comm.messages.on("inv", (body) => {
     const lined = item.split(":") as [string, string, string];
     const position = parseInt(lined[0], 10);
     slots[position] = lined[1] || null;
-    count[position] = parseInt(lined[2], 0);
+    count[position] = parseInt(lined[2], 10);
   });
 });
 
 function incrSel(incr: number) {
-  selected += incr;
-  selected %= slots.length;
+  // Wrap in [0, slots.length) even for negative increments.
+  selected = (selected + incr + slots.length) % slots.length;
 }
 
-keys.up.on(75, function () {
-  // K
+keys.up.on("KeyK", function () {
   comm.send("cyc", "f");
   incrSel(1);
 });
-keys.up.on(74, function () {
-  // J
+keys.up.on("KeyJ", function () {
   comm.send("cyc", "b");
   incrSel(-1);
 });
@@ -41,14 +39,14 @@ keys.up.on(74, function () {
 function useSelected() {
   comm.send("use", "0");
 }
-keys.up.on(76, useSelected); // L
-keys.up.on(32, useSelected); // Space
+keys.up.on("KeyL", useSelected);
+keys.up.on("Space", useSelected);
 
 function dropSelected() {
   comm.send("dro", "0");
 }
-keys.up.on(81, dropSelected); // Q
-keys.up.on(85, dropSelected); // U
+keys.up.on("KeyQ", dropSelected);
+keys.up.on("KeyU", dropSelected);
 
 export const activateSelected = () => {
   if (!slots[selected]) return;

@@ -96,6 +96,9 @@ export class Inventory {
   cycle(command: string) {
     this.consolidate();
     const count = this.numItems();
+    if (count < 2) {
+      return;
+    }
 
     if (command === "b") {
       const firstItem = this.slots[0]!;
@@ -120,7 +123,7 @@ export class Inventory {
   }
 
   use(i: number, holder: Entity) {
-    if (i >= this.capacity) {
+    if (i < 0 || i >= this.capacity) {
       return;
     }
     const contents = this.slots[i];
@@ -158,7 +161,7 @@ export class Inventory {
         holder.region.broadcast(
           new Event(
             EventType.PARTICLE_MACRO,
-            `0.5, -0.5, eatfood 10 ${holder.eid}`,
+            `0.5 -0.5 eatfood 10 ${holder.eid}`,
             holder,
           ),
         );

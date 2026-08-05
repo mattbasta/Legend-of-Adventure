@@ -1,13 +1,3 @@
-@font-face {
-  font-family: "VT323";
-  font-style: normal;
-  font-weight: 400;
-  src:
-    local("VT323"),
-    local("VT323-Regular"),
-    url(http://themes.googleusercontent.com/static/fonts/vt323/v5/SSPdB6sO_7a9ZMMiCroIGqCWcynf_cDxXwCLxiixG1c.woff)
-      format("woff");
-}
 *,
 *:before,
 *:after {

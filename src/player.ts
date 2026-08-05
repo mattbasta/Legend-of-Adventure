@@ -107,7 +107,7 @@ export class Player extends KillableEntity {
         if (isNaN(velX) || isNaN(velY)) {
           return;
         }
-        if (velX < -1 || velX > 1 || velY > 1 || velX > 1) {
+        if (velX < -1 || velX > 1 || velY < -1 || velY > 1) {
           this.log.warn("player attempted to go faster than possible");
           return;
         }
@@ -117,7 +117,7 @@ export class Player extends KillableEntity {
         if (isNaN(dirX) || isNaN(dirY)) {
           return;
         }
-        if (dirX < -1 || dirX > 1 || dirY > 1 || dirX > 1) {
+        if (dirX < -1 || dirX > 1 || dirY < -1 || dirY > 1) {
           this.log.warn("player attempted to face invalid direction");
           return;
         }
@@ -194,7 +194,10 @@ export class Player extends KillableEntity {
   onEvent(event: Event) {
     switch (event.type) {
       case EventType.DEATH: {
-        this.send(`delevt:${event.origin}\n${event.origin}`);
+        // Rewrite deaths as region exits: the client removes the entity by
+        // eid (stringifying the entity here would embed its whole JSON blob).
+        const eid = event.origin?.eid ?? "";
+        this.send(`delevt:${eid}\n${eid}`);
         return;
       }
       case EventType.DIRECT_ATTACK: {
@@ -347,7 +350,7 @@ export class Player extends KillableEntity {
     this.region.broadcast(
       new Event(
         EventType.PARTICLE_MACRO,
-        `${this.x} ${this.y} deathFlake 25`,
+        `${this.x} ${this.y} deathflake 25`,
         this,
       ),
     );

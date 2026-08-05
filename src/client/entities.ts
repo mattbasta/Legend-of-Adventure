@@ -51,7 +51,7 @@ let follow = "local";
 comm.messages.on("add", function (body) {
   var break_ = body.indexOf("\n");
   if (break_ !== -1) {
-    body = body.substr(0, break_);
+    body = body.slice(0, break_);
   }
 
   const parsed = JSON.parse(body);
@@ -74,7 +74,7 @@ comm.messages.on("epu", function (body, origin) {
 
   var break_ = body.indexOf("\n");
   if (break_ !== -1) {
-    body = body.substr(0, break_);
+    body = body.slice(0, break_);
   }
 
   var data = JSON.parse(body);
@@ -125,10 +125,10 @@ comm.messages.on("epu", function (body, origin) {
     data.height *= settings.tilesize;
   }
 
-  // for (var key in data) {
-  //   if (!data.hasOwnProperty(key)) continue;
-  //   entity[key] = data[key];
-  // }
+  // Copy any remaining updated properties onto the entity.
+  for (const [key, value] of Object.entries(data)) {
+    (entity as unknown as Record<string, unknown>)[key] = value;
+  }
 
   if (follow === origin) {
     level.setCenterPosition();

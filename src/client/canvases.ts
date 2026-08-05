@@ -28,8 +28,8 @@ function create(name: string, canvasSet = canvases, contextSet = contexts) {
     canvas.height = defaultHeight * settings.scales[name]!;
     canvas.width = defaultWidth * settings.scales[name]!;
   }
-  (canvases || canvasSet)[name] = canvas;
-  (contexts || contextSet)[name] = canvas.getContext("2d")!;
+  canvasSet[name] = canvas;
+  contextSet[name] = canvas.getContext("2d")!;
 }
 
 export const getCanvas = function (name: string, setName?: string) {

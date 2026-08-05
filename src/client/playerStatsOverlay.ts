@@ -52,11 +52,11 @@ canvas.addEventListener("mouseup", function () {
   useUp();
 });
 
-keys.down.on(76, useDown); // L
-keys.up.on(76, useUp);
+keys.down.on("KeyL", useDown);
+keys.up.on("KeyL", useUp);
 
-keys.down.on(32, useDown); // Space
-keys.up.on(32, useUp);
+keys.down.on("Space", useDown);
+keys.up.on("Space", useUp);
 
 var weapon_prefixes = {
   plain: ["Plain", 0],
@@ -108,13 +108,13 @@ function doRedraw(inventoryImg: HTMLImageElement, itemsImg: HTMLImageElement) {
     let modifier;
     if (code[0] == "w") {
       // Weapons have special codes to allow modifiers
-      const attributes = code.substr(1).split(".");
+      const attributes = code.slice(1).split(".");
       sx = weapon_prefixes_order.indexOf(attributes[1]!) * 24 + 5 * 24;
       sy = weapon_order.indexOf(attributes[0]!) * 24;
 
       modifier = attributes[2];
     } else {
-      const c = parseInt(code.substr(1), 10);
+      const c = parseInt(code.slice(1), 10);
       sx = (c % 5) * 24;
       sy = Math.floor(c / 5) * 24;
       if (code[0] === "p") {

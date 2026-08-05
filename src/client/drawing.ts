@@ -95,7 +95,6 @@ function draw() {
 
   var i;
   if (state) {
-    var scale;
     var j;
 
     if (settings.effect === "drained") {
@@ -107,7 +106,6 @@ function draw() {
     }
 
     // Draw the terrain
-    scale = settings.scales["terrain"];
     var topmostTB = Math.floor(state[1] / drawnTileSize / terrainChunkSize);
     var leftmostTB = Math.floor(state[0] / drawnTileSize / terrainChunkSize);
     var bottommostTB = Math.ceil(
@@ -291,7 +289,6 @@ function setState(
   w2: number,
   h2: number,
 ) {
-  if (!state) state = [] as any;
   state[0] = x;
   state[1] = y;
   state[2] = w;

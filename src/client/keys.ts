@@ -1,7 +1,7 @@
 import EventTarget from "./events.ts";
 
-const keyUpHandler = new EventTarget();
-const keyDownHandler = new EventTarget();
+const keyUpHandler = new EventTarget<Record<string, []>>();
+const keyDownHandler = new EventTarget<Record<string, []>>();
 
 export const keys = {
   leftArrow: false,
@@ -11,26 +11,26 @@ export const keys = {
 };
 
 function keypress(e: KeyboardEvent, set: boolean) {
-  switch (e.keyCode) {
-    case 37: // Left
-    case 65: // A
+  switch (e.code) {
+    case "ArrowLeft":
+    case "KeyA":
       keys.leftArrow = set;
       break;
-    case 38: // Up
-    case 87: // W
+    case "ArrowUp":
+    case "KeyW":
       keys.upArrow = set;
       break;
-    case 39: // Right
-    case 68: // D
+    case "ArrowRight":
+    case "KeyD":
       keys.rightArrow = set;
       break;
-    case 40: // Down
-    case 83: // S
+    case "ArrowDown":
+    case "KeyS":
       keys.downArrow = set;
       break;
 
     default:
-      (set ? keyDownHandler : keyUpHandler).fire(e.keyCode);
+      (set ? keyDownHandler : keyUpHandler).fire(e.code);
   }
 }
 window.addEventListener("keydown", function (e) {

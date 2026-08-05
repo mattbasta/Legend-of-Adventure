@@ -106,7 +106,7 @@ class DeathWakerSquish extends BloodSpatter {
 class DeathFlake extends ParticleBase {
   constructor() {
     super((Math.random() * 10 + 25) | 0, 4, "#222222");
-    this.movement = "spiralup";
+    this.movement = "spiralUp";
   }
 }
 

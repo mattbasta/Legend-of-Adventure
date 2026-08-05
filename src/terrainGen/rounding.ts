@@ -99,7 +99,7 @@ export function round(terrain: Terrain, tileset: Record<number, number>) {
           clone[ypxm1 + 3]!,
         );
       const hRightC =
-        x &&
+        x < colCount - 1 &&
         isVertical(
           clone[ypxp1]!,
           clone[ypxp1 + 1]!,
