@@ -1,4 +1,4 @@
-import { Region } from "./regions.ts";
+import type { Region } from "./regions.ts";
 import * as rng from "./rng.ts";
 import { RegionType, WorldType } from "./terrainGen/constants.ts";
 

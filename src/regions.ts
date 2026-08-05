@@ -1,4 +1,5 @@
 import { WEAPON_RAW_PREFIXES } from "./entities/constants.ts";
+import { createNpc } from "./entities/npc/registry.ts";
 import { ChestEntity, PotEntity, VirtualEntity } from "./entity.ts";
 import { Event, EventType } from "./events.ts";
 import type { RNG } from "./rng.ts";
@@ -316,7 +317,9 @@ export class Region {
   }
 
   spawn(entType: EntityType, x: number, y: number) {
-    const ent = new VirtualEntity(entType, this);
+    // Species with ported behaviors get a live NPC; the rest remain inert
+    // VirtualEntity placeholders until their behaviors are ported.
+    const ent = createNpc(entType, this) ?? new VirtualEntity(entType, this);
     ent.setPosition(x, y);
     this.addEntity(ent);
     return ent.eid;

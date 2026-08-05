@@ -43,3 +43,6 @@ export const WEAPON_PREFIXES: Record<string, number> = {
 
 // How far outside an entity's hitbox an attack still lands.
 export const ATTACK_WIGGLE_ROOM = 0.5;
+
+// How far away an entity notices other entities' movement (in tiles).
+export const ENTITY_VISION = 20;

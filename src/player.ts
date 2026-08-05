@@ -12,6 +12,7 @@ import { parseClientMessage } from "./protocol.ts";
 import { getRegion, getRegionData } from "./regions.ts";
 import { RegionType, WorldType } from "./terrainGen/constants.ts";
 import { EntityType } from "./types.ts";
+import { entityUpdateBody } from "./wire.ts";
 
 export const MAX_HEALTH = 100;
 export const PLAYER_INVENTORY_SIZE = 5;
@@ -134,12 +135,16 @@ export class Player extends KillableEntity {
         this.region.broadcast(
           new Event(
             EventType.ENTITY_UPDATE,
-            `${JSON.stringify({
-              x: this.x,
-              y: this.y,
-              velocity: [this.velX, this.velY],
-              direction: [this.dirX, this.dirY],
-            })}\n${this.x} ${this.y}`,
+            entityUpdateBody(
+              {
+                x: this.x,
+                y: this.y,
+                velocity: [this.velX, this.velY],
+                direction: [this.dirX, this.dirY],
+              },
+              this.x,
+              this.y,
+            ),
             this,
           ),
         );
