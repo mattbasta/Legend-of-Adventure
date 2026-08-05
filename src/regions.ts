@@ -52,13 +52,13 @@ export class Region {
   x: number;
   y: number;
 
-  cleanup: null | NodeJS.Timer = null;
+  cleanup: null | ReturnType<typeof setTimeout> = null;
 
   terrain: Terrain;
   entities: Set<Entity> = new Set();
   entityMap: Map<string, Entity> = new Map();
 
-  ticker: NodeJS.Timer;
+  ticker: ReturnType<typeof setInterval>;
 
   constructor(
     parent: string | WorldType,

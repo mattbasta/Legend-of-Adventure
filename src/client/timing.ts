@@ -5,7 +5,7 @@ import * as keys from "./keys";
 import * as level from "./level";
 import settings from "./settings";
 
-let timer: NodeJS.Timer | null = null;
+let timer: ReturnType<typeof setInterval> | null = null;
 let last = Date.now();
 
 function updateLocation() {

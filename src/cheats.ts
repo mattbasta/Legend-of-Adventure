@@ -6,8 +6,11 @@ function sayToPlayer(message: string, player: Entity) {
 }
 
 export function handleCheat(message: string, player: Entity) {
-  if (!message.startsWith('/')) {
-    return;
+  if (!message.startsWith("/")) {
+    return false;
   }
-  throw new Error("not implemented");
+  // Command handling is not yet ported from legacy/cheats.go. Swallow the
+  // message so it is neither broadcast as chat nor crashes the ws handler.
+  sayToPlayer("Unknown command", player);
+  return true;
 }

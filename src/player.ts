@@ -4,6 +4,7 @@ import { KillableEntity } from "./entities/BaseEntity";
 import { sendEntityToLocation } from "./entities/moveEntity";
 import { Event, EventType } from "./events";
 import { Inventory } from "./inventory";
+import { parseClientMessage } from "./protocol";
 import { getRegionData } from "./regions";
 import { RegionType, WorldType } from "./terrainGen/constants";
 import { EntityType } from "./types";
@@ -61,23 +62,23 @@ export class Player extends KillableEntity {
     }
     // console.log('> ' + message)
 
-    const split = message.toString("utf-8").split(/\s/g);
-    switch (split[0]) {
+    const { cmd, body } = parseClientMessage(message.toString("utf-8"));
+    switch (cmd) {
       case "cyc": // cycle inventory
-        this.inventory.cycle(split[1]);
+        this.inventory.cycle(body);
         return;
 
       case "cha": // chat
-        if (cheats.handleCheat(split[1], this)) {
+        if (cheats.handleCheat(body, this)) {
           return;
         }
         this.region.broadcast(
-          new Event(EventType.CHAT, `${this.x} ${this.y}\n${split[1]}`, this)
+          new Event(EventType.CHAT, `${this.x} ${this.y}\n${body}`, this)
         );
         return;
 
       case "loc":
-        const posData = split[1].split(":");
+        const posData = body.split(":");
         if (posData.length < 4) {
           return;
         }
@@ -143,7 +144,7 @@ export class Player extends KillableEntity {
         break;
 
       case "use":
-        const slot = parseInt(split[1], 10);
+        const slot = parseInt(body, 10);
         if (isNaN(slot)) {
           return;
         }
@@ -155,7 +156,7 @@ export class Player extends KillableEntity {
         return;
 
       case "lev":
-        const pos = split[1].split(":");
+        const pos = body.split(":");
         const x = parseFloat(pos[0]);
         const y = parseFloat(pos[1]);
         const iXPos = this.region.x - x;

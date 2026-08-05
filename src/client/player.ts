@@ -2,7 +2,7 @@ import * as comm from "./comm";
 import * as sound from "./sound";
 
 let health = 100;
-let lowHealth: NodeJS.Timer | null = null;
+let lowHealth: ReturnType<typeof setInterval> | null = null;
 
 comm.messages.on("hea", function (body) {
   var newHealth = parseInt(body, 10);

@@ -34,7 +34,7 @@ abstract class EntityBehavior {
   }
   updateEntity(updates: Partial<Entity>) {}
 
-  scheduleHandles: Array<NodeJS.Timer> = [];
+  scheduleHandles: Array<ReturnType<typeof setTimeout>> = [];
   schedule(handlerName: string, inMs: number, ...args: any) {
     this.scheduleHandles.push(
       setTimeout(() => {
