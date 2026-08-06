@@ -1,5 +1,6 @@
 import { BaseEntity } from "./entities/BaseEntity.ts";
 import { ItemEntity } from "./entities/itemEntity.ts";
+import { parseDirectAttack } from "./eventParsing.ts";
 import { Event, EventType } from "./events.ts";
 import { Inventory } from "./inventory.ts";
 import type { Region } from "./regions.ts";
@@ -24,17 +25,17 @@ export class ChestEntity extends BaseEntity {
   }
 
   onEvent(event: Event) {
-    if (event.type !== EventType.DIRECT_ATTACK) {
+    const attack = parseDirectAttack(event);
+    if (!attack) {
       return;
     }
-
-    const [x, y] = event.body.split(" ").map((x) => parseFloat(x));
+    const { x, y } = attack;
 
     if (
-      x! < this.x - CHEST_HIT_WIGGLE_ROOM_X ||
-      x! > this.x + this.width + CHEST_HIT_WIGGLE_ROOM_X ||
-      y! < this.y - this.height - CHEST_HIT_WIGGLE_ROOM_Y ||
-      y! > this.y + CHEST_HIT_WIGGLE_ROOM_Y
+      x < this.x - CHEST_HIT_WIGGLE_ROOM_X ||
+      x > this.x + this.width + CHEST_HIT_WIGGLE_ROOM_X ||
+      y < this.y - this.height - CHEST_HIT_WIGGLE_ROOM_Y ||
+      y > this.y + CHEST_HIT_WIGGLE_ROOM_Y
     ) {
       return;
     }
@@ -73,17 +74,17 @@ export class PotEntity extends BaseEntity {
   }
 
   onEvent(event: Event) {
-    if (event.type !== EventType.DIRECT_ATTACK) {
+    const attack = parseDirectAttack(event);
+    if (!attack) {
       return;
     }
-
-    const [x, y] = event.body.split(" ").map((x) => parseFloat(x));
+    const { x, y, item: weapon } = attack;
 
     if (
-      x! < this.x - POT_HIT_WIGGLE_ROOM_X ||
-      x! > this.x + this.width + POT_HIT_WIGGLE_ROOM_X ||
-      y! < this.y - this.height - POT_HIT_WIGGLE_ROOM_Y ||
-      y! > this.y + POT_HIT_WIGGLE_ROOM_Y
+      x < this.x - POT_HIT_WIGGLE_ROOM_X ||
+      x > this.x + this.width + POT_HIT_WIGGLE_ROOM_X ||
+      y < this.y - this.height - POT_HIT_WIGGLE_ROOM_Y ||
+      y > this.y + POT_HIT_WIGGLE_ROOM_Y
     ) {
       return;
     }
@@ -94,11 +95,16 @@ export class PotEntity extends BaseEntity {
       item.setPosition(this.x + (this.width - item.width) / 2, this.y);
       this.region.addEntity(item);
     } else if (this.entity) {
+      // Pass the blow along to whatever was hiding in the pot.
       const newEID = this.region.spawn(this.entity, this.x, this.y);
       if (event.origin) {
         const newEnt = this.region.entityMap.get(newEID);
         newEnt!.onEvent(
-          new Event(EventType.DIRECT_ATTACK, event.body, event.origin),
+          new Event(
+            EventType.DIRECT_ATTACK,
+            `${x} ${y} ${weapon}`,
+            event.origin,
+          ),
         );
       }
     }

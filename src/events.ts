@@ -56,12 +56,55 @@ export const EventType = {
 } as const;
 export type EventType = (typeof EventType)[keyof typeof EventType];
 
-export class Event {
-  type: EventType;
-  body: string;
-  origin: Entity | null;
+/**
+ * The body format each event type carries on the wire, as far as the type
+ * system can usefully express it. Types whose bodies are free-form or may
+ * repeat over several newline-separated lines stay `string`; the rest get a
+ * template literal type so malformed bodies are a compile error rather than
+ * a client-side parse failure at runtime.
+ *
+ * `src/eventParsing.ts` holds the matching runtime parsers.
+ */
+export interface EventBodies {
+  // <entity json>\n<x> <y>
+  [EventType.REGION_ENTRANCE]: `${string}\n${number} ${number}`;
+  [EventType.SPAWN]: `${string}\n${number} ${number}`;
+  [EventType.ENTITY_UPDATE]: `${string}\n${number} ${number}`;
+  // The eid of the departed entity.
+  [EventType.REGION_EXIT]: string;
+  [EventType.DEATH]: "";
+  // <x> <y>\n<message>
+  [EventType.CHAT]: `${number} ${number}\n${string}`;
+  // x y radius spread item_code
+  [EventType.SPLASH_ATTACK]: `${number} ${number} ${number} ${number} ${string}`;
+  // x y item_code
+  [EventType.DIRECT_ATTACK]: `${number} ${number} ${string}`;
+  // sound_id:x:y
+  [EventType.SOUND]: `${string}:${number}:${number}`;
+  // target_id item_code
+  [EventType.GIVE]: `${string} ${string}`;
+  // One or more newline-separated particle specs.
+  [EventType.PARTICLE]: string;
+  [EventType.PARTICLE_MACRO]: string;
+  // The effect's name.
+  [EventType.EFFECT]: string;
+  [EventType.EFFECT_CLEAR]: "";
+}
 
-  constructor(type: EventType, body: string, origin: Entity | null = null) {
+/**
+ * A single event on the wire.
+ *
+ * The type parameter is inferred from the constructor's first argument, so
+ * each event type only accepts bodies in its own format. Consumers that hold
+ * arbitrary events can keep writing `Event`, which defaults to "any type"
+ * and whose body is the union of every format.
+ */
+export class Event<T extends EventType = EventType> {
+  readonly type: T;
+  readonly body: EventBodies[T];
+  readonly origin: Entity | null;
+
+  constructor(type: T, body: EventBodies[T], origin: Entity | null = null) {
     this.type = type;
     this.body = body;
     this.origin = origin;

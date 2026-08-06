@@ -5,6 +5,10 @@
  * property patch and the trailing coordinates let observers do cheap
  * distance gating without parsing the JSON.
  */
-export function entityUpdateBody(update: object, x: number, y: number): string {
+export function entityUpdateBody(
+  update: object,
+  x: number,
+  y: number,
+): `${string}\n${number} ${number}` {
   return `${JSON.stringify(update)}\n${x} ${y}`;
 }

@@ -93,7 +93,8 @@ export class Inventory {
     }
   }
 
-  cycle(command: string) {
+  /** "f" cycles the selection forward, "b" backward. */
+  cycle(command: "f" | "b") {
     this.consolidate();
     const count = this.numItems();
     if (count < 2) {

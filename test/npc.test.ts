@@ -62,10 +62,11 @@ class FakeRegion {
 
 function makeSheep(region: FakeRegion, seed = 42) {
   let now = 0;
-  const sheep = new NpcEntity("sheep", region.asRegion(), Sheep, {
+  const sheep = NpcEntity.create("sheep", region.asRegion(), {
+    species: Sheep,
     rng: new MT(seed),
     clock: () => now,
-  });
+  })!;
   sheep.setPosition(50, 50);
   region.addEntity(sheep);
   // Region tick cadence is 100ms.

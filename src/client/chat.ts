@@ -3,36 +3,23 @@ import * as comm from "./comm.ts";
 import * as entities from "./entities.ts";
 import * as keys from "./keys.ts";
 import * as level from "./level.ts";
+import { sanitizeToFragment } from "./sanitize.ts";
 
 const CHAT_DISTANCE = 10;
 
 const chatbox = document.getElementById("chatbox") as HTMLDivElement;
 const textbox = document.getElementById("talkbar") as HTMLInputElement;
 
-// NPC speech arrives as `<span class="nametag">Name:</span> message`. That
-// one known shape is parsed structurally; everything else is rendered as
-// text so chat can never inject markup.
-const NAMETAG_PREFIX = /^<span class="nametag">(.*?)<\/span>\s*/;
-
+// Chat is relayed from other players, so it is untrusted. NPC speech does
+// legitimately carry a `<span class="nametag">` prefix, so the message is
+// sanitized against an allowlist rather than escaped wholesale.
 function handleMessage(message: string) {
   if (chatbox.childNodes.length > 10) {
     chatbox.removeChild(chatbox.childNodes[0]!);
   }
-  var p = document.createElement("p");
+  const p = document.createElement("p");
   if (message[0] == "/") p.style.color = "#5d6";
-
-  const nametag = NAMETAG_PREFIX.exec(message);
-  if (nametag) {
-    const span = document.createElement("span");
-    span.className = "nametag";
-    span.textContent = nametag[1]!;
-    p.appendChild(span);
-    p.appendChild(
-      document.createTextNode(" " + message.slice(nametag[0].length)),
-    );
-  } else {
-    p.appendChild(document.createTextNode(message));
-  }
+  p.appendChild(sanitizeToFragment(message));
   chatbox.appendChild(p);
 }
 

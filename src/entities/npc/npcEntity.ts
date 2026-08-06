@@ -1,6 +1,7 @@
 import type { Logger } from "pino";
 
-import { Event, EventType } from "../../events.ts";
+import { Event, type EventBodies, EventType } from "../../events.ts";
+import { parseEvent } from "../../eventParsing.ts";
 import { logger } from "../../logger.ts";
 import type { RNG } from "../../rng.ts";
 import { getNameRNG } from "../../terrain.ts";
@@ -13,6 +14,7 @@ import { ItemEntity } from "../itemEntity.ts";
 import { type Behavior, type BehaviorClass, linearize } from "./behavior.ts";
 import type { HookImpl, HookName, Hooks } from "./hooks.ts";
 import { distanceFromCoords, PathingHelper } from "./pathing.ts";
+import { behaviorFor } from "./registry.ts";
 import { getCoordRNG } from "../../terrain.ts";
 
 // TODO: Weapon-aware damage; the Go original hardcoded 10 everywhere too.
@@ -20,7 +22,12 @@ const NPC_DAMAGE = 10;
 
 const SPAWN_FIT_MAX_TRIES = 1000;
 
-interface NpcEntityOptions {
+export interface NpcEntityOptions {
+  /**
+   * Behavior stack to use instead of the registry's entry for this type.
+   * Mainly for tests, which exercise species in isolation.
+   */
+  species?: BehaviorClass;
   rng?: RNG;
   clock?: () => number;
 }
@@ -53,11 +60,27 @@ export class NpcEntity extends BaseEntity {
   private lastTick: number;
   private dead = false;
 
-  constructor(
+  /**
+   * Builds an NPC for `type`, or returns null when that species' behaviors
+   * have not been ported yet (callers fall back to an inert placeholder).
+   */
+  static create(
+    type: EntityType,
+    region: Region,
+    options: NpcEntityOptions = {},
+  ): NpcEntity | null {
+    const species = options.species ?? behaviorFor(type);
+    if (!species) {
+      return null;
+    }
+    return new NpcEntity(type, region, species, options);
+  }
+
+  private constructor(
     type: EntityType,
     region: Region,
     species: BehaviorClass,
-    options: NpcEntityOptions = {},
+    options: NpcEntityOptions,
   ) {
     super(type, region);
     this.log = logger.child({ eid: this.eid, species: type });
@@ -167,7 +190,7 @@ export class NpcEntity extends BaseEntity {
 
   // ----- Host API (the otto VM's injected globals) -----
 
-  sendEvent(type: EventType, body: string) {
+  sendEvent<T extends EventType>(type: T, body: EventBodies[T]) {
     this.region.broadcast(new Event(type, body, this));
   }
 
@@ -267,23 +290,21 @@ export class NpcEntity extends BaseEntity {
   // ----- Region event ingress (ports virtualentity.go handle()) -----
 
   private handleEvent(event: Event) {
+    const parsed = parseEvent(event);
+    if (!parsed) {
+      this.log.debug({ type: event.type }, "ignoring malformed event");
+      return;
+    }
     const originEid = event.origin?.eid ?? null;
 
-    switch (event.type) {
+    switch (parsed.type) {
       case EventType.SPAWN:
       case EventType.REGION_ENTRANCE:
       case EventType.ENTITY_UPDATE: {
         if (!originEid || !this.region.getEntity(originEid)) {
           return;
         }
-        const lines = event.body.split("\n");
-        const coords = (lines[1] ?? "").split(" ");
-        const coordX = parseFloat(coords[0] ?? "");
-        const coordY = parseFloat(coords[1] ?? "");
-        if (isNaN(coordX) || isNaN(coordY)) {
-          return;
-        }
-        const dist = this.distanceToCoords(coordX, coordY);
+        const dist = this.distanceToCoords(parsed.body.x, parsed.body.y);
         if (dist > ENTITY_VISION) {
           return;
         }
@@ -298,17 +319,12 @@ export class NpcEntity extends BaseEntity {
         return;
       }
       case EventType.REGION_EXIT: {
-        this.trigger("forget", event.body);
+        this.trigger("forget", parsed.body);
         return;
       }
 
       case EventType.DIRECT_ATTACK: {
-        const [xRaw, yRaw, item] = event.body.split(" ");
-        const x = parseFloat(xRaw ?? "");
-        const y = parseFloat(yRaw ?? "");
-        if (isNaN(x) || isNaN(y)) {
-          return;
-        }
+        const { x, y, item } = parsed.body;
         const from = originEid ?? "";
         if (
           x < this.x - ATTACK_WIGGLE_ROOM ||
@@ -316,26 +332,17 @@ export class NpcEntity extends BaseEntity {
           y < this.y - this.height - ATTACK_WIGGLE_ROOM ||
           y > this.y + ATTACK_WIGGLE_ROOM
         ) {
-          this.trigger("seenAttack", from, NPC_DAMAGE, item ?? "null");
+          this.trigger("seenAttack", from, NPC_DAMAGE, item);
           return;
         }
         this.log.debug({ from }, "direct hit");
-        this.trigger("attacked", from, NPC_DAMAGE, item ?? "null");
+        this.trigger("attacked", from, NPC_DAMAGE, item);
         return;
       }
 
       case EventType.CHAT: {
-        const newline = event.body.indexOf("\n");
-        if (newline === -1) {
-          return;
-        }
-        const coords = event.body.slice(0, newline).split(" ");
-        const x = parseFloat(coords[0] ?? "");
-        const y = parseFloat(coords[1] ?? "");
-        if (isNaN(x) || isNaN(y)) {
-          return;
-        }
-        this.trigger("heard", x, y, event.body.slice(newline + 1));
+        const { x, y, message } = parsed.body;
+        this.trigger("heard", x, y, message);
         return;
       }
     }

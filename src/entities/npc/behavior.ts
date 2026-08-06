@@ -35,12 +35,30 @@ const linearizationCache = new Map<
 >();
 
 /**
- * C3 linearization of the behavior graph rooted at `species`.
+ * Flattens a behavior's inheritance graph into the single ordered list that
+ * hook dispatch walks — its "method resolution order".
  *
- * Unlike the otto framework — whose breadth-first loader double-registered
- * classes reached through multiple paths (Animat appeared twice in every
- * sentient chain, running movement integration twice per tick) — each class
- * appears exactly once, in monotonic MRO order.
+ * Behaviors form a graph, not a tree: Sentient builds on both Harmable and
+ * Animat, Soldier on both Npc and Neutral, and several paths lead back to
+ * Animat. To dispatch a hook we need one flat order, and it has to satisfy
+ * three rules:
+ *
+ *   1. A behavior comes before all of its parents (a species overrides what
+ *      it builds on).
+ *   2. Parents keep the order they were declared in.
+ *   3. Every behavior appears exactly once, however many paths reach it.
+ *
+ * Rule 3 is where the otto framework went wrong: its loader appended a
+ * behavior each time it was reached, so Animat sat in every sentient chain
+ * twice and integrated movement twice per tick.
+ *
+ * This is the C3 algorithm Python uses for the same problem. It merges the
+ * parents' already-linearized orders by repeatedly taking a "safe" head —
+ * one that no other list is still waiting to place later. If no head is
+ * safe, the parent orders contradict each other and no valid order exists.
+ *
+ * Sheep -> [Peaceful] -> [Sentient] -> [Harmable, Animat] linearizes to
+ * [Sheep, Peaceful, Sentient, Harmable, Animat].
  */
 export function linearize(
   species: BehaviorClass,
@@ -50,38 +68,52 @@ export function linearize(
     return cached;
   }
 
+  // Merge each parent's own order, plus the parent list itself — that last
+  // one is what preserves the declared order of the parents (rule 2).
   const parents = species.parents;
-  const sequences: Array<Array<BehaviorClass>> = parents
+  const pending: Array<Array<BehaviorClass>> = parents
     .map((parent) => [...linearize(parent)])
     .concat([[...parents]]);
 
-  const result: Array<BehaviorClass> = [species];
-  while (sequences.some((seq) => seq.length)) {
-    let candidate: BehaviorClass | null = null;
-    for (const seq of sequences) {
-      const head = seq[0];
+  // The species always leads (rule 1).
+  const order: Array<BehaviorClass> = [species];
+
+  while (pending.some((list) => list.length)) {
+    // A head is safe to take when it appears nowhere else except at the
+    // front: if some other list has it further down, that list still needs
+    // to place something before it, so taking it now would break rule 1.
+    let safeHead: BehaviorClass | null = null;
+    for (const list of pending) {
+      const head = list[0];
       if (!head) {
         continue;
       }
-      // A valid candidate appears in no sequence's tail.
-      if (sequences.every((other) => other.indexOf(head) <= 0)) {
-        candidate = head;
+      const blockedElsewhere = pending.some((other) => other.indexOf(head) > 0);
+      if (!blockedElsewhere) {
+        safeHead = head;
         break;
       }
     }
-    if (!candidate) {
+
+    if (!safeHead) {
+      // Every remaining head is blocked by another list, which means two
+      // parents disagree about ordering (e.g. one wants A before B and the
+      // other B before A). There is no order satisfying both.
       throw new Error(
-        `Cannot linearize behavior hierarchy for ${species.name}`,
+        `Cannot linearize behavior hierarchy for ${species.name}: ` +
+          `its parents disagree about behavior ordering`,
       );
     }
-    result.push(candidate);
-    for (const seq of sequences) {
-      if (seq[0] === candidate) {
-        seq.shift();
+
+    order.push(safeHead);
+    // Consume it wherever it was waiting at the front.
+    for (const list of pending) {
+      if (list[0] === safeHead) {
+        list.shift();
       }
     }
   }
 
-  linearizationCache.set(species, result);
-  return result;
+  linearizationCache.set(species, order);
+  return order;
 }

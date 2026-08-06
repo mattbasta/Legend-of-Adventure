@@ -8,7 +8,7 @@ import { sendEntityToLocation } from "./entities/moveEntity.ts";
 import { Event, EventType } from "./events.ts";
 import { Inventory } from "./inventory.ts";
 import { logger } from "./logger.ts";
-import { parseClientMessage } from "./protocol.ts";
+import { parseClientCommand } from "./protocol.ts";
 import { getRegion, getRegionData } from "./regions.ts";
 import { RegionType, WorldType } from "./terrainGen/constants.ts";
 import { EntityType } from "./types.ts";
@@ -64,67 +64,55 @@ export class Player extends KillableEntity {
     if (isBinary) {
       return;
     }
-    // console.log('> ' + message)
 
-    const { cmd, body } = parseClientMessage(message.toString("utf-8"));
-    switch (cmd) {
+    const parsed = parseClientCommand(message.toString("utf-8"));
+    if (!parsed) {
+      return;
+    }
+    if (!parsed.ok) {
+      // Well-formed bodies are the client's job; anything else is either a
+      // bug or a cheat attempt.
+      this.log.warn(
+        { cmd: parsed.cmd, issues: parsed.error.issues },
+        "rejected malformed client command",
+      );
+      return;
+    }
+
+    const command = parsed.command;
+    switch (command.cmd) {
       case "cyc": // cycle inventory
-        this.inventory.cycle(body);
+        this.inventory.cycle(command.body);
         return;
 
       case "cha": // chat
-        if (handleCheat(body, this)) {
+        if (handleCheat(command.body, this)) {
           return;
         }
         this.region.broadcast(
-          new Event(EventType.CHAT, `${this.x} ${this.y}\n${body}`, this),
+          new Event(
+            EventType.CHAT,
+            `${this.x} ${this.y}\n${command.body}`,
+            this,
+          ),
         );
         return;
 
-      case "loc":
-        const posData = body.split(":");
-        if (posData.length < 4) {
-          return;
-        }
+      case "loc": {
         // TODO: do more cheat testing here
-        const newX = parseFloat(posData[0]!);
-        const newY = parseFloat(posData[1]!);
-        if (isNaN(newX) || isNaN(newY)) {
-          return;
-        }
-
+        const { x, y, velX, velY, dirX, dirY } = command.body;
         if (
-          newX < 0 ||
-          newX > this.region.terrain.width ||
-          newY < 0 ||
-          newY > this.region.terrain.height
+          x < 0 ||
+          x > this.region.terrain.width ||
+          y < 0 ||
+          y > this.region.terrain.height
         ) {
           this.log.warn("player attempted to exceed bounds of the level");
           return;
         }
 
-        const velX = parseFloat(posData[2]!);
-        const velY = parseFloat(posData[3]!);
-        if (isNaN(velX) || isNaN(velY)) {
-          return;
-        }
-        if (velX < -1 || velX > 1 || velY < -1 || velY > 1) {
-          this.log.warn("player attempted to go faster than possible");
-          return;
-        }
-
-        const dirX = parseFloat(posData[4]!);
-        const dirY = parseFloat(posData[5]!);
-        if (isNaN(dirX) || isNaN(dirY)) {
-          return;
-        }
-        if (dirX < -1 || dirX > 1 || dirY < -1 || dirY > 1) {
-          this.log.warn("player attempted to face invalid direction");
-          return;
-        }
-
-        this.x = newX;
-        this.y = newY;
+        this.x = x;
+        this.y = y;
         this.velX = velX;
         this.velY = velY;
         this.dirX = dirX;
@@ -148,25 +136,20 @@ export class Player extends KillableEntity {
             this,
           ),
         );
-
-        break;
+        return;
+      }
 
       case "use":
-        const slot = parseInt(body, 10);
-        if (isNaN(slot)) {
-          return;
-        }
-        this.inventory.use(slot, this);
+        this.inventory.use(command.body, this);
         return;
 
       case "dro":
         this.inventory.drop(this);
         return;
 
-      case "lev":
-        const pos = body.split(":");
-        const x = parseFloat(pos[0]!);
-        const y = parseFloat(pos[1]!);
+      case "lev": {
+        // Only accept slides into one of the four adjacent regions.
+        const { x, y } = command.body;
         const iXPos = this.region.x - x;
         const iYPos = this.region.y - y;
         if (
@@ -179,7 +162,6 @@ export class Player extends KillableEntity {
           return;
         }
 
-        // console.log(`${this.eid} sliding to ${x}:${y}`);
         this.sendToLocation(
           this.region.parentID,
           this.region.type,
@@ -189,6 +171,7 @@ export class Player extends KillableEntity {
           this.y,
         );
         return;
+      }
     }
   };
 
