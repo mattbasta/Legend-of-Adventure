@@ -78,3 +78,8 @@ Remaining: combat behaviors and the wolf/zombie species; A* pathing, the npc
 chatter layer, and the town species (soldier, child, bully, homely, trader,
 death waker); the slash-command console (`legacy/cheats.go`). Species without
 ported behaviors still spawn, as inert placeholders — see `Region.spawn`.
+
+**[PLAN.md](PLAN.md) is the working plan**: phase-by-phase detail for the
+remaining port work, what each behavior and species needs, deferred issues,
+and the backlog. Read it before picking up new work, and keep its status
+table current as phases land.
