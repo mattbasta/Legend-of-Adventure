@@ -31,7 +31,7 @@ reference material for the remaining port work and get deleted in phase 6.
 | 4     | NPC framework, pathing, sheep                   | **done** (`c76423f`)            |
 | —     | Review follow-ups: Zod, typed bodies, sanitizer | **done** (`badf28d`)            |
 | —     | Phase 2 hygiene: shutdown, heartbeat, limits    | **done**                        |
-| 5     | Combat: hostile/neutral, wolf, zombie           | next                            |
+| 5     | Entity rework + combat: wolf, zombie            | next                            |
 | 6     | A*, npc layer, town species; retire legacy      |                                 |
 | 7     | Cheats, README, dep audit                       |                                 |
 
@@ -57,42 +57,58 @@ landable, and it disappears at the end of 6.
   `registry.ts` is just the species map.
 - **Chat sanitizing** is allowlist-based via TreeWalker
   (`src/client/sanitize.ts`), not a fixed regex.
+- **Phase 4's hook chain is being replaced.** It faithfully ported the otto
+  framework, which was itself a hand-rolled reimplementation of Python's MRO
+  for an interpreter without multiple inheritance — a workaround TypeScript
+  does not need. See [docs/entity-system.md](docs/entity-system.md); roughly
+  half the phase-4 code (the vector field, the host API, the Zod layer, the
+  test harness) carries over.
 - **Golden masters**: `dungeon-interior.json` was regenerated once, in phase 3,
   when three Go-fidelity bugs were fixed (20/784 tiles changed, portals
   unchanged). Everything else has been byte-stable since phase 0.
 
 ---
 
-## Phase 5 — Combat
+## Phase 5 — Entity system rework, then combat
 
-Port source: `resources/entities/hostile.js`, `neutral.js`, `all/wolf.js`,
-`all/zombie.js`. `Harmable` already landed in phase 4.
+**Read [docs/entity-system.md](docs/entity-system.md) first.** It supersedes
+the phase-4 hook chain: single inheritance in the entity tree with
+capabilities as components, real method overrides instead of string-keyed
+`trigger()`, pulled perception instead of broadcast position updates, and
+batched per-tick event handlers.
 
-**Behaviors** (`src/entities/npc/behaviors/`):
+### 5a — the skeleton
 
-- `Hostile` (parents: `[Sentient]`) — `getPreferredBehavior` → `"chase"`,
-  `doesAttack` → true, `attacked` → chase the attacker, and `seenEntity` →
-  chase if not already chasing. This hook is what makes anything hunt the
-  player; nothing implements it yet.
-- `Neutral` (parents: `[Sentient]`) — same as Hostile minus `seenEntity`:
-  attacks only once provoked. (The original also carried an unused `chasing`
-  local; don't port it.)
+Build the new shape and migrate the sheep onto it, then delete the hook
+framework (`hooks.ts`, `behavior.ts`, `trigger()`, `behaviors/`). The sheep is
+the regression test: it must wander, bleat, bounce, flee and die exactly as it
+does today, with no string dispatch left behind.
 
-**Species** (`src/entities/npc/species/`):
+- `Entity → Animat → Sentient` plus the component set (movement, vitals,
+  pathing, behavior, attention).
+- `RegionView.nearby()` and the pulled sighting path; drop `epu` from the NPC
+  event ingress entirely.
+- Batched handlers with the deliberate dispatch order, and the collapsing,
+  self-capping inbox.
+- `Disposition` as a data record rather than hostile/neutral/peaceful classes.
 
-- `Wolf` (parents: `[Hostile]`) — 10 HP, `proto: "animal"`, speed 0.003,
-  nametag "Big Bad Wolf", always drops `f5`. Howls every 15–30s: skips the
-  howl while chasing, otherwise stops wandering, emits
-  `wolf_howl:<x>:<y>`, and resumes wandering 4s later. Tracks its chase
-  target so the howl scheduler can check it.
-- `Zombie` (parents: `[Hostile]`) — 75 HP, `proto: "avatar"`, speed 0.005, no
-  nametag. Refuses to chase or retaliate against `zombie` and `death_waker`
-  (guard in `chase`/`attacked` by declining to call `next()`, which is
-  exactly the pattern the hook chain is built for). `wasHurt` emits
-  `zombiesquish` instead of the default bloodspatter — note it does _not_
-  call `next()`, so it replaces rather than augments.
+Carry over rather than rewrite: the vector field in `pathing.ts`, the host API
+on `NpcEntity`, the Zod layer in `eventParsing.ts`, and the `FakeRegion`
+harness.
 
-Register both in `registry.ts`.
+### 5b — combat
+
+Port source: `resources/entities/all/wolf.js`, `all/zombie.js`.
+
+- `Vitals` applies damage unconditionally. Factions constrain targeting only,
+  so same-species brawls are possible — a deliberate divergence from both
+  ancestors, reasoned through in the design doc.
+- `Wolf` — 10 HP, `proto: "animal"`, speed 0.003, nametag "Big Bad Wolf",
+  always drops `f5`. Howls every 15–30s: skips the howl while chasing,
+  otherwise stops wandering, emits `wolf_howl:<x>:<y>`, resumes 4s later.
+- `Zombie` — 75 HP, `proto: "avatar"`, speed 0.005, no nametag,
+  `faction: "undead"`, `zombiesquish` as its hurt particle. Targets anything
+  outside its faction; takes damage from everything.
 
 **Client**: implement the `ded` handler (remove the entity, play the death
 effect). `dea` (player death) currently manifests only via the respawn
@@ -100,11 +116,10 @@ teleport. Check whether `spn` is ever emitted — the server's `addEntity` path
 uses `add` for spawned entities, so `spn` may be dead protocol surface worth
 documenting in `events.ts` rather than implementing.
 
-**Verify**: behavior tests on the `FakeRegion` harness in `test/npc.test.ts` —
-a wolf within vision of a player-typed entity converges on it and emits `dak`
-at `HURT_DISTANCE`; a zombie ignores `dak` from another zombie; a sheep flees
-when attacked (already covered). Manual: get chased and hit by a wolf, die,
-confirm respawn works and the client survives it.
+**Verify**: a wolf within vision of a player-typed entity converges and emits
+`dak` at `HURT_DISTANCE`; two zombies can damage each other but never target
+each other; a sheep attacked by two entities flees both (the vector field
+already sums repellers); the sheep suite still passes unchanged.
 
 ## Phase 6 — A*, town NPCs, retire the legacy tree
 
@@ -112,40 +127,40 @@ Port source: `legacy/entities/astar.go`, the `pathToBestTile` half of
 `legacy/entities/pathing.go`, `resources/entities/npc.js`, and
 `resources/entities/all/*.js`.
 
-- `src/entities/npc/astar.ts` — port `PathAStar` over the hitmap.
-- `PathingHelper.pathToBestTile` + path memory (`lastPath`), and the
-  `isDirectionOk` path-following logic that phase 4 deliberately left out
-  (its current implementation only checks the hitmap). Constants live in
-  `legacy/entities/constants.go` (`ASTAR_*`).
-- `Npc` behavior — idle chatter (10 canned phrases, randomly subsetted per
-  instance, rescheduled every 4–14s), prefers full A* over the vector field
-  when not wandering, clears the staged path on chase/flee/forget.
+- `AStarPathing` as a sibling of `VectorFieldPathing` — port `PathAStar` over
+  the hitmap, plus path memory (`lastPath`) and the path-following half of
+  `isDirectionOk` that phase 4 left out. Constants are in
+  `legacy/entities/constants.go` (`ASTAR_*`). Multi-threat avoidance degrades
+  to the nearest threat; see the design doc.
+- `Person` gains `Speech`. Base `Speech` is output-only (what `Undead` gets);
+  `ConversationalSpeech` adds input — the natural home for Python's
+  `MarkovBot`, which the otto port replaced with ten canned phrases.
+- `GuardBehavior` (soldiers hold a post, respond to witnessed attacks) and
+  `SummonerBehavior` (death wakers).
 
-**Species**: `Soldier` (125 HP, `[Npc, Neutral]`, wields `wsp.soldier`, never
-wanders, retaliates on `seenAttack` within 50 tiles unless the attacker used a
-soldier weapon, shouts threats, drops `wsw.<prefix>.<level>` on a cubed-random
-rarity curve); `Child` (`[Npc, Peaceful]`, random name and sprite, flees
-`bully`, adds an attractor toward the region centre when more than 20 tiles
-out); `Bully` ("Timmy the Bully", 100 HP, chases entities of type `child`);
-`Homely` (`[Npc, Sentient]`, random name from 10, sprite from 5, speed
+**Species**: `Soldier` (125 HP, wields `wsp.soldier`, never wanders,
+retaliates on a witnessed attack within 50 tiles unless the attacker wields a
+soldier weapon, shouts threats, drops `wsw.<prefix>.<level>` on a
+cubed-random rarity curve); `Child` (random name and sprite, flees `bully`,
+attractor toward the region centre when more than 20 tiles out); `Bully`
+("Timmy the Bully", 100 HP, `attacksOnSight` but targeting only children,
+flees when attacked); `Homely` (random name from 10, sprite from 5, speed
 0.00075); `Trader` (200 HP, A* pathing, debug `par` particles — consider
-dropping those); `DeathWaker` (140 HP, `[Peaceful]`, tracks visible players,
-broadcasts `{"movement":"shake"}`, then spawns 1–3 zombies via `spawnNearby`).
+dropping those); `DeathWaker` (140 HP, tracks visible players, broadcasts
+`{"movement":"shake"}`, then spawns 1–3 zombies).
 
-Move the image-variant logic (`soldier1-3`, `child1-2`, `homely1-3`) out of
-`VirtualEntity.getMetadata` into each species' `describe()` — it currently
-re-randomizes on every serialization, so sprites flicker.
+Per-instance variants (`soldier1-3`, `child1-2`, `homely1-3`, random names)
+resolve **once at spawn** into instance state. `VirtualEntity.getMetadata`
+currently re-randomizes on every serialization, which is why sprites flicker.
 
 Then **delete** `VirtualEntity`, the registry fallback in `Region.spawn`,
 `resources/entities/`, and `legacy/`. Git history keeps them.
 
-**Verify**: a linearization snapshot for `Soldier`
-(`[Soldier, Npc, Neutral, Sentient, Harmable, Animat]`); A* unit tests on a
-hand-built hitmap (corridor, blocked, around a corner); a scripted
-"bully chases child, child flees toward centre" scenario. Manual: the town at
-(0,0) — soldiers guard, villagers chatter, attacking a child brings the
-soldiers down on you; a dungeon — zombies chase and a death waker shakes and
-spawns.
+**Verify**: A* unit tests on a hand-built hitmap (corridor, blocked, around a
+corner); a scripted "bully chases child, child flees toward centre" scenario.
+Manual: the town at (0,0) — soldiers guard, villagers chatter, attacking a
+child brings the soldiers down on you; a dungeon — zombies chase and a death
+waker shakes and spawns.
 
 ## Phase 7 — Cheats and polish
 

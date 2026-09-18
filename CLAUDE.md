@@ -32,6 +32,7 @@ stripping. **There is no build step** — `tsc` only typechecks.
 | `src/events.ts`, `src/eventParsing.ts` | wire protocol types and parsers                                |
 | `src/client/`                          | browser client (canvas), bundled by esbuild to `www/client.js` |
 | `test/golden/`                         | terrain snapshots (see below)                                  |
+| `docs/`                                | design docs (entity system)                                    |
 
 ## Conventions
 
@@ -83,3 +84,9 @@ ported behaviors still spawn, as inert placeholders — see `Region.spawn`.
 remaining port work, what each behavior and species needs, deferred issues,
 and the backlog. Read it before picking up new work, and keep its status
 table current as phases land.
+
+**[docs/entity-system.md](docs/entity-system.md) is the entity design.** The
+hook-chain framework that shipped in phase 4 is being replaced — components
+over multiple inheritance, real method overrides over string-keyed dispatch,
+pulled perception over broadcast position updates, batched per-tick event
+handlers. Read it before touching `src/entities/`.
