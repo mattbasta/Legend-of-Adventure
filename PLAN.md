@@ -30,6 +30,7 @@ reference material for the remaining port work and get deleted in phase 6.
 | 3     | Bug sweep                                       | **done** (`6790567`)            |
 | 4     | NPC framework, pathing, sheep                   | **done** (`c76423f`)            |
 | —     | Review follow-ups: Zod, typed bodies, sanitizer | **done** (`badf28d`)            |
+| —     | Phase 2 hygiene: shutdown, heartbeat, limits    | **done**                        |
 | 5     | Combat: hostile/neutral, wolf, zombie           | next                            |
 | 6     | A*, npc layer, town species; retire legacy      |                                 |
 | 7     | Cheats, README, dep audit                       |                                 |
@@ -167,9 +168,10 @@ Deliberately left alone so far, roughly in priority order:
 - **Damage is hardcoded to 10** in both `player.ts` and `NpcEntity`; weapon
   level and prefix affect sprites and drop tables but never damage. Both the
   Go original and the Python one had the same TODO.
-- **No reconnect logic** in the client: when the server restarts, the socket
-  closes and `timing.ts` logs `WebSocket is already in CLOSING or CLOSED
-state` on every tick forever. Painful in dev under `node --watch`.
+- **No reconnect logic** in the client. The server now sends a proper 1001
+  close frame on shutdown, so the client has everything it needs to tell a
+  deliberate restart from a network drop - it just does not act on it yet,
+  and `timing.ts` keeps trying to send on the dead socket.
 - **Region-edge sliding is client-authoritative** (`src/client/timing.ts`
   carries the TODO).
 - **`ether` world** is half-designed: referenced throughout region validation
@@ -177,8 +179,6 @@ state` on every tick forever. Painful in dev under `node --watch`.
   exists.
 - **`sak` (splash attack) and `giv`** are fully specified in the protocol and
   emitted by nobody, in either implementation.
-- `Region` has no `dispose()`; its `setInterval` is only cleared by the 60s
-  idle reaper. Tests work around this with `FakeRegion`.
 - Shop entity population duplicates the House block verbatim, preserving a
   Go `fallthrough`. Faithful, but worth deciding whether it was intentional.
 - `buildings.ts` `RoomType.Storage === RoomType.Bed` (both `"bed"`). Faithful
@@ -188,8 +188,6 @@ state` on every tick forever. Painful in dev under `node --watch`.
   `DUNGEON_MIN_SIZE = 3`, but fragile.
 - `entities.ts` will happily delete `"local"` or the followed entity if the
   server says so, after which `getLocal()`/`getFollowing()` throw.
-- No `MAX_CONNECTED_PLAYERS` enforcement (Go had it), no ws heartbeat, no
-  graceful shutdown.
 
 ## Backlog beyond the original brief
 

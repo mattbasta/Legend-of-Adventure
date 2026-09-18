@@ -11,7 +11,7 @@
     "start": "NODE_ENV=production node index.ts",
     "build:client": "node scripts/clientBuild.ts",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.client.json",
-    "test": "node --test \"test/*.test.ts\"",
+    "test": "LOG_LEVEL=silent node --test \"test/*.test.ts\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

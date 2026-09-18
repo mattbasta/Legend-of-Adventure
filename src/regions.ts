@@ -89,6 +89,20 @@ export class Region {
     }, CLEANUP_TTL);
   }
 
+  /**
+   * Stops this region's timers and drops it from the cache. Without this a
+   * region's tick interval keeps the event loop alive until the idle reaper
+   * fires, so the process cannot exit promptly.
+   */
+  dispose() {
+    clearInterval(this.ticker);
+    if (this.cleanup) {
+      clearTimeout(this.cleanup);
+      this.cleanup = null;
+    }
+    delete regionCache[this.id];
+  }
+
   tick = () => {
     let hasPlayers = false;
     for (let entity of this.entities.values()) {
@@ -354,6 +368,13 @@ export class Region {
 
 function getRegionID(parent: string, type: string, x: number, y: number) {
   return `${parent},${type}:${x}:${y}`;
+}
+
+/** Disposes every cached region; used when shutting the server down. */
+export function disposeAllRegions() {
+  for (const region of Object.values(regionCache)) {
+    region.dispose();
+  }
 }
 
 export function getRegion(
