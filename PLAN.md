@@ -132,9 +132,10 @@ Port source: `legacy/entities/astar.go`, the `pathToBestTile` half of
   `isDirectionOk` that phase 4 left out. Constants are in
   `legacy/entities/constants.go` (`ASTAR_*`). Multi-threat avoidance degrades
   to the nearest threat; see the design doc.
-- `Person` gains `Speech`. Base `Speech` is output-only (what `Undead` gets);
-  `ConversationalSpeech` adds input — the natural home for Python's
-  `MarkovBot`, which the otto port replaced with ten canned phrases.
+- `Person` gains `Speech`. Base `Speech` is output-only (what `Undead` gets).
+  Chatter stays at otto parity — ten canned phrases, randomly subsetted per
+  instance. Conversational speech is a documented parity gap, not phase 6
+  scope.
 - `GuardBehavior` (soldiers hold a post, respond to witnessed attacks) and
   `SummonerBehavior` (death wakers).
 
@@ -194,6 +195,10 @@ Deliberately left alone so far, roughly in priority order:
   exists.
 - **`sak` (splash attack) and `giv`** are fully specified in the protocol and
   emitted by nobody, in either implementation.
+- **Conversational NPCs** are below Python parity: `MarkovBot` generated
+  replies to what players said, and both later ports reduced that to canned
+  phrases. See the parity-gaps section of
+  [docs/entity-system.md](docs/entity-system.md).
 - Shop entity population duplicates the House block verbatim, preserving a
   Go `fallthrough`. Faithful, but worth deciding whether it was intentional.
 - `buildings.ts` `RoomType.Storage === RoomType.Bed` (both `"bed"`). Faithful

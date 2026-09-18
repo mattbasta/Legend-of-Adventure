@@ -69,28 +69,38 @@ The Node design has three goals in response, stated when the port began:
 ## Entity tree
 
 ```
-Entity                     eid, position, size, region membership
+Entity                     eid, position, size, region membership, schedule()
 ├─ Item                    picked up on proximity; does not move
-├─ Prop                    Chest, Pot — static, destructible
-├─ Player                  socket-driven; movement is client-authoritative
-└─ Animat                  moves under its own power
+├─ Prop                    Chest, Pot — static; self-destructs when hit
+└─ Animat                  moves under its own power; movement + vitals
+    ├─ Player              socket-driven; movement is client-authoritative
     └─ Sentient            perceives, attends, decides
         ├─ Animal          Sheep, Wolf
         ├─ Undead          Zombie, DeathWaker          faction: "undead"
         └─ Person          Child, Bully, Homely, Trader, Soldier
 ```
 
-`Animat` has no current inhabitants of its own — every creature in the game
-today is `Sentient`. It exists as the seam where movement stops and cognition
-starts (a drifting projectile or a driverless cart would sit there), and it
-mirrors the Python lineage, where `Animat` and `SentientAnimat` were distinct.
+`Animat` is the seam where movement stops and cognition starts, mirroring the
+Python lineage where `Animat` and `SentientAnimat` were distinct. Nothing sits
+at that layer by itself today apart from the player — a drifting projectile or
+a driverless cart would.
+
+**The player stops at `Animat` deliberately.** It moves and it can be hurt, so
+it wants movement and vitals; but its decisions arrive over a socket, and
+subclassing `Sentient` would hand it a `Behavior` and an `Attention` that
+could inject decisions into a call chain that should be entirely
+client-driven.
+
+`schedule(cb, ms)` lives on `Entity`. Everything uses it — item despawns,
+sheep bleats, wolf howls, zombie groans — so there is nothing to gain by
+lifting it into a component.
 
 ## Components
 
 | Component   | Base                   | Specializations                     | Attached at        |
 | ----------- | ---------------------- | ----------------------------------- | ------------------ |
 | `Movement`  | `WalkingMovement`      | (`FlyingMovement`, if ether lands)  | `Animat`           |
-| `Vitals`    | `Vitals`               | —                                   | `Animat`, `Prop`   |
+| `Vitals`    | `Vitals`               | —                                   | `Animat`           |
 | `Pathing`   | `VectorFieldPathing`   | `AStarPathing`                      | `Sentient`         |
 | `Behavior`  | `SentientBehavior`     | `GuardBehavior`, `SummonerBehavior` | `Sentient`         |
 | `Attention` | `Attention`            | —                                   | `Sentient`         |
@@ -108,9 +118,15 @@ that the split is cut in the right place:
 
 **Speech is split by direction.** Zombies emit text on a timer but neither
 hear nor understand it, so the base `Speech` is output only. People converse,
-so `ConversationalSpeech` adds input — which is where Python's `MarkovBot`
-would be restored if we want conversational NPCs back (the otto port replaced
-it with ten canned phrases).
+so `ConversationalSpeech` adds input. Nothing implements the input half yet —
+see "Known parity gaps" below.
+
+**Props have no `Vitals`,** because they are not alive. Chests and pots have
+never had hit points — they react to a blow that lands inside their hitbox by
+dropping their contents or spawning what they hold, and then remove
+themselves. Giving them a health bar would be modelling a hack: a notion of
+"health" bolted onto something that was never alive. A prop handles the attack
+event and self-destructs on the right hit, and that is the whole story.
 
 **Pathing is a real split.** `npc.js` overrode direction-finding to prefer
 full A\* while animals used the vector field; that override becomes a
@@ -297,12 +313,20 @@ So the model should keep `fleeing` as a `Set` from the start; animals honour
 all of it, and `AStarPathing` degrades to avoiding the nearest threat with a
 TODO. No ping-ponging for animals, and no restructuring needed later.
 
-## Open questions
+## Known parity gaps
 
-- Does `Vitals` belong to `Animat`, or is it fully orthogonal? Props are
-  destructible without being animats, which argues for orthogonal.
-- Does `Player` join the `Sentient` tree or stay a separate branch? It moves,
-  but client-authoritatively, and it has no behavior component.
-- Where does the scheduler (`schedule(cb, ms)`) live — `Entity`, or a
-  component?
-- Is restoring markov speech in scope for phase 6, or later?
+**Conversational NPCs.** Python's NPCs actually held up their end of a
+conversation: `NPC` inherited `MarkovBot`, and `on_chat` fed what a player
+said into a markov chain to generate a reply. The otto port dropped this for
+ten canned phrases, and the TypeScript port inherits that reduction. It is
+**not** planned for phase 6 — `ConversationalSpeech` exists as the seam, with
+nothing behind it.
+
+Worth saying why it is worth revisiting rather than deleting: when the project
+started ~20 years ago a markov chain was about the only way to generate NPC
+dialogue at all. The obvious modern implementation is an LLM behind an
+OpenAI-compatible endpoint, which `ConversationalSpeech` could call without
+anything else in the design changing. That would need care around latency (a
+tick-based server cannot block on a network round trip) and around untrusted
+player text reaching a model, but the component boundary is the right place
+for both.
